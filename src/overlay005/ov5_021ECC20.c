@@ -126,6 +126,12 @@ void *ov5_021ECD68(const MapObjectManager *param0, u32 param1, int param2)
         v0 = Heap_AllocAtEnd(HEAP_ID_FIELD1, v2);
     }
 
+    // ENTRY P97: a full field heap used to read the member into NULL (a data abort - the black screen after
+    // choosing a starter). The texture loader in ov5_021ECE40.c retries a NULL result on a later frame.
+    if (v0 == NULL) {
+        return NULL;
+    }
+
     NARC_ReadWholeMember(v1, param1, v0);
 
     return v0;

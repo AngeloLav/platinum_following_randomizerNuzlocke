@@ -108,6 +108,31 @@ static void ScreenShakeEffect_Finish(ScreenShakeEffect *screenShake);
 static void ScreenShakeEffect_Start(ScreenShakeEffect *screenShake, u8 startX, u8 endX, u16 angleIncrement, fx32 amplitude, s16 shakeSpeed, u32 bg, u32 defaultValue, u32 priority);
 static void ScreenShakeEffect_InvertBuffer(ScreenShakeEffect *screenShake, u32 interval);
 
+// ENTRY P111: the full-screen BG 3 window of the Galactic boss / higher-level water / higher-level cave trainer intros
+// needs ONE free 32 KB block in HEAP_ID_FIELD1. With the follower additions FIELD1 has much less spare room than in the
+// original game, and the intro used to load its sprite resources first (the files go through temporary buffers), which
+// split the largest free block: Window_Add then failed silently and Window_FillTilemap crashed on the empty window (a
+// freeze on hardware - Jupiter in the Eterna Galactic Building right after loading a save, 42 968 bytes free in one
+// block before the intro, 31 700 left when the window was asked for). The window is now allocated before anything else,
+// and if FIELD1 still has no 32 KB block it is taken from HEAP_ID_FIELD2 (66 KB free in the field). Window_Remove frees
+// it through Heap_Free, which finds the right heap by itself.
+static Window *EncounterEffect_NewScreenWindow(BgConfig *bgConfig)
+{
+    Window *window = Window_New(HEAP_ID_FIELD1, 1);
+
+    Window_Add(bgConfig, window, 3, 0, 0, 32, 32, 0, 0);
+
+    if (window->bgConfig == NULL) {
+        enum HeapID heapID = bgConfig->heapID;
+
+        bgConfig->heapID = HEAP_ID_FIELD2;
+        Window_Add(bgConfig, window, 3, 0, 0, 32, 32, 0, 0);
+        bgConfig->heapID = heapID;
+    }
+
+    return window;
+}
+
 void EncounterEffect_Grass_HigherLevel(SysTask *task, void *param)
 {
     EncounterEffect *encEffect = param;
@@ -1154,6 +1179,7 @@ void EncounterEffect_Trainer_Water_HigherLevel(SysTask *param0, void *param1)
         v0->param = Heap_Alloc(HEAP_ID_FIELD1, sizeof(UnkStruct_ov5_021E3560));
         memset(v0->param, 0, sizeof(UnkStruct_ov5_021E3560));
         v1 = v0->param;
+        v1->unk_270 = EncounterEffect_NewScreenWindow(v0->fieldSystem->bgConfig); // ENTRY P111: first, see above
 
         v1->camera = v0->fieldSystem->camera;
 
@@ -1175,9 +1201,6 @@ void EncounterEffect_Trainer_Water_HigherLevel(SysTask *param0, void *param1)
         }
 
         GXLayers_EngineAToggleLayers(GX_PLANEMASK_OBJ, 1);
-
-        v1->unk_270 = Window_New(HEAP_ID_FIELD1, 1);
-        Window_Add(v0->fieldSystem->bgConfig, v1->unk_270, 3, 0, 0, 32, 32, 0, 0);
 
         {
             GXRgb v6 = 0;
@@ -1492,6 +1515,7 @@ void EncounterEffect_Trainer_Cave_HigherLevel(SysTask *param0, void *param1)
         v0->param = Heap_Alloc(HEAP_ID_FIELD1, sizeof(UnkStruct_ov5_021E3D8C));
         memset(v0->param, 0, sizeof(UnkStruct_ov5_021E3D8C));
         v1 = v0->param;
+        v1->unk_264 = EncounterEffect_NewScreenWindow(v0->fieldSystem->bgConfig); // ENTRY P111: first
 
         v1->camera = v0->fieldSystem->camera;
 
@@ -1507,9 +1531,6 @@ void EncounterEffect_Trainer_Cave_HigherLevel(SysTask *param0, void *param1)
         }
 
         GXLayers_EngineAToggleLayers(GX_PLANEMASK_OBJ, 1);
-
-        v1->unk_264 = Window_New(HEAP_ID_FIELD1, 1);
-        Window_Add(v0->fieldSystem->bgConfig, v1->unk_264, 3, 0, 0, 32, 32, 0, 0);
 
         {
             GXRgb v6 = 0;
@@ -2133,6 +2154,7 @@ void EncounterEffect_GalacticBoss(SysTask *param0, void *param1)
         v0->param = Heap_Alloc(HEAP_ID_FIELD1, sizeof(UnkStruct_ov5_021E4B3C));
         memset(v0->param, 0, sizeof(UnkStruct_ov5_021E4B3C));
         v1 = v0->param;
+        v1->unk_00 = EncounterEffect_NewScreenWindow(v0->fieldSystem->bgConfig); // ENTRY P111: first
 
         EncounterEffect_InitSpriteCollection(&v1->unk_08, 1, 1);
 
@@ -2147,9 +2169,6 @@ void EncounterEffect_GalacticBoss(SysTask *param0, void *param1)
         GXLayers_EngineAToggleLayers(GX_PLANEMASK_OBJ, 1);
 
         v1->unk_04 = ov5_021DEBEC(HEAP_ID_FIELD1);
-
-        v1->unk_00 = Window_New(HEAP_ID_FIELD1, 1);
-        Window_Add(v0->fieldSystem->bgConfig, v1->unk_00, 3, 0, 0, 32, 32, 0, 0);
 
         {
             GXRgb v3 = 0;

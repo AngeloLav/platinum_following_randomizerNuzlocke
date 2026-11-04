@@ -860,10 +860,14 @@ static void ov5_021D1878(FieldSystem *fieldSystem)
     }
 
     {
-        int v2 = 10;
+        // ENTRY P97: overworld textures loaded per frame (vanilla 10, 5 in the Union Room). Each one's RAM copy
+        // is freed after its VRAM upload, so this caps the field heap peak during a map load: with 10, the Route
+        // 201 starter scene held ~60 KB of textures at once and ran out of heap once the follower's own
+        // resources were added. 2 per frame only spreads the loads over a few frames of the fade-in.
+        int v2 = 2;
 
         if (fieldSystem->mapLoadType == MAP_LOAD_TYPE_UNION) {
-            v2 = 5;
+            v2 = 2;
         }
 
         ov5_021ECC20(fieldSystem->mapObjMan, 32, MapObjectsToPreload_GetCount(fieldSystem->mapObjectsToPreload) + 3, MapObjectsToPreload_GetIDs(fieldSystem->mapObjectsToPreload), v2);

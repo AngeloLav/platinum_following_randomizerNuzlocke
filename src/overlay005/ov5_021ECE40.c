@@ -1479,8 +1479,15 @@ int ov5_021EDF30(int param0)
 static int ov5_021EDF3C(UnkStruct_ov5_021ED0A4 *param0, int param1, u32 param2, int param3)
 {
     UnkStruct_ov5_021EDF3C *v0 = param0->unk_100;
+    void *v3 = NULL;
 
-    if ((v0->unk_04 >= v0->unk_02) || (BillboardList_IsRedrawing(param0->unk_E0) == 1)) {
+    // ENTRY P97: load now only if the texture fits in the field heap; otherwise queue it like a texture over this
+    // frame's budget, and ov5_021EE030 loads it once this frame's uploads have freed their copies.
+    if ((v0->unk_04 < v0->unk_02) && (BillboardList_IsRedrawing(param0->unk_E0) != 1)) {
+        v3 = ov5_021EDCF4(param0, param2, 0);
+    }
+
+    if (v3 == NULL) {
         int v1 = 0;
         UnkStruct_ov5_021EDFBC *v2 = v0->unk_0C;
 
@@ -1501,13 +1508,9 @@ static int ov5_021EDF3C(UnkStruct_ov5_021ED0A4 *param0, int param1, u32 param2, 
         return 0;
     }
 
-    {
-        void *v3 = ov5_021EDCF4(param0, param2, 0);
-
-        ov5_021EE0E8(param0, param1, v3, param3);
-        v0->unk_04++;
-        return 1;
-    }
+    ov5_021EE0E8(param0, param1, v3, param3);
+    v0->unk_04++;
+    return 1;
 }
 
 static void ov5_021EDFBC(UnkStruct_ov5_021ED0A4 *param0, int param1)
@@ -1565,6 +1568,11 @@ static void ov5_021EE030(SysTask *param0, void *param1)
     while ((v2->unk_04 < v2->unk_02) && v0 < v2->unk_00) {
         if (v3->unk_0C != NULL) {
             void *v4 = ov5_021EDCF4(v1, v3->unk_00, 0);
+
+            // ENTRY P97: no room yet - leave it (and everything after it) queued until the next frame.
+            if (v4 == NULL) {
+                break;
+            }
 
             ov5_021EE0E8(v1, v3->unk_04, v4, v3->unk_08);
             v3->unk_0C = NULL;

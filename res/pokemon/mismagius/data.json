@@ -1,10 +1,10 @@
 {
     "base_stats": {
-        "hp": 60,
+        "hp": 90,
         "attack": 60,
         "defense": 60,
         "speed": 105,
-        "special_attack": 105,
+        "special_attack": 135,
         "special_defense": 105
     },
     "types": [ "TYPE_GHOST", "TYPE_GHOST" ],

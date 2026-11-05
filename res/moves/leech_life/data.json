@@ -9,9 +9,9 @@
     ],
     "class": "CLASS_PHYSICAL",
     "type": "TYPE_BUG",
-    "power": 20,
+    "power": 30,
     "accuracy": 100,
-    "pp": 15,
+    "pp": 25,
     "effect": {
         "type": "BATTLE_EFFECT_RECOVER_HALF_DAMAGE_DEALT",
         "chance": 0

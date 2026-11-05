@@ -1,11 +1,11 @@
 {
     "base_stats": {
-        "hp": 55,
-        "attack": 35,
-        "defense": 50,
-        "speed": 85,
-        "special_attack": 55,
-        "special_defense": 110
+        "hp": 85,
+        "attack": 115,
+        "defense": 110,
+        "speed": 95,
+        "special_attack": 95,
+        "special_defense": 130
     },
     "types": [ "TYPE_BUG", "TYPE_FLYING" ],
     "catch_rate": 90,
@@ -19,7 +19,7 @@
         "special_defense": 2
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_SILVERPOWDER",
         "rare": "ITEM_NONE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
@@ -37,18 +37,39 @@
             [ 1, "MOVE_TACKLE" ],
             [ 1, "MOVE_SUPERSONIC" ],
             [ 1, "MOVE_COMET_PUNCH" ],
+            [ 1, "MOVE_MACH_PUNCH" ],
+            [ 1, "MOVE_LEECH_LIFE" ],
             [ 6, "MOVE_SUPERSONIC" ],
+            [ 8, "MOVE_SUPERSONIC" ],
             [ 9, "MOVE_COMET_PUNCH" ],
             [ 14, "MOVE_LIGHT_SCREEN" ],
             [ 14, "MOVE_REFLECT" ],
             [ 14, "MOVE_SAFEGUARD" ],
+            [ 15, "MOVE_COMET_PUNCH" ],
+            [ 15, "MOVE_FIRE_PUNCH" ],
+            [ 15, "MOVE_ICE_PUNCH" ],
+            [ 15, "MOVE_THUNDER_PUNCH" ],
             [ 17, "MOVE_MACH_PUNCH" ],
+            [ 18, "MOVE_CONFUSION" ],
+            [ 20, "MOVE_MEGA_PUNCH" ],
+            [ 20, "MOVE_MACH_PUNCH" ],
             [ 24, "MOVE_BATON_PASS" ],
+            [ 24, "MOVE_LIGHT_SCREEN" ],
+            [ 24, "MOVE_REFLECT" ],
+            [ 24, "MOVE_SAFEGUARD" ],
             [ 29, "MOVE_SILVER_WIND" ],
+            [ 30, "MOVE_LEECH_LIFE" ],
+            [ 31, "MOVE_MACH_PUNCH" ],
+            [ 33, "MOVE_BATON_PASS" ],
+            [ 35, "MOVE_COMET_PUNCH" ],
             [ 36, "MOVE_AGILITY" ],
+            [ 39, "MOVE_DYNAMIC_PUNCH" ],
             [ 41, "MOVE_SWIFT" ],
+            [ 42, "MOVE_SWIFT" ],
             [ 48, "MOVE_DOUBLE_EDGE" ],
-            [ 53, "MOVE_BUG_BUZZ" ]
+            [ 51, "MOVE_AGILITY" ],
+            [ 53, "MOVE_BUG_BUZZ" ],
+            [ 60, "MOVE_DOUBLE_EDGE" ]
         ],
         "by_tm": [
             "TM01",

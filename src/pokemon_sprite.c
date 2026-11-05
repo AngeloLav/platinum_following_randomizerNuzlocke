@@ -9,6 +9,7 @@
 #include "math_util.h"
 #include "narc.h"
 #include "palette.h"
+#include "pokemon_color_mod.h"
 #include "pokemon_sprite.h"
 
 #include "res/pokemon/pl_otherpoke.naix"
@@ -1447,6 +1448,15 @@ static void BufferPokemonSpritePlttData(PokemonSpriteManager *monSpriteMan)
                 monSpriteMan->plttRawData[j + PALETTE_SIZE * i] = rawPlttData[j];
                 monSpriteMan->plttRawDataUnfaded[j + PALETTE_SIZE * i] = rawPlttData[j];
             }
+
+            // COLOR MOD (port of PokeHeartGold's Pokepic_RotatePalette/PokepicManager_BufferPlttData): rotate
+            // this sprite's palette by its own personality, in both the unfaded and (about to be re-derived
+            // from it) faded buffers. template.personality is already populated for every PokemonSprite
+            // consumer (battle, summary screen, PC box, starter select, etc. - it's required for Spinda spot
+            // generation, see PokemonSpriteTemplate's own comment in include/pokemon_sprite.h), so this one
+            // hook covers every 2D Pokemon sprite in the game without needing a separate hook per screen.
+            PersonalityRotatePalette(&monSpriteMan->plttRawData[PALETTE_SIZE * i], PALETTE_SIZE, monSpriteMan->sprites[i].template.personality);
+            PersonalityRotatePalette(&monSpriteMan->plttRawDataUnfaded[PALETTE_SIZE * i], PALETTE_SIZE, monSpriteMan->sprites[i].template.personality);
 
             Heap_Free(nclrFile);
 

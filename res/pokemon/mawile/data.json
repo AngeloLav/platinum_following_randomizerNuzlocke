@@ -1,7 +1,7 @@
 {
     "base_stats": {
-        "hp": 50,
-        "attack": 85,
+        "hp": 70,
+        "attack": 115,
         "defense": 85,
         "speed": 50,
         "special_attack": 55,
@@ -44,6 +44,9 @@
             [ 36, "MOVE_CRUNCH" ],
             [ 41, "MOVE_IRON_DEFENSE" ],
             [ 46, "MOVE_SUCKER_PUNCH" ],
+            [ 46, "MOVE_STOCKPILE" ],
+            [ 46, "MOVE_SWALLOW" ],
+            [ 46, "MOVE_SPIT_UP" ],
             [ 51, "MOVE_STOCKPILE" ],
             [ 51, "MOVE_SWALLOW" ],
             [ 51, "MOVE_SPIT_UP" ],

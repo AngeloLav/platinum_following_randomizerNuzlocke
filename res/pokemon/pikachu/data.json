@@ -1,10 +1,10 @@
 {
     "base_stats": {
-        "hp": 35,
-        "attack": 55,
+        "hp": 55,
+        "attack": 95,
         "defense": 30,
         "speed": 90,
-        "special_attack": 50,
+        "special_attack": 95,
         "special_defense": 40
     },
     "types": [ "TYPE_ELECTRIC", "TYPE_ELECTRIC" ],
@@ -37,16 +37,24 @@
             [ 1, "MOVE_THUNDER_SHOCK" ],
             [ 1, "MOVE_GROWL" ],
             [ 5, "MOVE_TAIL_WHIP" ],
+            [ 6, "MOVE_TAIL_WHIP" ],
+            [ 8, "MOVE_THUNDER_WAVE" ],
             [ 10, "MOVE_THUNDER_WAVE" ],
+            [ 11, "MOVE_QUICK_ATTACK" ],
             [ 13, "MOVE_QUICK_ATTACK" ],
+            [ 15, "MOVE_DOUBLE_TEAM" ],
             [ 18, "MOVE_DOUBLE_TEAM" ],
+            [ 20, "MOVE_SLAM" ],
             [ 21, "MOVE_SLAM" ],
             [ 26, "MOVE_THUNDERBOLT" ],
             [ 29, "MOVE_FEINT" ],
+            [ 33, "MOVE_AGILITY" ],
             [ 34, "MOVE_AGILITY" ],
             [ 37, "MOVE_DISCHARGE" ],
+            [ 41, "MOVE_THUNDER" ],
             [ 42, "MOVE_LIGHT_SCREEN" ],
-            [ 45, "MOVE_THUNDER" ]
+            [ 45, "MOVE_THUNDER" ],
+            [ 50, "MOVE_LIGHT_SCREEN" ]
         ],
         "by_tm": [
             "TM01",

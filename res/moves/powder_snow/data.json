@@ -11,7 +11,7 @@
     "type": "TYPE_ICE",
     "power": 40,
     "accuracy": 100,
-    "pp": 25,
+    "pp": 35,
     "effect": {
         "type": "BATTLE_EFFECT_FREEZE_HIT",
         "chance": 10

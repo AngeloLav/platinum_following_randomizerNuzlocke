@@ -23,6 +23,7 @@
 #include "field_map_change.h"
 #include "field_task.h"
 #include "field_transition.h"
+#include "follower_mon.h"
 #include "heap.h"
 #include "inlines.h"
 #include "location.h"
@@ -283,10 +284,12 @@ static BOOL sub_02056E20(FieldTask *taskMan)
         v1->unk_1C = ov5_021D431C();
         v2 = (UnkStruct_ov5_021D432C *)v1->unk_1C;
         ov5_021D4334(PlayerAvatar_GetXPos(fieldSystem->playerAvatar), PlayerAvatar_GetZPos(fieldSystem->playerAvatar), v2);
+        FollowerMon_EnterDoor(fieldSystem); // ENTRY P100: the follower goes into its Poke Ball as the player walks in
         (v1->unk_04)++;
         break;
     case 1:
         v2 = (UnkStruct_ov5_021D432C *)v1->unk_1C;
+        FollowerMon_UpdateEnterDoor(fieldSystem); // ENTRY P100
 
         if (ov5_021D433C(fieldSystem, v2)) {
             ov5_021D432C(v1->unk_1C);

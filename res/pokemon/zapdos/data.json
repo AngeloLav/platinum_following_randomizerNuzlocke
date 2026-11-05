@@ -4,7 +4,7 @@
         "attack": 90,
         "defense": 85,
         "speed": 100,
-        "special_attack": 125,
+        "special_attack": 145,
         "special_defense": 90
     },
     "types": [ "TYPE_ELECTRIC", "TYPE_FLYING" ],
@@ -19,8 +19,8 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "common": "ITEM_MAGNET",
+        "rare": "ITEM_MAGNET"
     },
     "gender_ratio": "GENDER_RATIO_NO_GENDER",
     "hatch_cycles": 80,
@@ -37,17 +37,26 @@
             [ 1, "MOVE_PECK" ],
             [ 1, "MOVE_THUNDER_SHOCK" ],
             [ 8, "MOVE_THUNDER_WAVE" ],
+            [ 13, "MOVE_THUNDER_WAVE" ],
             [ 15, "MOVE_DETECT" ],
             [ 22, "MOVE_PLUCK" ],
+            [ 25, "MOVE_AGILITY" ],
             [ 29, "MOVE_ANCIENT_POWER" ],
             [ 36, "MOVE_CHARGE" ],
+            [ 37, "MOVE_DETECT" ],
             [ 43, "MOVE_AGILITY" ],
+            [ 49, "MOVE_DRILL_PECK" ],
             [ 50, "MOVE_DISCHARGE" ],
             [ 57, "MOVE_ROOST" ],
+            [ 61, "MOVE_CHARGE" ],
+            [ 61, "MOVE_LIGHT_SCREEN" ],
             [ 64, "MOVE_LIGHT_SCREEN" ],
             [ 71, "MOVE_DRILL_PECK" ],
+            [ 73, "MOVE_LIGHT_SCREEN" ],
+            [ 73, "MOVE_THUNDER" ],
             [ 78, "MOVE_THUNDER" ],
-            [ 85, "MOVE_RAIN_DANCE" ]
+            [ 85, "MOVE_RAIN_DANCE" ],
+            [ 85, "MOVE_THUNDER" ]
         ],
         "by_tm": [
             "TM05",

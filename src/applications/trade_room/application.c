@@ -48,6 +48,7 @@
 #include "party.h"
 #include "pltt_transfer.h"
 #include "pokemon.h"
+#include "pokemon_color_mod.h"
 #include "pokemon_icon.h"
 #include "render_oam.h"
 #include "render_window.h"
@@ -170,6 +171,9 @@ static int TradeRoom_ResolveCursorMoveTarget(int currentSlot, int direction, Tra
 static void TradeRoom_MoveCursorSprite(int slot, Sprite *sprite, int cursorIdx);
 static int TradeRoom_UpdateCursor(u32 *directionFlag, int *slotIdx, Sprite *sprite, TradeRoomMonDisplayData *displayData, int side);
 static int TradeRoom_LoadMonPreviewSprite(int side, Pokemon *mon, u8 *destination, PokemonSpriteTemplate *psTemplate);
+
+// ENTRY P88: personality-rotated preview palettes, see TradeRoom_LoadMonPreviewPalette.
+static u16 sTradeRoomPreviewPalettes[2][PALETTE_SIZE];
 static void TradeRoom_RecordTradeInJournal(JournalEntry *journalEntry, Pokemon *mon);
 static void TradeRoom_SendChatotCry(ChatotCry *chatotCryData);
 static void TradeRoom_AddWaitDialHandle(TradeRoom *tradeRoom);
@@ -934,7 +938,7 @@ static void TradeRoom_VBlankCallback(void *param)
         int side = tradeRoom->pendingPreviewLoadSide - 1;
 
         GXS_LoadOBJ(tradeRoom->previewSpritePixelBuf[side], 0 + side * (TILE_SIZE_4BPP * 10 * 10), TILE_SIZE_4BPP * 10 * 10);
-        Graphics_LoadPalette(tradeRoom->previewSpriteTemplate[side].narcID, tradeRoom->previewSpriteTemplate[side].palette, 5, TILE_SIZE_4BPP * (2 + side), 32, HEAP_ID_TRADE_ROOM);
+        GXS_LoadOBJPltt(sTradeRoomPreviewPalettes[side], TILE_SIZE_4BPP * (2 + side), 32); // ENTRY P88: rotated copy
 
         tradeRoom->pendingPreviewLoadSide = 0;
     }
@@ -1260,6 +1264,22 @@ static void TradeRoom_InitSpriteRendering(TradeRoom *tradeRoom, NARC *narc)
     Graphics_LoadPalette(NARC_INDEX_POKETOOL__ICONGRA__PL_POKE_ICON, PokeIconPalettesFileIndex(), 1, PLTT_OFFSET(10), PLTT_OFFSET(4), HEAP_ID_TRADE_ROOM);
 }
 
+// ENTRY P88: the hovered Pokemon's preview on the bottom screen (HG shows it on the top screen) is drawn from raw tiles
+// with its palette loaded straight from the NARC during VBlank, so it never went through the colour mod's central
+// hook (pokemon_sprite.c). The palette is now loaded here, rotated by the Pokemon's personality like every other
+// Pokemon sprite (PersonalityRotatePalette - index 0 is left alone), and the VBlank callback uploads this copy.
+static void TradeRoom_LoadMonPreviewPalette(int side, PokemonSpriteTemplate *psTemplate, u32 personality)
+{
+    NNSG2dPaletteData *plttData;
+    void *nclrFile = Graphics_GetPlttData(psTemplate->narcID, psTemplate->palette, &plttData, HEAP_ID_TRADE_ROOM);
+
+    MI_CpuCopy16(plttData->pRawData, sTradeRoomPreviewPalettes[side], sizeof(sTradeRoomPreviewPalettes[side]));
+    Heap_Free(nclrFile);
+
+    PersonalityRotatePalette(sTradeRoomPreviewPalettes[side], PALETTE_SIZE, personality);
+    DC_FlushRange(sTradeRoomPreviewPalettes[side], sizeof(sTradeRoomPreviewPalettes[side]));
+}
+
 static int TradeRoom_LoadMonPreviewSprite(int side, Pokemon *mon, u8 *destination, PokemonSpriteTemplate *psTemplate)
 {
     Pokemon_BuildSpriteTemplate(psTemplate, mon, 2);
@@ -1270,6 +1290,7 @@ static int TradeRoom_LoadMonPreviewSprite(int side, Pokemon *mon, u8 *destinatio
     CharacterSprite_LoadPokemonSpriteRect(psTemplate->narcID, psTemplate->character, HEAP_ID_TRADE_ROOM, 0, 0, 10, 10, destination, personality, FALSE, FACE_FRONT, species);
 
     DC_FlushRange(destination, TILE_SIZE_4BPP * 10 * 10);
+    TradeRoom_LoadMonPreviewPalette(side, psTemplate, personality);
 
     return side + 1;
 }

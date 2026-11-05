@@ -1501,6 +1501,12 @@ void BattleController_EmitUpdatePartyMon(BattleSystem *battleSys, BattleContext 
         message.updateStats = 0;
     }
 
+    // ENTRY P99: Arceus' in-battle transformation (BattleSystem_TryArceusTransform) is never written back to the party
+    // Pokemon - after the battle it has the form its plate gives it, as before the battle.
+    if (battleCtx->battleMons[battler].species == SPECIES_ARCEUS) {
+        message.updateForm = 0;
+    }
+
     SendMessage(battleSys, COMM_RECIPIENT_CLIENT, battler, &message, sizeof(UpdatePartyMonMessage));
 }
 

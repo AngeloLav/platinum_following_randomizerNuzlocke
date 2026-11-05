@@ -19,7 +19,7 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_ORAN_BERRY",
         "rare": "ITEM_NONE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_75",
@@ -36,9 +36,11 @@
         "by_level": [
             [ 1, "MOVE_SING" ],
             [ 1, "MOVE_CHARM" ],
+            [ 4, "MOVE_DEFENSE_CURL" ],
             [ 5, "MOVE_DEFENSE_CURL" ],
             [ 9, "MOVE_POUND" ],
             [ 13, "MOVE_SWEET_KISS" ],
+            [ 14, "MOVE_SWEET_KISS" ],
             [ 17, "MOVE_COPYCAT" ]
         ],
         "by_tm": [

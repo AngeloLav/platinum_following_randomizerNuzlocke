@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "rare": "ITEM_CHESTO_BERRY"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 20,
@@ -43,17 +43,26 @@
             [ 1, "MOVE_DETECT" ],
             [ 4, "MOVE_MEDITATE" ],
             [ 8, "MOVE_CONFUSION" ],
+            [ 9, "MOVE_CONFUSION" ],
             [ 11, "MOVE_DETECT" ],
+            [ 12, "MOVE_DETECT" ],
             [ 15, "MOVE_HIDDEN_POWER" ],
+            [ 17, "MOVE_HIDDEN_POWER" ],
             [ 18, "MOVE_MIND_READER" ],
+            [ 20, "MOVE_SWAGGER" ],
             [ 22, "MOVE_FEINT" ],
             [ 25, "MOVE_CALM_MIND" ],
+            [ 25, "MOVE_MIND_READER" ],
+            [ 28, "MOVE_CALM_MIND" ],
             [ 29, "MOVE_FORCE_PALM" ],
             [ 32, "MOVE_HI_JUMP_KICK" ],
+            [ 33, "MOVE_HI_JUMP_KICK" ],
             [ 36, "MOVE_PSYCH_UP" ],
             [ 42, "MOVE_POWER_TRICK" ],
+            [ 47, "MOVE_REVERSAL" ],
             [ 49, "MOVE_REVERSAL" ],
-            [ 55, "MOVE_RECOVER" ]
+            [ 55, "MOVE_RECOVER" ],
+            [ 56, "MOVE_RECOVER" ]
         ],
         "by_tm": [
             "TM01",

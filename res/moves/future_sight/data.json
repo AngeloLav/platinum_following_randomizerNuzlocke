@@ -9,7 +9,7 @@
     ],
     "class": "CLASS_SPECIAL",
     "type": "TYPE_PSYCHIC",
-    "power": 80,
+    "power": 120,
     "accuracy": 90,
     "pp": 15,
     "effect": {

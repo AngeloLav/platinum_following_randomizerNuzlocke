@@ -1,15 +1,15 @@
 {
     "base_stats": {
-        "hp": 65,
-        "attack": 80,
-        "defense": 40,
-        "speed": 75,
+        "hp": 85,
+        "attack": 120,
+        "defense": 60,
+        "speed": 95,
         "special_attack": 45,
-        "special_defense": 80
+        "special_defense": 100
     },
     "types": [ "TYPE_BUG", "TYPE_POISON" ],
     "catch_rate": 45,
-    "base_exp_reward": 159,
+    "base_exp_reward": 181,
     "ev_yields": {
         "hp": 0,
         "attack": 2,
@@ -19,8 +19,8 @@
         "special_defense": 1
     },
     "held_items": {
-        "common": "ITEM_NONE",
-        "rare": "ITEM_POISON_BARB"
+        "common": "ITEM_POISON_BARB",
+        "rare": "ITEM_QUICK_CLAW"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 15,
@@ -35,17 +35,31 @@
     "learnset": {
         "by_level": [
             [ 1, "MOVE_FURY_ATTACK" ],
+            [ 1, "MOVE_SPIKE_CANNON" ],
             [ 10, "MOVE_FURY_ATTACK" ],
+            [ 10, "MOVE_SPIKE_CANNON" ],
             [ 13, "MOVE_FOCUS_ENERGY" ],
+            [ 15, "MOVE_FOCUS_ENERGY" ],
             [ 16, "MOVE_TWINEEDLE" ],
+            [ 18, "MOVE_ACID" ],
             [ 19, "MOVE_RAGE" ],
+            [ 20, "MOVE_TWINEEDLE" ],
             [ 22, "MOVE_PURSUIT" ],
             [ 25, "MOVE_TOXIC_SPIKES" ],
+            [ 25, "MOVE_RAGE" ],
             [ 28, "MOVE_PIN_MISSILE" ],
+            [ 29, "MOVE_MEGAHORN" ],
+            [ 30, "MOVE_PURSUIT" ],
             [ 31, "MOVE_AGILITY" ],
             [ 34, "MOVE_ASSURANCE" ],
+            [ 35, "MOVE_PIN_MISSILE" ],
             [ 37, "MOVE_POISON_JAB" ],
-            [ 40, "MOVE_ENDEAVOR" ]
+            [ 40, "MOVE_ENDEAVOR" ],
+            [ 40, "MOVE_AGILITY" ],
+            [ 40, "MOVE_SLUDGE_BOMB" ],
+            [ 45, "MOVE_ENDEAVOR" ],
+            [ 45, "MOVE_MEGAHORN" ],
+            [ 50, "MOVE_EXTREME_SPEED" ]
         ],
         "by_tm": [
             "TM06",

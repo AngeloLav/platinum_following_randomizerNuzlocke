@@ -339,6 +339,12 @@ static BOOL ScrCmd_LockAll(ScriptContext *ctx);
 static BOOL sub_020410CC(ScriptContext *ctx);
 static BOOL ScriptContext_WaitFollowerMonStep(ScriptContext *ctx);
 static void FollowerMon_FollowScriptedPlayer(FieldSystem *fieldSystem, MapObject *object);
+static void StartScriptedMovement(FieldSystem *fieldSystem, MapObject *object, const MapObjectAnimCmd *cmds);
+static BOOL ScriptContext_StartMovementAfterFollower(ScriptContext *ctx);
+
+// ENTRY P96: the movement ScrCmd_ApplyMovement holds back until the follower Pokemon has stepped out of its way.
+static MapObject *sFollowerPendingMover;
+static const MapObjectAnimCmd *sFollowerPendingCmds;
 static BOOL ScrCmd_ReleaseAll(ScriptContext *ctx);
 static BOOL ScrCmd_LockObject(ScriptContext *ctx);
 static BOOL ScrCmd_ReleaseObject(ScriptContext *ctx);
@@ -2059,13 +2065,45 @@ static BOOL ScrCmd_ApplyMovement(ScriptContext *ctx)
         return FALSE;
     }
 
-    FollowerMon_FollowScriptedPlayer(ctx->fieldSystem, object);
+    const MapObjectAnimCmd *cmds = (MapObjectAnimCmd *)(ctx->scriptPtr + movementOffset);
 
-    SysTask *task = MapObject_StartAnimation(object, (MapObjectAnimCmd *)(ctx->scriptPtr + movementOffset));
-    u8 *movementCount = FieldSystem_GetScriptMemberPtr(ctx->fieldSystem, SCRIPT_MANAGER_MOVEMENT_COUNT);
-    (*movementCount)++;
-    sub_02040F28(ctx->fieldSystem, task, NULL);
+    // ENTRY P96: if the follower Pokemon stands anywhere on this object's path, it steps aside (or goes into its ball)
+    // first, and this movement starts once it is out of the way - nobody walks through it or stops on its tile.
+    FollowerMonPath path;
+
+    FollowerMonPath_FromAnimCmds(&path, object, cmds);
+
+    if (FollowerMon_ClearPath(ctx->fieldSystem, &path, object)) {
+        sFollowerPendingMover = object;
+        sFollowerPendingCmds = cmds;
+        ScriptContext_Pause(ctx, ScriptContext_StartMovementAfterFollower);
+        return TRUE;
+    }
+
+    StartScriptedMovement(ctx->fieldSystem, object, cmds);
     return FALSE;
+}
+
+static void StartScriptedMovement(FieldSystem *fieldSystem, MapObject *object, const MapObjectAnimCmd *cmds)
+{
+    FollowerMon_FollowScriptedPlayer(fieldSystem, object);
+
+    SysTask *task = MapObject_StartAnimation(object, cmds);
+    u8 *movementCount = FieldSystem_GetScriptMemberPtr(fieldSystem, SCRIPT_MANAGER_MOVEMENT_COUNT);
+    (*movementCount)++;
+    sub_02040F28(fieldSystem, task, NULL);
+}
+
+static BOOL ScriptContext_StartMovementAfterFollower(ScriptContext *ctx)
+{
+    if (FollowerMon_IsClearingPath(ctx->fieldSystem)) {
+        return FALSE;
+    }
+
+    StartScriptedMovement(ctx->fieldSystem, sFollowerPendingMover, sFollowerPendingCmds);
+    sFollowerPendingMover = NULL;
+    sFollowerPendingCmds = NULL;
+    return TRUE;
 }
 
 static BOOL ScrCmd_Unused_2A1(ScriptContext *ctx)

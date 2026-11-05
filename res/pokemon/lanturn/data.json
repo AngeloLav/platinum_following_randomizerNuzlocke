@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_DEEPSEASCALE"
+        "rare": "ITEM_YELLOW_SHARD"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 20,
@@ -37,21 +37,32 @@
             [ 1, "MOVE_BUBBLE" ],
             [ 1, "MOVE_SUPERSONIC" ],
             [ 1, "MOVE_THUNDER_WAVE" ],
+            [ 5, "MOVE_SUPERSONIC" ],
             [ 6, "MOVE_THUNDER_WAVE" ],
             [ 9, "MOVE_FLAIL" ],
             [ 12, "MOVE_WATER_GUN" ],
+            [ 13, "MOVE_FLAIL" ],
             [ 17, "MOVE_CONFUSE_RAY" ],
+            [ 17, "MOVE_WATER_GUN" ],
             [ 20, "MOVE_SPARK" ],
             [ 23, "MOVE_TAKE_DOWN" ],
+            [ 25, "MOVE_SPARK" ],
             [ 27, "MOVE_STOCKPILE" ],
             [ 27, "MOVE_SWALLOW" ],
             [ 27, "MOVE_SPIT_UP" ],
             [ 30, "MOVE_BUBBLE_BEAM" ],
+            [ 32, "MOVE_CONFUSE_RAY" ],
+            [ 33, "MOVE_CONFUSE_RAY" ],
             [ 35, "MOVE_SIGNAL_BEAM" ],
             [ 40, "MOVE_DISCHARGE" ],
+            [ 43, "MOVE_TAKE_DOWN" ],
+            [ 45, "MOVE_TAKE_DOWN" ],
             [ 47, "MOVE_AQUA_RING" ],
+            [ 50, "MOVE_HYDRO_PUMP" ],
             [ 52, "MOVE_HYDRO_PUMP" ],
-            [ 57, "MOVE_CHARGE" ]
+            [ 53, "MOVE_HYDRO_PUMP" ],
+            [ 57, "MOVE_CHARGE" ],
+            [ 61, "MOVE_CHARGE" ]
         ],
         "by_tm": [
             "TM03",

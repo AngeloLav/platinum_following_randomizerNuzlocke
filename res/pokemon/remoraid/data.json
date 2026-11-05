@@ -37,14 +37,21 @@
             [ 1, "MOVE_WATER_GUN" ],
             [ 6, "MOVE_LOCK_ON" ],
             [ 10, "MOVE_PSYBEAM" ],
+            [ 11, "MOVE_LOCK_ON" ],
             [ 14, "MOVE_AURORA_BEAM" ],
             [ 19, "MOVE_BUBBLE_BEAM" ],
+            [ 22, "MOVE_PSYBEAM" ],
+            [ 22, "MOVE_AURORA_BEAM" ],
+            [ 22, "MOVE_BUBBLE_BEAM" ],
             [ 23, "MOVE_FOCUS_ENERGY" ],
             [ 27, "MOVE_BULLET_SEED" ],
             [ 32, "MOVE_WATER_PULSE" ],
+            [ 33, "MOVE_FOCUS_ENERGY" ],
             [ 36, "MOVE_SIGNAL_BEAM" ],
             [ 40, "MOVE_ICE_BEAM" ],
-            [ 45, "MOVE_HYPER_BEAM" ]
+            [ 44, "MOVE_ICE_BEAM" ],
+            [ 45, "MOVE_HYPER_BEAM" ],
+            [ 55, "MOVE_HYPER_BEAM" ]
         ],
         "by_tm": [
             "TM03",

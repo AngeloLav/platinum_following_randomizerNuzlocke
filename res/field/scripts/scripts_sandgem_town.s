@@ -205,6 +205,7 @@ SandgemTown_LucasLetsGoIn:
 
 SandgemTown_EnterPokemonResearchLab:
     CloseMessage
+    FollowerMonEnterDoor @ ENTRY P107: scripted lab door - the follower goes into its ball behind the player first
     ApplyMovement LOCALID_SANDGEM_COUNTERPART, SandgemTown_Movement_CounterpartEnterLab
     ApplyMovement LOCALID_PLAYER, SandgemTown_Movement_PlayerEnterLab
     WaitMovement

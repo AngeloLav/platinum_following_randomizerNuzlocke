@@ -19,8 +19,8 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_ASPEAR_BERRY",
-        "rare": "ITEM_ASPEAR_BERRY"
+        "common": "ITEM_RAWST_BERRY",
+        "rare": "ITEM_RAWST_BERRY"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_ONLY",
     "hatch_cycles": 25,
@@ -35,19 +35,32 @@
     "learnset": {
         "by_level": [
             [ 1, "MOVE_POUND" ],
+            [ 1, "MOVE_LICK" ],
             [ 5, "MOVE_LICK" ],
             [ 8, "MOVE_SWEET_KISS" ],
+            [ 9, "MOVE_SWEET_KISS" ],
             [ 11, "MOVE_POWDER_SNOW" ],
+            [ 13, "MOVE_POWDER_SNOW" ],
             [ 15, "MOVE_CONFUSION" ],
             [ 18, "MOVE_SING" ],
             [ 21, "MOVE_MEAN_LOOK" ],
+            [ 21, "MOVE_CONFUSION" ],
             [ 25, "MOVE_FAKE_TEARS" ],
+            [ 25, "MOVE_SING" ],
             [ 28, "MOVE_LUCKY_CHANT" ],
             [ 31, "MOVE_AVALANCHE" ],
+            [ 33, "MOVE_MEAN_LOOK" ],
             [ 35, "MOVE_PSYCHIC" ],
+            [ 37, "MOVE_FAKE_TEARS" ],
+            [ 37, "MOVE_PSYCHIC" ],
             [ 38, "MOVE_COPYCAT" ],
             [ 41, "MOVE_PERISH_SONG" ],
-            [ 45, "MOVE_BLIZZARD" ]
+            [ 45, "MOVE_BLIZZARD" ],
+            [ 45, "MOVE_PSYCHIC" ],
+            [ 45, "MOVE_PERISH_SONG" ],
+            [ 49, "MOVE_PERISH_SONG" ],
+            [ 49, "MOVE_BLIZZARD" ],
+            [ 57, "MOVE_BLIZZARD" ]
         ],
         "by_tm": [
             "TM03",

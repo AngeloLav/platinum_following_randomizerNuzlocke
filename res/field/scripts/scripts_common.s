@@ -180,6 +180,7 @@ CommonScript_NurseAcceptHealPokemon:
     ChangePlayerState
     ApplyMovement LOCALID_PLAYER, CommonScript_Movement_PlayerGivePokemon
     WaitMovement
+    FollowerMonPokecenterHop @ ENTRY P96 (HG scr_seq_0003 ScrCmd_599): the follower hops onto the counter, into its ball
     GetTrainerCardLevel VAR_RESULT
     CallIfGe VAR_RESULT, TRAINER_CARD_LEVEL_GOLD, CommonScript_TakePokemonGoldCard
     CallIfLt VAR_RESULT, TRAINER_CARD_LEVEL_GOLD, CommonScript_TakePokemon
@@ -423,7 +424,11 @@ CommonScript_PoisonWhiteout:
 
 CommonScript_SaveAndStoreResult:
     ClearFlag FLAG_MAP_LOCAL_SAVE_EXTRA_BLOCK
-    Call CommonScript_TrySaveGame
+    @ HG SYNC (port of PokeHeartGold ENTRY CI/CJ, reworked for Platinum's script-driven save menu): Save from the Start
+    @ Menu (this script, common script 5, started by StartMenu_Save) goes straight to saving - no "Would you like to save
+    @ the game?" and no "Is it OK to overwrite it?". Other saves (Common_SaveGame: link contests, Union Room, ...) keep
+    @ their prompts through CommonScript_TrySaveGame.
+    Call CommonScript_TrySaveGameNoPrompt
     StoreSaveResult VAR_RESULT
     CloseMessage
     End
@@ -452,6 +457,23 @@ CommonScript_TrySaveGame:
     GoToIfEq VAR_RESULT, SAVE_TYPE_NO_DATA_EXISTS, CommonScript_SavingALotOfData
     GoToIfEq VAR_RESULT, SAVE_TYPE_FULL_SAVE, CommonScript_FullSaveAskOverwrite
     GoToIfEq VAR_RESULT, SAVE_TYPE_QUICK_SAVE, CommonScript_QuickSaveAskOverwrite
+    End
+
+@ HG SYNC: CommonScript_TrySaveGame without the two Yes/No questions, as if both were answered Yes. The "impossible to
+@ save" check and the save info window stay; every path ends in the same Return as CommonScript_TrySaveGame's.
+CommonScript_TrySaveGameNoPrompt:
+    CheckSaveType VAR_RESULT
+    GoToIfEq VAR_RESULT, SAVE_TYPE_OVERWRITE, CommonScript_SaveTypeOverwrite
+    OpenSaveInfo
+    CheckSaveType VAR_RESULT
+    GoToIfEq VAR_RESULT, SAVE_TYPE_NO_DATA_EXISTS, CommonScript_SavingALotOfData
+    GoToIfEq VAR_RESULT, SAVE_TYPE_FULL_SAVE, CommonScript_SavingALotOfData
+    GoToIfEq VAR_RESULT, SAVE_TYPE_QUICK_SAVE, CommonScript_QuickSaveNoPrompt
+    End
+
+CommonScript_QuickSaveNoPrompt:
+    GoToIfUnset FLAG_MAP_LOCAL_SAVE_EXTRA_BLOCK, CommonScript_StartQuickSave
+    GoToIfSet FLAG_MAP_LOCAL_SAVE_EXTRA_BLOCK, CommonScript_QuickSaveCheckMiscFlag
     End
 
 CommonScript_SaveTypeOverwrite:

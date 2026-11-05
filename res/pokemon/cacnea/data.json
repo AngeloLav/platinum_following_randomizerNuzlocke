@@ -45,9 +45,13 @@
             [ 29, "MOVE_FAINT_ATTACK" ],
             [ 33, "MOVE_SPIKES" ],
             [ 37, "MOVE_SUCKER_PUNCH" ],
+            [ 37, "MOVE_NEEDLE_ARM" ],
             [ 41, "MOVE_PAYBACK" ],
+            [ 41, "MOVE_COTTON_SPORE" ],
             [ 45, "MOVE_NEEDLE_ARM" ],
+            [ 45, "MOVE_SANDSTORM" ],
             [ 49, "MOVE_COTTON_SPORE" ],
+            [ 49, "MOVE_DESTINY_BOND" ],
             [ 53, "MOVE_SANDSTORM" ],
             [ 57, "MOVE_DESTINY_BOND" ]
         ],

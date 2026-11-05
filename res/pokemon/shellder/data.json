@@ -35,18 +35,31 @@
     "learnset": {
         "by_level": [
             [ 1, "MOVE_TACKLE" ],
+            [ 1, "MOVE_WITHDRAW" ],
             [ 4, "MOVE_WITHDRAW" ],
             [ 8, "MOVE_SUPERSONIC" ],
+            [ 8, "MOVE_ICICLE_SPEAR" ],
+            [ 9, "MOVE_SUPERSONIC" ],
             [ 13, "MOVE_ICICLE_SPEAR" ],
+            [ 15, "MOVE_SUPERSONIC" ],
             [ 16, "MOVE_PROTECT" ],
+            [ 17, "MOVE_AURORA_BEAM" ],
             [ 20, "MOVE_LEER" ],
+            [ 22, "MOVE_AURORA_BEAM" ],
             [ 25, "MOVE_CLAMP" ],
+            [ 25, "MOVE_PROTECT" ],
             [ 28, "MOVE_ICE_SHARD" ],
+            [ 29, "MOVE_PROTECT" ],
             [ 32, "MOVE_AURORA_BEAM" ],
+            [ 33, "MOVE_LEER" ],
+            [ 36, "MOVE_LEER" ],
             [ 37, "MOVE_WHIRLPOOL" ],
             [ 40, "MOVE_IRON_DEFENSE" ],
+            [ 41, "MOVE_CLAMP" ],
+            [ 43, "MOVE_CLAMP" ],
             [ 44, "MOVE_BRINE" ],
-            [ 49, "MOVE_ICE_BEAM" ]
+            [ 49, "MOVE_ICE_BEAM" ],
+            [ 50, "MOVE_ICE_BEAM" ]
         ],
         "by_tm": [
             "TM03",

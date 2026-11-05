@@ -9,9 +9,9 @@
     ],
     "class": "CLASS_SPECIAL",
     "type": "TYPE_DRAGON",
-    "power": 60,
+    "power": 80,
     "accuracy": 100,
-    "pp": 20,
+    "pp": 25,
     "effect": {
         "type": "BATTLE_EFFECT_PARALYZE_HIT",
         "chance": 30

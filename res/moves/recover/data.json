@@ -10,7 +10,7 @@
     "type": "TYPE_NORMAL",
     "power": 0,
     "accuracy": 0,
-    "pp": 10,
+    "pp": 20,
     "effect": {
         "type": "BATTLE_EFFECT_RESTORE_HALF_HP",
         "chance": 0

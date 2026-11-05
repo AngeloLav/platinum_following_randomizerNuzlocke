@@ -1,10 +1,10 @@
 {
     "base_stats": {
-        "hp": 75,
-        "attack": 105,
+        "hp": 85,
+        "attack": 135,
         "defense": 75,
         "speed": 45,
-        "special_attack": 105,
+        "special_attack": 135,
         "special_defense": 75
     },
     "types": [ "TYPE_WATER", "TYPE_WATER" ],
@@ -42,15 +42,22 @@
             [ 1, "MOVE_AURORA_BEAM" ],
             [ 6, "MOVE_CONSTRICT" ],
             [ 10, "MOVE_PSYBEAM" ],
+            [ 11, "MOVE_CONSTRICT" ],
             [ 14, "MOVE_AURORA_BEAM" ],
             [ 19, "MOVE_BUBBLE_BEAM" ],
+            [ 22, "MOVE_PSYBEAM" ],
+            [ 22, "MOVE_AURORA_BEAM" ],
+            [ 22, "MOVE_BUBBLE_BEAM" ],
             [ 23, "MOVE_FOCUS_ENERGY" ],
             [ 25, "MOVE_OCTAZOOKA" ],
             [ 29, "MOVE_BULLET_SEED" ],
             [ 36, "MOVE_WRING_OUT" ],
+            [ 38, "MOVE_FOCUS_ENERGY" ],
             [ 42, "MOVE_SIGNAL_BEAM" ],
             [ 48, "MOVE_ICE_BEAM" ],
-            [ 55, "MOVE_HYPER_BEAM" ]
+            [ 54, "MOVE_ICE_BEAM" ],
+            [ 55, "MOVE_HYPER_BEAM" ],
+            [ 70, "MOVE_HYPER_BEAM" ]
         ],
         "by_tm": [
             "TM03",

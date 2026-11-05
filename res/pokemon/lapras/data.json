@@ -19,8 +19,8 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "common": "ITEM_MYSTIC_WATER",
+        "rare": "ITEM_MYSTIC_WATER"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 40,
@@ -39,16 +39,31 @@
             [ 1, "MOVE_WATER_GUN" ],
             [ 4, "MOVE_MIST" ],
             [ 7, "MOVE_CONFUSE_RAY" ],
+            [ 7, "MOVE_MIST" ],
+            [ 8, "MOVE_MIST" ],
             [ 10, "MOVE_ICE_SHARD" ],
+            [ 13, "MOVE_BODY_SLAM" ],
             [ 14, "MOVE_WATER_PULSE" ],
+            [ 15, "MOVE_BODY_SLAM" ],
             [ 18, "MOVE_BODY_SLAM" ],
+            [ 19, "MOVE_CONFUSE_RAY" ],
             [ 22, "MOVE_RAIN_DANCE" ],
+            [ 22, "MOVE_CONFUSE_RAY" ],
+            [ 25, "MOVE_PERISH_SONG" ],
             [ 27, "MOVE_PERISH_SONG" ],
+            [ 29, "MOVE_PERISH_SONG" ],
+            [ 31, "MOVE_ICE_BEAM" ],
             [ 32, "MOVE_ICE_BEAM" ],
+            [ 36, "MOVE_ICE_BEAM" ],
             [ 37, "MOVE_BRINE" ],
+            [ 37, "MOVE_RAIN_DANCE" ],
             [ 43, "MOVE_SAFEGUARD" ],
+            [ 43, "MOVE_RAIN_DANCE" ],
             [ 49, "MOVE_HYDRO_PUMP" ],
-            [ 55, "MOVE_SHEER_COLD" ]
+            [ 50, "MOVE_SAFEGUARD" ],
+            [ 55, "MOVE_SHEER_COLD" ],
+            [ 57, "MOVE_HYDRO_PUMP" ],
+            [ 60, "MOVE_BLIZZARD" ]
         ],
         "by_tm": [
             "TM03",

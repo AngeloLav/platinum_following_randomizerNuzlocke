@@ -1,11 +1,11 @@
 {
     "base_stats": {
-        "hp": 55,
-        "attack": 55,
-        "defense": 50,
-        "speed": 55,
-        "special_attack": 45,
-        "special_defense": 65
+        "hp": 75,
+        "attack": 75,
+        "defense": 70,
+        "speed": 75,
+        "special_attack": 65,
+        "special_defense": 75
     },
     "types": [ "TYPE_NORMAL", "TYPE_NORMAL" ],
     "catch_rate": 45,
@@ -19,7 +19,7 @@
         "special_defense": 1
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_SILK_SCARF",
         "rare": "ITEM_NONE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_12_5",
@@ -39,9 +39,14 @@
             [ 1, "MOVE_HELPING_HAND" ],
             [ 8, "MOVE_SAND_ATTACK" ],
             [ 15, "MOVE_GROWL" ],
+            [ 16, "MOVE_GROWL" ],
             [ 22, "MOVE_QUICK_ATTACK" ],
+            [ 23, "MOVE_QUICK_ATTACK" ],
             [ 29, "MOVE_BITE" ],
+            [ 30, "MOVE_BITE" ],
             [ 36, "MOVE_BATON_PASS" ],
+            [ 36, "MOVE_FOCUS_ENERGY" ],
+            [ 42, "MOVE_TAKE_DOWN" ],
             [ 43, "MOVE_TAKE_DOWN" ],
             [ 50, "MOVE_LAST_RESORT" ],
             [ 57, "MOVE_TRUMP_CARD" ]

@@ -4,7 +4,7 @@
         "attack": 100,
         "defense": 60,
         "speed": 80,
-        "special_attack": 90,
+        "special_attack": 135,
         "special_defense": 60
     },
     "types": [ "TYPE_GRASS", "TYPE_DARK" ],
@@ -38,6 +38,10 @@
             [ 1, "MOVE_WHIRLWIND" ],
             [ 1, "MOVE_NASTY_PLOT" ],
             [ 1, "MOVE_RAZOR_LEAF" ],
+            [ 1, "MOVE_POUND" ],
+            [ 1, "MOVE_HARDEN" ],
+            [ 1, "MOVE_GROWTH" ],
+            [ 1, "MOVE_NATURE_POWER" ],
             [ 49, "MOVE_LEAF_STORM" ]
         ],
         "by_tm": [

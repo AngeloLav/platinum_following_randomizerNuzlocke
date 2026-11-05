@@ -8,7 +8,7 @@
     ],
     "class": "CLASS_PHYSICAL",
     "type": "TYPE_DRAGON",
-    "power": 80,
+    "power": 85,
     "accuracy": 100,
     "pp": 15,
     "effect": {

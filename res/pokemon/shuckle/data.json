@@ -1,15 +1,15 @@
 {
     "base_stats": {
-        "hp": 20,
-        "attack": 10,
-        "defense": 230,
+        "hp": 30,
+        "attack": 25,
+        "defense": 255,
         "speed": 5,
-        "special_attack": 10,
-        "special_defense": 230
+        "special_attack": 25,
+        "special_defense": 255
     },
     "types": [ "TYPE_BUG", "TYPE_ROCK" ],
     "catch_rate": 190,
-    "base_exp_reward": 80,
+    "base_exp_reward": 140,
     "ev_yields": {
         "hp": 0,
         "attack": 0,
@@ -38,10 +38,15 @@
             [ 1, "MOVE_CONSTRICT" ],
             [ 1, "MOVE_BIDE" ],
             [ 9, "MOVE_ENCORE" ],
+            [ 9, "MOVE_WRAP" ],
             [ 14, "MOVE_SAFEGUARD" ],
+            [ 14, "MOVE_ENCORE" ],
             [ 22, "MOVE_WRAP" ],
+            [ 23, "MOVE_SAFEGUARD" ],
             [ 27, "MOVE_REST" ],
+            [ 28, "MOVE_BIDE" ],
             [ 35, "MOVE_GASTRO_ACID" ],
+            [ 37, "MOVE_REST" ],
             [ 40, "MOVE_BUG_BITE" ],
             [ 48, "MOVE_POWER_TRICK" ]
         ],

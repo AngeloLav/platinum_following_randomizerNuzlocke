@@ -1,11 +1,11 @@
 {
     "base_stats": {
-        "hp": 100,
+        "hp": 110,
         "attack": 100,
         "defense": 100,
         "speed": 100,
-        "special_attack": 100,
-        "special_defense": 100
+        "special_attack": 140,
+        "special_defense": 140
     },
     "types": [ "TYPE_PSYCHIC", "TYPE_GRASS" ],
     "catch_rate": 45,
@@ -40,9 +40,13 @@
             [ 1, "MOVE_HEAL_BELL" ],
             [ 10, "MOVE_SAFEGUARD" ],
             [ 19, "MOVE_MAGICAL_LEAF" ],
+            [ 20, "MOVE_ANCIENT_POWER" ],
             [ 28, "MOVE_ANCIENT_POWER" ],
+            [ 30, "MOVE_FUTURE_SIGHT" ],
             [ 37, "MOVE_BATON_PASS" ],
+            [ 40, "MOVE_BATON_PASS" ],
             [ 46, "MOVE_NATURAL_GIFT" ],
+            [ 50, "MOVE_PERISH_SONG" ],
             [ 55, "MOVE_HEAL_BLOCK" ],
             [ 64, "MOVE_FUTURE_SIGHT" ],
             [ 73, "MOVE_HEALING_WISH" ],

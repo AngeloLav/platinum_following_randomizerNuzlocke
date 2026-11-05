@@ -61,8 +61,76 @@ static PMBackLightSwitch sSavedBacklightState;
 BOOL gIgnoreCartridgeForWake;
 extern const ApplicationManagerTemplate gOpeningCutsceneAppTemplate;
 
+// ---------------------------------------------------------------------------------------------------------------------
+// ENTRY P110: R4 / YSMENU COMPATIBILITY (same fix as HG ENTRY DV). YSMenu (the R4 / DSTT menu) recognises the game code CPUE
+// and writes its anti-piracy fix for the ORIGINAL Platinum to a fixed address before the game starts (its TTMenu/extinfo.dat):
+// "nop; skip" (C0 46 02 E0) over 4 bytes at 0x02017C28. In this modified game other code lives there (InitSystem+0x84 in the
+// build this was written for), so - depending on where each build's code happens to land - the game could hang on a white
+// screen on an R4 while running everywhere else. tools/debug/ysmguard.py copies the build's own bytes of that place into this
+// table when the ROM is packed; if the place holds YSMenu's bytes at startup, they are put back here, before InitSystem.
+// Nothing else (emulators, nds-bootstrap / TWiLight, real cartridges) is affected.
+// ---------------------------------------------------------------------------------------------------------------------
+typedef struct YSMenuGuardSite {
+    u32 addr;
+    u32 size;
+    u8 ysmenu[8]; // what YSMenu writes there
+    u8 orig[8]; // this build's own bytes (filled in by tools/debug/ysmguard.py)
+} YSMenuGuardSite;
+
+typedef struct YSMenuGuard {
+    char magic[16]; // located by tools/debug/ysmguard.py
+    u32 numSites;
+    u32 filled; // 1 once ysmguard.py has filled in orig[]
+    YSMenuGuardSite sites[1];
+} YSMenuGuard;
+
+YSMenuGuard gYSMenuGuard = {
+    "YSMENU_GUARD_V1",
+    1,
+    0,
+    {
+        { 0x02017C28, 4, { 0xC0, 0x46, 0x02, 0xE0 } },
+    },
+};
+
+static void YSMenuGuard_UndoPatch(void)
+{
+    volatile YSMenuGuard *guard = &gYSMenuGuard;
+
+    if (guard->filled != 1) {
+        return;
+    }
+
+    for (u32 i = 0; i < guard->numSites; i++) {
+        volatile YSMenuGuardSite *site = &guard->sites[i];
+        vu8 *code = (vu8 *)site->addr;
+        BOOL patched = TRUE, sameAsOrig = TRUE;
+
+        for (u32 j = 0; j < site->size; j++) {
+            if (code[j] != site->ysmenu[j]) {
+                patched = FALSE;
+            }
+
+            if (site->orig[j] != site->ysmenu[j]) {
+                sameAsOrig = FALSE;
+            }
+        }
+
+        // YSMenu's bytes are there and they are not this build's own: put the build's own back
+        if (patched && !sameAsOrig) {
+            for (u32 j = 0; j < site->size; j++) {
+                code[j] = site->orig[j];
+            }
+
+            DC_FlushRange((void *)site->addr, site->size);
+            IC_InvalidateRange((void *)site->addr, site->size);
+        }
+    }
+}
+
 void NitroMain(void)
 {
+    YSMenuGuard_UndoPatch(); // ENTRY P110: before InitSystem (where YSMenu's patch landed when this was written)
     InitSystem();
     InitVRAM();
     InitKeypadAndTouchpad();

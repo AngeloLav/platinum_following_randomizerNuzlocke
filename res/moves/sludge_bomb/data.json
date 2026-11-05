@@ -11,7 +11,7 @@
     "type": "TYPE_POISON",
     "power": 90,
     "accuracy": 100,
-    "pp": 10,
+    "pp": 15,
     "effect": {
         "type": "BATTLE_EFFECT_POISON_HIT",
         "chance": 30

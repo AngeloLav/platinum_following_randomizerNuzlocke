@@ -3,6 +3,7 @@
 #include "constants/battle.h"
 #include "constants/pokemon.h"
 #include "generated/trainer_message_types.h"
+#include "generated/trainers.h"
 
 #include "struct_defs/trainer.h"
 
@@ -167,6 +168,85 @@ u8 TrainerClass_Gender(int trclass)
     return sTrainerClassGender[trclass];
 }
 
+// ENTRY P113: Champion Cynthia's set builds (both champion battles). Her Pokemon are otherwise rolled like every trainer's
+// (random personality and IVs); these pin the IVs that decide the custom types (HP IV -> type 1, Speed IV -> type 2) and
+// the ability donor (species = (Def IV << 5) | Sp.Def IV, plus NATIONAL_DEX_COUNT for the second pass, which gives higher
+// IVs - see ApplyAbilityDonor in pokemon.c), and the personality's low bit, which picks the donor's ability slot (a donor
+// without a second ability always gives its first). Held items: res/trainers/data/champion_cynthia*.json.
+#define CHAMPION_IV_ROLLED 0xFF
+
+typedef struct ChampionMonBuild {
+    u16 species;
+    u8 hpIV; // custom type 1, or CHAMPION_IV_ROLLED
+    u8 speedIV; // custom type 2, or CHAMPION_IV_ROLLED
+    u16 donorSeed; // (Def IV << 5) | Sp.Def IV
+    u8 abilitySlot; // personality low bit: 0 = the donor's ability 1, 1 = ability 2
+} ChampionMonBuild;
+
+static const ChampionMonBuild sChampionCynthiaBuilds[] = {
+    { SPECIES_SPIRITOMB, TYPE_DARK, TYPE_GHOST, SPECIES_SHEDINJA + NATIONAL_DEX_COUNT, 0 }, // Wonder Guard (Def 24, SpDef 17)
+    { SPECIES_ROSERADE, CHAMPION_IV_ROLLED, CHAMPION_IV_ROLLED, SPECIES_DRAPION + NATIONAL_DEX_COUNT, 1 }, // Sniper (29, 17)
+    { SPECIES_TOGEKISS, TYPE_FLYING, TYPE_STEEL, SPECIES_ELEKID + NATIONAL_DEX_COUNT, 0 }, // Static (22, 28)
+    { SPECIES_LUCARIO, CHAMPION_IV_ROLLED, CHAMPION_IV_ROLLED, SPECIES_PORYGON_Z, 0 }, // Adaptability (14, 26)
+    { SPECIES_MILOTIC, TYPE_WATER, TYPE_ICE, SPECIES_ABOMASNOW + NATIONAL_DEX_COUNT, 0 }, // Snow Warning (29, 25)
+    { SPECIES_GARCHOMP, TYPE_DRAGON, TYPE_STEEL, SPECIES_MEDICHAM, 0 }, // Pure Power (9, 20)
+};
+
+static const ChampionMonBuild *TrainerData_GetChampionBuild(int trainerID, u16 species)
+{
+    int i;
+
+    if (trainerID != TRAINER_CHAMPION_CYNTHIA && trainerID != TRAINER_CHAMPION_CYNTHIA_REMATCH) {
+        return NULL;
+    }
+
+    for (i = 0; i < NELEMS(sChampionCynthiaBuilds); i++) {
+        if (sChampionCynthiaBuilds[i].species == species) {
+            return &sChampionCynthiaBuilds[i];
+        }
+    }
+
+    return NULL;
+}
+
+// Before Pokemon_InitWith: the ability slot bit. The low byte is the gender byte, so this can only move it by one (Cynthia's
+// 120 -> 121), which changes no gender ratio's outcome.
+static u32 TrainerData_ChampionPersonality(const ChampionMonBuild *build, u32 personality)
+{
+    if (build == NULL) {
+        return personality;
+    }
+
+    return (personality & ~1) | build->abilitySlot;
+}
+
+// After Pokemon_InitWith: the IVs, then the stats again (full HP, as Pokemon_InitWith leaves it).
+static void TrainerData_ApplyChampionIVs(const ChampionMonBuild *build, Pokemon *mon)
+{
+    u8 iv;
+
+    if (build == NULL) {
+        return;
+    }
+
+    if (build->hpIV != CHAMPION_IV_ROLLED) {
+        iv = build->hpIV;
+        Pokemon_SetValue(mon, MON_DATA_HP_IV, &iv);
+    }
+
+    if (build->speedIV != CHAMPION_IV_ROLLED) {
+        iv = build->speedIV;
+        Pokemon_SetValue(mon, MON_DATA_SPEED_IV, &iv);
+    }
+
+    iv = build->donorSeed >> 5;
+    Pokemon_SetValue(mon, MON_DATA_DEF_IV, &iv);
+    iv = build->donorSeed & 0x1F;
+    Pokemon_SetValue(mon, MON_DATA_SPDEF_IV, &iv);
+
+    Pokemon_CalcStats(mon);
+}
+
 /**
  * @brief Build the party for a trainer as loaded in the FieldBattleDTO struct.
  *
@@ -182,8 +262,15 @@ static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, enum HeapID
     u32 genderMod, rnd, oldSeed;
     u8 ivs;
     Pokemon *mon;
+    const ChampionMonBuild *build;
 
     oldSeed = LCRNG_GetSeed();
+    // ENTRY P113: the random personalities and IVs below used to come straight from the overworld RNG state, which is put
+    // back at the end, so building a party never advanced it: two trainers in one double battle got identical Pokemon in the
+    // same slot (same colour, ability, types, nature), and back-to-back battles repeated whenever nothing else had advanced
+    // the RNG in between. Each party now starts from a fresh value of the Mersenne Twister RNG (seeded from the clock at
+    // boot, advanced by every call). The overworld state is still restored at the end, so nothing else changes.
+    LCRNG_SetSeed(MTRNG_Next());
 
     // alloc enough space to support the maximum possible data size
     Party_InitWithCapacity(dto->parties[battler], MAX_PARTY_SIZE);
@@ -204,19 +291,27 @@ static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, enum HeapID
             u16 species = trmon[i].species & 0x3FF;
             u8 form = (trmon[i].species & 0xFC00) >> TRAINER_MON_FORM_SHIFT;
 
-            rnd = trmon[i].ivScale + trmon[i].level + species + dto->trainerIDs[battler];
-            LCRNG_SetSeed(rnd);
-
-            for (j = 0; j < dto->trainer[battler].header.trainerType; j++) {
-                rnd = LCRNG_Next();
-            }
-
+            // HG SYNC (port of PokeHeartGold ENTRY AY item 1): personality used to be seeded deterministically from
+            // ivScale/level/species/trainerID and rolled a fixed number of times, so a given trainer's given party
+            // slot had the exact same personality (nature, ability slot, colour) on every encounter. Now a random
+            // roll from the global RNG (restored to oldSeed at the end of this function, as before, so the overworld
+            // RNG is unaffected). The gender byte is still packed into the low 8 bits exactly as before.
+            rnd = (LCRNG_Next() | ((u32)LCRNG_Next() << 16));
             rnd = (rnd << 8) + genderMod;
-            ivs = trmon[i].ivScale * MAX_IVS_SINGLE_STAT / MAX_IV_SCALE;
+            // COLOR MOD (port of PokeHeartGold ENTRY AM): trainer Pokemon used to get one uniform IV
+            // (all 6 stats identical) derived from ivScale here, so every Pokemon of a given species on
+            // a given trainer had identical stats. Passing INIT_IVS_RANDOM (32) makes Pokemon_InitWith's
+            // underlying IV setup take its normal random-IV path instead (the same one wild/player
+            // Pokemon use), rolling each of the 6 IVs independently for real stat variety.
+            ivs = INIT_IVS_RANDOM;
+
+            build = TrainerData_GetChampionBuild(dto->trainerIDs[battler], species); // ENTRY P113
+            rnd = TrainerData_ChampionPersonality(build, rnd);
 
             Pokemon_InitWith(mon, species, trmon[i].level, ivs, TRUE, rnd, OTID_NOT_SHINY, 0);
             Pokemon_SetBallSeal(trmon[i].cbSeal, mon, heapID);
             Pokemon_SetValue(mon, MON_DATA_FORM, &form);
+            TrainerData_ApplyChampionIVs(build, mon); // ENTRY P113
             Party_AddPokemon(dto->parties[battler], mon);
         }
 
@@ -229,15 +324,18 @@ static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, enum HeapID
             u16 species = trmon[i].species & 0x3FF;
             u8 form = (trmon[i].species & 0xFC00) >> TRAINER_MON_FORM_SHIFT;
 
-            rnd = trmon[i].ivScale + trmon[i].level + species + dto->trainerIDs[battler];
-            LCRNG_SetSeed(rnd);
-
-            for (j = 0; j < dto->trainer[battler].header.trainerType; j++) {
-                rnd = LCRNG_Next();
-            }
-
+            // HG SYNC (port of PokeHeartGold ENTRY AY item 1): personality used to be seeded deterministically from
+            // ivScale/level/species/trainerID and rolled a fixed number of times, so a given trainer's given party
+            // slot had the exact same personality (nature, ability slot, colour) on every encounter. Now a random
+            // roll from the global RNG (restored to oldSeed at the end of this function, as before, so the overworld
+            // RNG is unaffected). The gender byte is still packed into the low 8 bits exactly as before.
+            rnd = (LCRNG_Next() | ((u32)LCRNG_Next() << 16));
             rnd = (rnd << 8) + genderMod;
-            ivs = trmon[i].ivScale * MAX_IVS_SINGLE_STAT / MAX_IV_SCALE;
+            // COLOR MOD: random per-stat IVs, see the identical change/comment above for TRDATATYPE_BASE.
+            ivs = INIT_IVS_RANDOM;
+
+            build = TrainerData_GetChampionBuild(dto->trainerIDs[battler], species); // ENTRY P113
+            rnd = TrainerData_ChampionPersonality(build, rnd);
 
             Pokemon_InitWith(mon, species, trmon[i].level, ivs, TRUE, rnd, OTID_NOT_SHINY, 0);
 
@@ -247,6 +345,7 @@ static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, enum HeapID
 
             Pokemon_SetBallSeal(trmon[i].cbSeal, mon, heapID);
             Pokemon_SetValue(mon, MON_DATA_FORM, &form);
+            TrainerData_ApplyChampionIVs(build, mon); // ENTRY P113
             Party_AddPokemon(dto->parties[battler], mon);
         }
 
@@ -259,20 +358,24 @@ static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, enum HeapID
             u16 species = trmon[i].species & 0x3FF;
             u8 form = (trmon[i].species & 0xFC00) >> TRAINER_MON_FORM_SHIFT;
 
-            rnd = trmon[i].ivScale + trmon[i].level + species + dto->trainerIDs[battler];
-            LCRNG_SetSeed(rnd);
-
-            for (j = 0; j < dto->trainer[battler].header.trainerType; j++) {
-                rnd = LCRNG_Next();
-            }
-
+            // HG SYNC (port of PokeHeartGold ENTRY AY item 1): personality used to be seeded deterministically from
+            // ivScale/level/species/trainerID and rolled a fixed number of times, so a given trainer's given party
+            // slot had the exact same personality (nature, ability slot, colour) on every encounter. Now a random
+            // roll from the global RNG (restored to oldSeed at the end of this function, as before, so the overworld
+            // RNG is unaffected). The gender byte is still packed into the low 8 bits exactly as before.
+            rnd = (LCRNG_Next() | ((u32)LCRNG_Next() << 16));
             rnd = (rnd << 8) + genderMod;
-            ivs = trmon[i].ivScale * MAX_IVS_SINGLE_STAT / MAX_IV_SCALE;
+            // COLOR MOD: random per-stat IVs, see the identical change/comment above for TRDATATYPE_BASE.
+            ivs = INIT_IVS_RANDOM;
+
+            build = TrainerData_GetChampionBuild(dto->trainerIDs[battler], species); // ENTRY P113
+            rnd = TrainerData_ChampionPersonality(build, rnd);
 
             Pokemon_InitWith(mon, species, trmon[i].level, ivs, TRUE, rnd, OTID_NOT_SHINY, 0);
             Pokemon_SetValue(mon, MON_DATA_HELD_ITEM, &trmon[i].item);
             Pokemon_SetBallSeal(trmon[i].cbSeal, mon, heapID);
             Pokemon_SetValue(mon, MON_DATA_FORM, &form);
+            TrainerData_ApplyChampionIVs(build, mon); // ENTRY P113
             Party_AddPokemon(dto->parties[battler], mon);
         }
 
@@ -285,15 +388,18 @@ static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, enum HeapID
             u16 species = trmon[i].species & 0x3FF;
             u8 form = (trmon[i].species & 0xFC00) >> TRAINER_MON_FORM_SHIFT;
 
-            rnd = trmon[i].ivScale + trmon[i].level + species + dto->trainerIDs[battler];
-            LCRNG_SetSeed(rnd);
-
-            for (j = 0; j < dto->trainer[battler].header.trainerType; j++) {
-                rnd = LCRNG_Next();
-            }
-
+            // HG SYNC (port of PokeHeartGold ENTRY AY item 1): personality used to be seeded deterministically from
+            // ivScale/level/species/trainerID and rolled a fixed number of times, so a given trainer's given party
+            // slot had the exact same personality (nature, ability slot, colour) on every encounter. Now a random
+            // roll from the global RNG (restored to oldSeed at the end of this function, as before, so the overworld
+            // RNG is unaffected). The gender byte is still packed into the low 8 bits exactly as before.
+            rnd = (LCRNG_Next() | ((u32)LCRNG_Next() << 16));
             rnd = (rnd << 8) + genderMod;
-            ivs = trmon[i].ivScale * MAX_IVS_SINGLE_STAT / MAX_IV_SCALE;
+            // COLOR MOD: random per-stat IVs, see the identical change/comment above for TRDATATYPE_BASE.
+            ivs = INIT_IVS_RANDOM;
+
+            build = TrainerData_GetChampionBuild(dto->trainerIDs[battler], species); // ENTRY P113
+            rnd = TrainerData_ChampionPersonality(build, rnd);
 
             Pokemon_InitWith(mon, species, trmon[i].level, ivs, TRUE, rnd, OTID_NOT_SHINY, 0);
             Pokemon_SetValue(mon, MON_DATA_HELD_ITEM, &trmon[i].item);
@@ -304,6 +410,7 @@ static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, enum HeapID
 
             Pokemon_SetBallSeal(trmon[i].cbSeal, mon, heapID);
             Pokemon_SetValue(mon, MON_DATA_FORM, &form);
+            TrainerData_ApplyChampionIVs(build, mon); // ENTRY P113
             Party_AddPokemon(dto->parties[battler], mon);
         }
 

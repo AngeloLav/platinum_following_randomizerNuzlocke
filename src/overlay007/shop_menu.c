@@ -1258,8 +1258,15 @@ static u8 Shop_FinishPurchase(ShopMenu *shopMenu)
             SystemVars_IncrementDepartmentStoreBuyCount(shopMenu->varsFlags);
         }
 
-        if (((shopMenu->martType == MART_TYPE_NORMAL) || (shopMenu->martType == MART_TYPE_FRONTIER)) && (shopMenu->itemId == ITEM_POKE_BALL) && (shopMenu->itemAmount >= 10)) {
-            if (Bag_TryAddItem(shopMenu->destInventory, ITEM_PREMIER_BALL, 1, HEAP_ID_FIELD2) == TRUE) {
+        // HG SYNC (port of PokeHeartGold ENTRY BA item 3): the free Premier Ball used to need ITEM_POKE_BALL
+        // specifically and was always exactly 1. Now any Poke Ball variant (Master Ball .. Cherish Ball, item ids
+        // 1-16) counts, and it scales: 1 free Premier Ball per 10 bought (99 bought -> 9 free). The bonus message
+        // is unchanged (it still says "a Premier Ball").
+        BOOL isAnyPokeBall = shopMenu->itemId >= ITEM_MASTER_BALL && shopMenu->itemId <= ITEM_CHERISH_BALL;
+        u16 bonusPremierBalls = shopMenu->itemAmount / 10;
+
+        if (((shopMenu->martType == MART_TYPE_NORMAL) || (shopMenu->martType == MART_TYPE_FRONTIER)) && isAnyPokeBall && bonusPremierBalls > 0) {
+            if (Bag_TryAddItem(shopMenu->destInventory, ITEM_PREMIER_BALL, bonusPremierBalls, HEAP_ID_FIELD2) == TRUE) {
                 String *string = MessageLoader_GetNewString(shopMenu->msgLoader, pl_msg_00000543_00010);
 
                 StringTemplate_Format(shopMenu->strTemplate, shopMenu->string, string);
@@ -1269,7 +1276,7 @@ static u8 Shop_FinishPurchase(ShopMenu *shopMenu)
                 shopMenu->fieldMsgPrinterId = FieldMessage_Print(&shopMenu->windows[SHOP_WINDOW_MESSAGE], shopMenu->string, shopMenu->options, TRUE);
 
                 GameRecords *records = SaveData_GetGameRecords(shopMenu->saveData);
-                GameRecords_IncrementRecordValue(records, RECORD_UNK_050);
+                GameRecords_AddToRecordValue(records, RECORD_UNK_050, bonusPremierBalls); // HG SYNC: count every ball earned
 
                 return SHOP_STATE_FINISH_FREE_PREMIER;
             }

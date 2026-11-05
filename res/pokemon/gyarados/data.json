@@ -19,8 +19,8 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "common": "ITEM_DRAGON_SCALE",
+        "rare": "ITEM_DRAGON_SCALE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 5,
@@ -36,15 +36,24 @@
         "by_level": [
             [ 1, "MOVE_THRASH" ],
             [ 20, "MOVE_BITE" ],
+            [ 20, "MOVE_DRAGON_RAGE" ],
             [ 23, "MOVE_DRAGON_RAGE" ],
+            [ 25, "MOVE_DRAGON_RAGE" ],
             [ 26, "MOVE_LEER" ],
             [ 29, "MOVE_TWISTER" ],
+            [ 30, "MOVE_LEER" ],
             [ 32, "MOVE_ICE_FANG" ],
             [ 35, "MOVE_AQUA_TAIL" ],
+            [ 35, "MOVE_TWISTER" ],
             [ 38, "MOVE_RAIN_DANCE" ],
+            [ 40, "MOVE_HYDRO_PUMP" ],
             [ 41, "MOVE_HYDRO_PUMP" ],
             [ 44, "MOVE_DRAGON_DANCE" ],
-            [ 47, "MOVE_HYPER_BEAM" ]
+            [ 45, "MOVE_RAIN_DANCE" ],
+            [ 47, "MOVE_HYPER_BEAM" ],
+            [ 50, "MOVE_DRAGON_DANCE" ],
+            [ 50, "MOVE_HYPER_BEAM" ],
+            [ 55, "MOVE_HYPER_BEAM" ]
         ],
         "by_tm": [
             "TM03",

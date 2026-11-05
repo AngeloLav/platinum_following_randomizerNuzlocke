@@ -1,10 +1,10 @@
 {
     "base_stats": {
-        "hp": 106,
-        "attack": 90,
+        "hp": 206,
+        "attack": 120,
         "defense": 130,
         "speed": 110,
-        "special_attack": 90,
+        "special_attack": 130,
         "special_defense": 154
     },
     "types": [ "TYPE_PSYCHIC", "TYPE_FLYING" ],
@@ -19,8 +19,8 @@
         "special_defense": 3
     },
     "held_items": {
-        "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "common": "ITEM_MYSTIC_WATER",
+        "rare": "ITEM_MYSTIC_WATER"
     },
     "gender_ratio": "GENDER_RATIO_NO_GENDER",
     "hatch_cycles": 120,
@@ -35,20 +35,32 @@
     "learnset": {
         "by_level": [
             [ 1, "MOVE_WHIRLWIND" ],
-            [ 9, "MOVE_SAFEGUARD" ],
-            [ 15, "MOVE_GUST" ],
-            [ 23, "MOVE_RECOVER" ],
-            [ 29, "MOVE_HYDRO_PUMP" ],
-            [ 37, "MOVE_RAIN_DANCE" ],
-            [ 43, "MOVE_SWIFT" ],
-            [ 51, "MOVE_NATURAL_GIFT" ],
+            [ 1, "MOVE_WEATHER_BALL" ],
+            [ 1, "MOVE_AEROBLAST" ],
+            [ 9, "MOVE_GUST" ],
+            [ 11, "MOVE_SAFEGUARD" ],
+            [ 15, "MOVE_DRAGON_RUSH" ],
+            [ 22, "MOVE_GUST" ],
+            [ 23, "MOVE_EXTRASENSORY" ],
+            [ 29, "MOVE_RAIN_DANCE" ],
+            [ 33, "MOVE_RECOVER" ],
+            [ 37, "MOVE_HYDRO_PUMP" ],
+            [ 43, "MOVE_AEROBLAST" ],
+            [ 44, "MOVE_HYDRO_PUMP" ],
+            [ 50, "MOVE_PUNISHMENT" ],
+            [ 55, "MOVE_RAIN_DANCE" ],
             [ 57, "MOVE_ANCIENT_POWER" ],
-            [ 65, "MOVE_EXTRASENSORY" ],
-            [ 71, "MOVE_PUNISHMENT" ],
+            [ 65, "MOVE_SAFEGUARD" ],
+            [ 66, "MOVE_SWIFT" ],
+            [ 71, "MOVE_RECOVER" ],
+            [ 77, "MOVE_AEROBLAST" ],
+            [ 77, "MOVE_WHIRLWIND" ],
             [ 79, "MOVE_FUTURE_SIGHT" ],
-            [ 85, "MOVE_AEROBLAST" ],
+            [ 85, "MOVE_NATURAL_GIFT" ],
+            [ 88, "MOVE_ANCIENT_POWER" ],
             [ 93, "MOVE_CALM_MIND" ],
-            [ 99, "MOVE_SKY_ATTACK" ]
+            [ 99, "MOVE_SKY_ATTACK" ],
+            [ 99, "MOVE_FUTURE_SIGHT" ]
         ],
         "by_tm": [
             "TM03",

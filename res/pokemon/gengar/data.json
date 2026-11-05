@@ -1,10 +1,10 @@
 {
     "base_stats": {
-        "hp": 60,
-        "attack": 65,
+        "hp": 90,
+        "attack": 115,
         "defense": 60,
         "speed": 110,
-        "special_attack": 130,
+        "special_attack": 145,
         "special_defense": 75
     },
     "types": [ "TYPE_GHOST", "TYPE_POISON" ],
@@ -19,8 +19,8 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "common": "ITEM_SPELL_TAG",
+        "rare": "ITEM_SPELL_TAG"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 20,
@@ -39,17 +39,32 @@
             [ 1, "MOVE_SPITE" ],
             [ 5, "MOVE_SPITE" ],
             [ 8, "MOVE_MEAN_LOOK" ],
+            [ 8, "MOVE_SPITE" ],
             [ 12, "MOVE_CURSE" ],
+            [ 13, "MOVE_CURSE" ],
+            [ 13, "MOVE_MEAN_LOOK" ],
             [ 15, "MOVE_NIGHT_SHADE" ],
+            [ 16, "MOVE_NIGHT_SHADE" ],
+            [ 16, "MOVE_CURSE" ],
             [ 19, "MOVE_CONFUSE_RAY" ],
+            [ 21, "MOVE_CONFUSE_RAY" ],
+            [ 21, "MOVE_NIGHT_SHADE" ],
             [ 22, "MOVE_SUCKER_PUNCH" ],
             [ 25, "MOVE_SHADOW_PUNCH" ],
             [ 28, "MOVE_PAYBACK" ],
+            [ 31, "MOVE_DREAM_EATER" ],
+            [ 31, "MOVE_CONFUSE_RAY" ],
             [ 33, "MOVE_SHADOW_BALL" ],
             [ 39, "MOVE_DREAM_EATER" ],
+            [ 39, "MOVE_DESTINY_BOND" ],
             [ 44, "MOVE_DARK_PULSE" ],
+            [ 45, "MOVE_SHADOW_BALL" ],
+            [ 48, "MOVE_DESTINY_BOND" ],
             [ 50, "MOVE_DESTINY_BOND" ],
-            [ 55, "MOVE_NIGHTMARE" ]
+            [ 50, "MOVE_SHADOW_BALL" ],
+            [ 53, "MOVE_NIGHTMARE" ],
+            [ 55, "MOVE_NIGHTMARE" ],
+            [ 64, "MOVE_MEAN_LOOK" ]
         ],
         "by_tm": [
             "TM01",

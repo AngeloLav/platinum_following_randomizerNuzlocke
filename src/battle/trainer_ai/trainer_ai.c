@@ -22,8 +22,13 @@
 
 #include "assert.h"
 #include "flags.h"
+#include "item.h"
 #include "party.h"
 #include "pokemon.h"
+#include "tutor_movesets.h"
+
+#include "res/pokemon/species_egg_moves.h"
+#include "res/pokemon/species_learnsets_by_tutor.h"
 
 #define AI_CONTEXT (battleCtx->aiContext)
 
@@ -208,6 +213,199 @@ static const AICommandFunc sAICommandTable[] = {
 #include "data/scripts/aicmd.h"
 };
 
+// ---------------------------------------------------------------------------------------------------------------------
+// ENTRY P109 (replaces the first-turn-only hiding of 2026-10-11, HG ENTRY DP): the AI knows what a "maximum informed"
+// player would know of the Pokemon it faces - see BattleAI_HideOpponentInfo in battle_lib.c, which this calls around every
+// decision. This overlay works out the move hints: a move a Pokemon was seen using that its species cannot learn (level-up,
+// TM/HM, egg, tutor - its own or its base form's) can only be a per-type level-up move (ENTRY P108) or a TM it learned
+// through its type, so it has one of those types. Once per move; the egg and tutor move data live here.
+// ---------------------------------------------------------------------------------------------------------------------
+static BOOL TrainerAI_SpeciesLearnsMove(int species, int form, u16 move)
+{
+    int i;
+
+    if (Pokemon_LevelUpLearnsetHasMove(species, form, move)) {
+        return TRUE;
+    }
+
+    for (i = 0; i < NUM_TMHMS; i++) {
+        if (Item_MoveForTMHM(ITEM_TM01 + i) == move) {
+            if (CanPokemonFormLearnTM(species, form, i)) {
+                return TRUE;
+            }
+
+            break;
+        }
+    }
+
+    // egg moves are listed for the species that hatches
+    for (i = 0; sEggMoves[i] != EGG_MOVES_TERMINATOR; i++) {
+        if (sEggMoves[i] == EGG_MOVES_SPECIES_OFFSET + species) {
+            for (i++; sEggMoves[i] < EGG_MOVES_SPECIES_OFFSET; i++) {
+                if (sEggMoves[i] == move) {
+                    return TRUE;
+                }
+            }
+
+            break;
+        }
+    }
+
+    for (i = 0; i < NELEMS(sTeachableMoves); i++) {
+        if (sTeachableMoves[i].moveID == move) {
+            return species < NELEMS(sSpeciesLearnsetsByTutor) && (sSpeciesLearnsetsByTutor[species].maskData[i / 8] & (1 << (i % 8)));
+        }
+    }
+
+    return FALSE;
+}
+
+static u32 TrainerAI_TypesExplainingMove(BattleContext *battleCtx, int species, int form, u16 move)
+{
+    int baseSpecies = Pokemon_GetBaseSpeciesFromPersonalData(species);
+    u32 types = 0;
+    u32 defaultTypes, baseTypes;
+    int i;
+
+    if (TrainerAI_SpeciesLearnsMove(species, form, move) || (baseSpecies != species && TrainerAI_SpeciesLearnsMove(baseSpecies, 0, move))) {
+        return 0;
+    }
+
+    for (i = 0; i <= TYPE_DARK; i++) {
+        if (Pokemon_IsTypeLevelUpMove(i, move)) {
+            types |= FlagIndex(i);
+        }
+    }
+
+    for (i = 0; i < NUM_TMHMS; i++) {
+        if (Item_MoveForTMHM(ITEM_TM01 + i) == move) {
+            types |= FlagIndex(MOVE_DATA(move).type);
+            break;
+        }
+    }
+
+    // a type its base form had and it no longer has by default may have taught it the move before it evolved
+    defaultTypes = FlagIndex(SpeciesData_GetFormValue(species, form, SPECIES_DATA_TYPE_1)) | FlagIndex(SpeciesData_GetFormValue(species, form, SPECIES_DATA_TYPE_2));
+    baseTypes = FlagIndex(SpeciesData_GetSpeciesValue(baseSpecies, SPECIES_DATA_TYPE_1)) | FlagIndex(SpeciesData_GetSpeciesValue(baseSpecies, SPECIES_DATA_TYPE_2));
+
+    if (types & baseTypes & ~defaultTypes) {
+        return 0;
+    }
+
+    return types;
+}
+
+static void TrainerAI_UpdateMoveKnowledge(BattleSystem *battleSys, BattleContext *battleCtx)
+{
+    int owner, slot, i;
+
+    if (BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_LINK) {
+        return;
+    }
+
+    for (owner = 0; owner < MAX_BATTLERS; owner++) {
+        for (slot = 0; slot < MAX_PARTY_SIZE; slot++) {
+            AIMonKnowledge *knowledge = &battleCtx->aiMonKnowledge[owner][slot];
+
+            for (i = 0; i < LEARNED_MOVES_MAX; i++) {
+                if (knowledge->seenMoves[i] != MOVE_NONE && (knowledge->seenMoveTypes[i] & AI_KNOWLEDGE_MOVE_CHECKED) == 0) {
+                    Pokemon *mon = BattleSystem_GetPartyPokemon(battleSys, owner, slot);
+
+                    knowledge->seenMoveTypes[i] = AI_KNOWLEDGE_MOVE_CHECKED
+                        | TrainerAI_TypesExplainingMove(battleCtx, Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL), Pokemon_GetValue(mon, MON_DATA_FORM, NULL), knowledge->seenMoves[i]);
+                }
+            }
+        }
+    }
+}
+
+// Moves that a Wonder Guard target cannot stop the AI from using even though they do no damage: confusion, burn, poison
+// and the two damaging weathers.
+static BOOL TrainerAI_IsUsefulVsWonderGuard(u16 move)
+{
+    switch (move) {
+    case MOVE_CONFUSE_RAY:
+    case MOVE_SUPERSONIC:
+    case MOVE_SWEET_KISS:
+    case MOVE_TEETER_DANCE:
+    case MOVE_SWAGGER:
+    case MOVE_FLATTER:
+    case MOVE_WILL_O_WISP:
+    case MOVE_TOXIC:
+    case MOVE_POISON_POWDER:
+    case MOVE_POISON_GAS:
+    case MOVE_HAIL:
+    case MOVE_SANDSTORM:
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+// QOL (2026-10-11): if the AI believes its current target has Wonder Guard and none of its damaging moves is super
+// effective, it no longer stalls with arbitrary status moves - it attacks anyway (the hits do nothing, but it keeps
+// attacking), unless the status move is one of the useful ones above. Runs after the AI scripts scored the moves and before
+// the best move is picked. Scores of unusable moves (0) are left alone.
+static void TrainerAI_WonderGuardOverride(BattleSystem *battleSys, BattleContext *battleCtx)
+{
+    int i, attacker = AI_CONTEXT.attacker, defender = AI_CONTEXT.defender;
+    u8 invalidMoves;
+    int known;
+    u16 move;
+    u32 effectiveness;
+
+    if ((defender & 1) == (attacker & 1) || battleCtx->battleMons[attacker].ability == ABILITY_MOLD_BREAKER) {
+        return;
+    }
+
+    // what the AI believes: a known (revealed) ability, else Wonder Guard if the species can only have that
+    known = AI_CONTEXT.battlerAbilities[defender];
+    if (known == ABILITY_NONE) {
+        int ability1 = SpeciesData_GetSpeciesValue(battleCtx->battleMons[defender].species, SPECIES_DATA_ABILITY_1);
+        int ability2 = SpeciesData_GetSpeciesValue(battleCtx->battleMons[defender].species, SPECIES_DATA_ABILITY_2);
+
+        if (ability1 == ABILITY_WONDER_GUARD || ability2 == ABILITY_WONDER_GUARD) {
+            known = ABILITY_WONDER_GUARD;
+        }
+    }
+
+    if (known != ABILITY_WONDER_GUARD) {
+        return;
+    }
+
+    // any super-effective damaging move? then the normal scoring already handles it
+    for (i = 0; i < LEARNED_MOVES_MAX; i++) {
+        move = battleCtx->battleMons[attacker].moves[i];
+
+        if (move && MOVE_DATA(move).power) {
+            effectiveness = 0;
+            BattleSystem_ApplyTypeChart(battleSys, battleCtx, move, TrainerAI_MoveType(battleSys, battleCtx, attacker, move), attacker, defender, 0, &effectiveness);
+
+            if (effectiveness & MOVE_STATUS_SUPER_EFFECTIVE) {
+                return;
+            }
+        }
+    }
+
+    invalidMoves = BattleSystem_CheckInvalidMoves(battleSys, battleCtx, attacker, 0, CHECK_INVALID_ALL);
+
+    for (i = 0; i < LEARNED_MOVES_MAX; i++) {
+        move = battleCtx->battleMons[attacker].moves[i];
+
+        if (move == MOVE_NONE || (invalidMoves & FlagIndex(i))) {
+            continue;
+        }
+
+        if (MOVE_DATA(move).power) {
+            if (AI_CONTEXT.moveScore[i] < 100) {
+                AI_CONTEXT.moveScore[i] = 100;
+            }
+        } else if (TrainerAI_IsUsefulVsWonderGuard(move) == FALSE) {
+            AI_CONTEXT.moveScore[i] = 0;
+        }
+    }
+}
+
 void TrainerAI_Init(BattleSystem *battleSys, BattleContext *battleCtx, u8 battler, u8 initScore)
 {
     // must declare these up here to match
@@ -260,6 +458,9 @@ u8 TrainerAI_Main(BattleSystem *battleSys, u8 battler)
     u8 result;
     BattleContext *battleCtx = battleSys->battleCtx;
 
+    TrainerAI_UpdateMoveKnowledge(battleSys, battleCtx); // ENTRY P109
+    BattleAI_HideOpponentInfo(battleSys, battleCtx, battler);
+
     if ((AI_CONTEXT.stateFlags & AI_STATUS_FLAG_CONTINUE) == FALSE) {
         AI_CONTEXT.attacker = battler;
         AI_CONTEXT.defender = BattleSystem_RandomOpponent(battleSys, battleCtx, battler);
@@ -272,6 +473,8 @@ u8 TrainerAI_Main(BattleSystem *battleSys, u8 battler)
     } else {
         result = TrainerAI_MainDoubles(battleSys, battleCtx);
     }
+
+    BattleAI_RestoreOpponentInfo(battleCtx);
 
     return result;
 }
@@ -307,6 +510,8 @@ static u8 TrainerAI_MainSingles(BattleSystem *battleSys, BattleContext *battleCt
         AI_CONTEXT.thinkingBitShift++;
         AI_CONTEXT.moveSlot = 0;
     }
+
+    TrainerAI_WonderGuardOverride(battleSys, battleCtx);
 
     if (AI_CONTEXT.stateFlags & AI_STATUS_FLAG_ESCAPE) {
         action = AI_ENEMY_ESCAPE;
@@ -392,6 +597,8 @@ static u8 TrainerAI_MainDoubles(BattleSystem *battleSys, BattleContext *battleCt
             AI_CONTEXT.thinkingBitShift++;
             AI_CONTEXT.moveSlot = 0;
         }
+
+        TrainerAI_WonderGuardOverride(battleSys, battleCtx);
 
         if (AI_CONTEXT.stateFlags & AI_STATUS_FLAG_ESCAPE) {
             actionForBattler[battler] = AI_ENEMY_ESCAPE;
@@ -3002,17 +3209,18 @@ static s32 TrainerAI_CalcDamage(BattleSystem *battleSys, BattleContext *battleCt
         type = TYPE_NORMAL; // default to the base move type
         break;
 
+    // ENTRY P113: the fixed-damage formulas of the effect scripts (effect_script_0041 / 0087 / 0088 / 0130).
     case MOVE_DRAGON_RAGE:
-        damage = 40;
+        damage = (battleCtx->battleMons[attacker].level * 7 + 3) / 4;
         break;
 
     case MOVE_SEISMIC_TOSS:
     case MOVE_NIGHT_SHADE:
-        damage = battleCtx->battleMons[attacker].level;
+        damage = (battleCtx->battleMons[attacker].level * 3 + 1) / 2;
         break;
 
     case MOVE_PSYWAVE:
-        damage = battleCtx->battleMons[attacker].level * (BattleSystem_RandNext(battleSys) % 11 + 5) / 10;
+        damage = (battleCtx->battleMons[attacker].level * (BattleSystem_RandNext(battleSys) % 11 + 10) + 9) / 10;
         break;
 
     case MOVE_RETURN:
@@ -3049,7 +3257,7 @@ static s32 TrainerAI_CalcDamage(BattleSystem *battleSys, BattleContext *battleCt
         break;
 
     case MOVE_SONIC_BOOM:
-        damage = 20;
+        damage = 20 + (battleCtx->battleMons[attacker].level * 5 + 3) / 4;
         break;
 
     case MOVE_LOW_KICK:
@@ -3986,7 +4194,24 @@ static BOOL TrainerAI_ShouldSwitch(BattleSystem *battleSys, BattleContext *battl
     return FALSE;
 }
 
+static int TrainerAI_PickCommandInternal(BattleSystem *battleSys, int battler);
+
+// QOL (2026-10-11), ENTRY P109: the switch / item decisions read the opponent's abilities and types directly (e.g.
+// AI_CannotDamageWonderGuard), so they get the same knowledge as TrainerAI_Main.
 int TrainerAI_PickCommand(BattleSystem *battleSys, int battler)
+{
+    BattleContext *battleCtx = battleSys->battleCtx;
+    int result;
+
+    TrainerAI_UpdateMoveKnowledge(battleSys, battleCtx);
+    BattleAI_HideOpponentInfo(battleSys, battleCtx, battler);
+    result = TrainerAI_PickCommandInternal(battleSys, battler);
+    BattleAI_RestoreOpponentInfo(battleCtx);
+
+    return result;
+}
+
+static int TrainerAI_PickCommandInternal(BattleSystem *battleSys, int battler)
 {
     // must declare C89-style to match
     int i;

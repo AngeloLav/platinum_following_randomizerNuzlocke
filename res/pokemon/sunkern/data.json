@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_COBA_BERRY"
+        "rare": "ITEM_NONE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 20,
@@ -36,17 +36,29 @@
         "by_level": [
             [ 1, "MOVE_ABSORB" ],
             [ 1, "MOVE_GROWTH" ],
+            [ 4, "MOVE_GROWTH" ],
             [ 5, "MOVE_MEGA_DRAIN" ],
+            [ 6, "MOVE_GROWTH" ],
             [ 9, "MOVE_INGRAIN" ],
+            [ 10, "MOVE_MEGA_DRAIN" ],
             [ 13, "MOVE_GRASS_WHISTLE" ],
+            [ 13, "MOVE_MEGA_DRAIN" ],
             [ 17, "MOVE_LEECH_SEED" ],
+            [ 18, "MOVE_INGRAIN" ],
+            [ 19, "MOVE_SUNNY_DAY" ],
             [ 21, "MOVE_ENDEAVOR" ],
             [ 25, "MOVE_WORRY_SEED" ],
+            [ 25, "MOVE_ENDEAVOR" ],
             [ 29, "MOVE_RAZOR_LEAF" ],
+            [ 30, "MOVE_SUNNY_DAY" ],
+            [ 31, "MOVE_SYNTHESIS" ],
             [ 33, "MOVE_SYNTHESIS" ],
             [ 37, "MOVE_SUNNY_DAY" ],
+            [ 37, "MOVE_SYNTHESIS" ],
             [ 41, "MOVE_GIGA_DRAIN" ],
-            [ 45, "MOVE_SEED_BOMB" ]
+            [ 42, "MOVE_GIGA_DRAIN" ],
+            [ 45, "MOVE_SEED_BOMB" ],
+            [ 46, "MOVE_GIGA_DRAIN" ]
         ],
         "by_tm": [
             "TM06",

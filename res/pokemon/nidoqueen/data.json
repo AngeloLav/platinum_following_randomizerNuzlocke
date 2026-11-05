@@ -1,7 +1,7 @@
 {
     "base_stats": {
-        "hp": 90,
-        "attack": 82,
+        "hp": 130,
+        "attack": 102,
         "defense": 87,
         "speed": 76,
         "special_attack": 75,
@@ -38,8 +38,11 @@
             [ 1, "MOVE_TAIL_WHIP" ],
             [ 1, "MOVE_DOUBLE_KICK" ],
             [ 1, "MOVE_POISON_STING" ],
+            [ 1, "MOVE_TACKLE" ],
+            [ 22, "MOVE_BODY_SLAM" ],
             [ 23, "MOVE_BODY_SLAM" ],
             [ 43, "MOVE_EARTH_POWER" ],
+            [ 43, "MOVE_SUPERPOWER" ],
             [ 58, "MOVE_SUPERPOWER" ]
         ],
         "by_tm": [

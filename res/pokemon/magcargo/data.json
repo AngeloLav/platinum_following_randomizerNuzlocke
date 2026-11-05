@@ -19,7 +19,7 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_CHARCOAL",
         "rare": "ITEM_NONE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
@@ -40,13 +40,19 @@
             [ 1, "MOVE_ROCK_THROW" ],
             [ 8, "MOVE_EMBER" ],
             [ 11, "MOVE_ROCK_THROW" ],
+            [ 15, "MOVE_ROCK_THROW" ],
             [ 16, "MOVE_HARDEN" ],
+            [ 22, "MOVE_HARDEN" ],
             [ 23, "MOVE_RECOVER" ],
             [ 26, "MOVE_ANCIENT_POWER" ],
+            [ 29, "MOVE_AMNESIA" ],
             [ 31, "MOVE_AMNESIA" ],
+            [ 36, "MOVE_FLAMETHROWER" ],
             [ 40, "MOVE_LAVA_PLUME" ],
             [ 45, "MOVE_ROCK_SLIDE" ],
+            [ 48, "MOVE_ROCK_SLIDE" ],
             [ 52, "MOVE_BODY_SLAM" ],
+            [ 60, "MOVE_BODY_SLAM" ],
             [ 61, "MOVE_FLAMETHROWER" ],
             [ 66, "MOVE_EARTH_POWER" ]
         ],

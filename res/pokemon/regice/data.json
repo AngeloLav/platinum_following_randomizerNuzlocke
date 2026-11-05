@@ -1,11 +1,11 @@
 {
     "base_stats": {
-        "hp": 80,
+        "hp": 90,
         "attack": 50,
         "defense": 100,
-        "speed": 50,
-        "special_attack": 100,
-        "special_defense": 200
+        "speed": 70,
+        "special_attack": 110,
+        "special_defense": 250
     },
     "types": [ "TYPE_ICE", "TYPE_ICE" ],
     "catch_rate": 3,
@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "rare": "ITEM_SPELL_TAG"
     },
     "gender_ratio": "GENDER_RATIO_NO_GENDER",
     "hatch_cycles": 80,
@@ -42,8 +42,10 @@
             [ 33, "MOVE_ANCIENT_POWER" ],
             [ 41, "MOVE_AMNESIA" ],
             [ 49, "MOVE_CHARGE_BEAM" ],
+            [ 49, "MOVE_ZAP_CANNON" ],
             [ 57, "MOVE_LOCK_ON" ],
             [ 65, "MOVE_ZAP_CANNON" ],
+            [ 65, "MOVE_HYPER_BEAM" ],
             [ 73, "MOVE_ICE_BEAM" ],
             [ 81, "MOVE_HAMMER_ARM" ],
             [ 89, "MOVE_HYPER_BEAM" ]

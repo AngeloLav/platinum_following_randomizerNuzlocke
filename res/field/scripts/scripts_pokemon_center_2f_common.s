@@ -322,6 +322,7 @@ PokemonCenter2FCommon_EnterColosseum:
     WaitMovement
     LoadDoorAnimation 0, 0, 13, 2, ANIMATION_TAG_DOOR_1
     Call PokemonCenter2FCommon_DoorOpenAnimation
+    FollowerMonEnterDoor @ ENTRY P105: the follower goes into its ball behind the player, as at a normal door
     ApplyMovement LOCALID_PLAYER, PokemonCenter2FCommon_Movement_PlayerEnterDoor
     WaitMovement
     Call PokemonCenter2FCommon_DoorCloseAnimation
@@ -431,6 +432,7 @@ PokemonCenter2FCommon_EnterUnionRoom:
     WaitMovement
     LoadDoorAnimation 0, 0, 8, 2, ANIMATION_TAG_DOOR_1
     Call PokemonCenter2FCommon_DoorOpenAnimation
+    FollowerMonEnterDoor @ ENTRY P105: the follower goes into its ball behind the player, as at a normal door
     ApplyMovement LOCALID_PLAYER, PokemonCenter2FCommon_Movement_PlayerEnterDoor
     WaitMovement
     Call PokemonCenter2FCommon_DoorCloseAnimation

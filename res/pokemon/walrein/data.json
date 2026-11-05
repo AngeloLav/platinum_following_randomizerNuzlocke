@@ -1,10 +1,10 @@
 {
     "base_stats": {
-        "hp": 110,
-        "attack": 80,
+        "hp": 140,
+        "attack": 120,
         "defense": 90,
         "speed": 65,
-        "special_attack": 95,
+        "special_attack": 115,
         "special_defense": 90
     },
     "types": [ "TYPE_ICE", "TYPE_WATER" ],
@@ -39,6 +39,7 @@
             [ 1, "MOVE_GROWL" ],
             [ 1, "MOVE_WATER_GUN" ],
             [ 1, "MOVE_ENCORE" ],
+            [ 1, "MOVE_DEFENSE_CURL" ],
             [ 7, "MOVE_ENCORE" ],
             [ 13, "MOVE_ICE_BALL" ],
             [ 19, "MOVE_BODY_SLAM" ],
@@ -48,7 +49,9 @@
             [ 39, "MOVE_REST" ],
             [ 39, "MOVE_SNORE" ],
             [ 44, "MOVE_ICE_FANG" ],
+            [ 50, "MOVE_BLIZZARD" ],
             [ 52, "MOVE_BLIZZARD" ],
+            [ 61, "MOVE_SHEER_COLD" ],
             [ 65, "MOVE_SHEER_COLD" ]
         ],
         "by_tm": [

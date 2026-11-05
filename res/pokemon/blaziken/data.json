@@ -1,9 +1,9 @@
 {
     "base_stats": {
         "hp": 80,
-        "attack": 120,
+        "attack": 130,
         "defense": 70,
-        "speed": 80,
+        "speed": 90,
         "special_attack": 110,
         "special_defense": 70
     },
@@ -49,6 +49,8 @@
             [ 36, "MOVE_BLAZE_KICK" ],
             [ 42, "MOVE_SLASH" ],
             [ 49, "MOVE_BRAVE_BIRD" ],
+            [ 49, "MOVE_MIRROR_MOVE" ],
+            [ 50, "MOVE_EXTREME_SPEED" ],
             [ 59, "MOVE_SKY_UPPERCUT" ],
             [ 66, "MOVE_FLARE_BLITZ" ]
         ],

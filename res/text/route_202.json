@@ -47,8 +47,11 @@
         "if you make them sleep or something\f",
         "by using a Pokémon’s move.\r",
         "OK, {STRVAR_1 3, 0, 0}, to get you\n",
-        "started, I’ll give you five\f",
-        "Poké Balls!\r"
+        "started, I’ll give you a bunch of\f",
+        "Poké Balls so you can catch some\n",
+        "unique, rare Delta species Pokémon\r",
+        "with altered colors and typings.\n",
+        "Good luck!\r"
       ]
     },
     {
@@ -107,7 +110,10 @@
         "catch if you make one of your\f",
         "Pokémon put them to sleep or such.\r",
         "Here, {STRVAR_1 3, 0, 0}, I’ll give you\n",
-        "five Poké Balls to get you started.\r"
+        "a bunch of Poké Balls so you can\f",
+        "catch some unique, rare Delta\n",
+        "species Pokémon with altered colors\r",
+        "and typings. Good luck!\r"
       ]
     },
     {

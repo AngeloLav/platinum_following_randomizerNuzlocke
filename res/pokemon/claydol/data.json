@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "rare": "ITEM_POISON_BARB"
     },
     "gender_ratio": "GENDER_RATIO_NO_GENDER",
     "hatch_cycles": 20,
@@ -46,9 +46,12 @@
             [ 19, "MOVE_SELFDESTRUCT" ],
             [ 25, "MOVE_ANCIENT_POWER" ],
             [ 31, "MOVE_POWER_TRICK" ],
+            [ 31, "MOVE_SANDSTORM" ],
             [ 36, "MOVE_HYPER_BEAM" ],
             [ 40, "MOVE_SANDSTORM" ],
+            [ 42, "MOVE_COSMIC_POWER" ],
             [ 51, "MOVE_COSMIC_POWER" ],
+            [ 55, "MOVE_EXPLOSION" ],
             [ 62, "MOVE_EARTH_POWER" ],
             [ 73, "MOVE_HEAL_BLOCK" ],
             [ 86, "MOVE_EXPLOSION" ]

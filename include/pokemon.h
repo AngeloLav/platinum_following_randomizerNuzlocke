@@ -379,6 +379,11 @@ u8 BoxPokemon_GetGender(BoxPokemon *boxMon);
 u8 Pokemon_GetGenderOf(u16 monSpecies, u32 monPersonality);
 
 /**
+ * @brief The ability a mon of this species/personality has without the ability-donor override.
+ */
+u32 Pokemon_GetOriginalAbilityOf(u32 species, u32 personality);
+
+/**
  * @brief Gets the gender of a pokemon based on its SpeciesData and personality value
  *
  * @param speciesData
@@ -834,6 +839,10 @@ void Pokemon_UpdateAfterCatch(Pokemon *mon, TrainerInfo *trainer, int monPokebal
 void Pokemon_GiveHeldItem(Pokemon *mon, u32 battleType, int itemRates);
 BOOL Pokemon_CanLearnTM(Pokemon *mon, u8 tmID);
 BOOL CanPokemonFormLearnTM(u16 monSpecies, int monForm, u8 tmID);
+
+// ENTRY P109 (trainer AI): TRUE if the move is in the type's per-type level-up list (ENTRY P108) / in the species' level-up list.
+BOOL Pokemon_IsTypeLevelUpMove(u32 type, u16 move);
+BOOL Pokemon_LevelUpLearnsetHasMove(int monSpecies, int monForm, u16 move);
 
 /**
  * @brief Sets the ability of a Pokemon based on its species, form and peronsality value

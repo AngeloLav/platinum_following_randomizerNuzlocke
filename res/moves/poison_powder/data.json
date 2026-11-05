@@ -10,7 +10,7 @@
     "class": "CLASS_STATUS",
     "type": "TYPE_POISON",
     "power": 0,
-    "accuracy": 75,
+    "accuracy": 85,
     "pp": 35,
     "effect": {
         "type": "BATTLE_EFFECT_STATUS_POISON",

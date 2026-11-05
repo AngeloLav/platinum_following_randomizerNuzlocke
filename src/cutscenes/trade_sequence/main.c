@@ -3,6 +3,8 @@
 #include <nitro.h>
 #include <string.h>
 
+#include "constants/graphics.h"
+
 #include "overlay006/struct_npc_trade_animation_template.h"
 
 #include "bg_window.h"
@@ -15,6 +17,7 @@
 #include "network_icon.h"
 #include "overlay_manager.h"
 #include "pokemon.h"
+#include "pokemon_color_mod.h"
 #include "render_oam.h"
 #include "screen_fade.h"
 #include "sound.h"
@@ -483,12 +486,17 @@ static void BgScaleAnimation_Apply(BgScaleAnimation *bgScaleAnim)
     Bg_SetAffineParams(bgScaleAnim->bgConfig, 6, &mtx, 128, sCenterY[bgScaleAnim->centerIndex]);
 }
 
+// ENTRY P104: the personality-rotated palette of a Pokemon drawn as BG tiles (the two Pokemon passing each other).
+static u16 sTradeSequenceMonPalette[PALETTE_SIZE];
+
 void TradeSequence_LoadPokemonBGTiles(TradeSequenceData *sequenceData, int pokemonIndex, u32 bgLayer, u32 paletteSlot, BOOL loadBothFrames)
 {
     PokemonSpriteTemplate template;
     u32 paletteBank;
     u32 tileBufferSize;
     void *tileBuffer;
+    u32 colorPersonality = 0;
+    BOOL colorPersonalityKnown = FALSE;
 
     tileBufferSize = (loadBothFrames) ? 0x20 * 200 : 0x20 * 100;
     tileBuffer = Heap_AllocAtEnd(HEAP_ID_TRADE_SEQUENCE, tileBufferSize);
@@ -507,6 +515,8 @@ void TradeSequence_LoadPokemonBGTiles(TradeSequenceData *sequenceData, int pokem
 
         personality = BoxPokemon_GetValue(boxMon, MON_DATA_PERSONALITY, NULL);
         species = BoxPokemon_GetValue(boxMon, MON_DATA_SPECIES, NULL);
+        colorPersonality = personality;
+        colorPersonalityKnown = TRUE;
 
         if (loadBothFrames) {
             tileRegion.width *= 2;
@@ -521,6 +531,24 @@ void TradeSequence_LoadPokemonBGTiles(TradeSequenceData *sequenceData, int pokem
     }
 
     paletteBank = (bgLayer >= 4) ? 4 : 0;
+
+    // ENTRY P104 (COLOR MOD): the two Pokemon passing each other in the wormhole had the shiny palette but no personality
+    // colour rotation. Same rotation every other Pokemon sprite gets (PokemonSpriteManager, trade room preview): the
+    // palette (shiny or normal, from the sprite template) is read from the NARC, rotated, then loaded to the same slot of
+    // the same screen's BG palette (main for layers 0-3, sub for 4-7 - what paletteBank 0/4 meant above).
+    if (colorPersonalityKnown) {
+        NNSG2dPaletteData *plttData;
+        void *nclrFile = Graphics_GetPlttData(template.narcID, template.palette, &plttData, HEAP_ID_TRADE_SEQUENCE);
+
+        if (nclrFile != NULL) {
+            MI_CpuCopy16(plttData->pRawData, sTradeSequenceMonPalette, sizeof(sTradeSequenceMonPalette));
+            Heap_Free(nclrFile);
+            PersonalityRotatePalette(sTradeSequenceMonPalette, PALETTE_SIZE, colorPersonality);
+            Bg_LoadPalette(bgLayer, sTradeSequenceMonPalette, sizeof(sTradeSequenceMonPalette), paletteSlot * 0x20);
+            return;
+        }
+    }
+
     Graphics_LoadPalette(template.narcID, template.palette, paletteBank, paletteSlot * 0x20, 0x20, HEAP_ID_TRADE_SEQUENCE);
 }
 

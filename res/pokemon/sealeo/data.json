@@ -38,6 +38,7 @@
             [ 1, "MOVE_GROWL" ],
             [ 1, "MOVE_WATER_GUN" ],
             [ 1, "MOVE_ENCORE" ],
+            [ 1, "MOVE_DEFENSE_CURL" ],
             [ 7, "MOVE_ENCORE" ],
             [ 13, "MOVE_ICE_BALL" ],
             [ 19, "MOVE_BODY_SLAM" ],

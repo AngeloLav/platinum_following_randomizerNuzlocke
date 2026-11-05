@@ -19,7 +19,7 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_TWISTEDSPOON",
         "rare": "ITEM_TWISTEDSPOON"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_25",
@@ -39,14 +39,25 @@
             [ 1, "MOVE_CONFUSION" ],
             [ 16, "MOVE_CONFUSION" ],
             [ 18, "MOVE_DISABLE" ],
+            [ 21, "MOVE_PSYBEAM" ],
             [ 22, "MOVE_MIRACLE_EYE" ],
+            [ 23, "MOVE_REFLECT" ],
             [ 24, "MOVE_PSYBEAM" ],
+            [ 25, "MOVE_RECOVER" ],
+            [ 26, "MOVE_RECOVER" ],
             [ 28, "MOVE_REFLECT" ],
             [ 30, "MOVE_RECOVER" ],
+            [ 30, "MOVE_FUTURE_SIGHT" ],
+            [ 31, "MOVE_FUTURE_SIGHT" ],
+            [ 33, "MOVE_ROLE_PLAY" ],
             [ 34, "MOVE_PSYCHO_CUT" ],
             [ 36, "MOVE_ROLE_PLAY" ],
+            [ 36, "MOVE_PSYCHIC" ],
+            [ 38, "MOVE_PSYCHIC" ],
             [ 40, "MOVE_PSYCHIC" ],
             [ 42, "MOVE_FUTURE_SIGHT" ],
+            [ 43, "MOVE_TRICK" ],
+            [ 45, "MOVE_REFLECT" ],
             [ 46, "MOVE_TRICK" ]
         ],
         "by_tm": [

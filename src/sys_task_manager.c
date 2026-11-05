@@ -182,6 +182,21 @@ static SysTask *SysTaskManager_InternalAddTask(SysTaskManager *sysTaskMgr, SysTa
 
 void SysTask_Delete(SysTask *task)
 {
+    // PROACTIVE HARDWARE CRASH FIX (2026-09-23): task can legitimately be NULL here -
+    // SysTaskManager_InternalAddTask (above) itself returns NULL on pool exhaustion (see its own
+    // `if (task == NULL) { return NULL; }`), and this is the shared low-level accessor every task-owning
+    // caller across this codebase funnels through. This mirrors, proactively, a bug class the sibling
+    // PokeHeartGold project (../Changelog.txt ENTRIES AP and AQ) hit as real "Error: Data Abort!" crashes
+    // on real hardware this same session - the exact same shape of bug (an unguarded NULL SysTask/
+    // equivalent-task-handle dereference in shared plumbing), just under this project's own naming
+    // (SysTask_GetParam here is the equivalent of HG's SysTask_GetData, etc.). Hardening every accessor
+    // here to tolerate NULL (a no-op / safe-default return, the same convention Heap_Free and several
+    // other Destroy-style functions in this codebase already follow) protects every current and future
+    // caller at once, the same fix HG needed reactively after two separate real-hardware crashes.
+    if (task == NULL) {
+        return;
+    }
+
     if (task->manager->nextTask == task) {
         task->manager->nextTask = task->nextTask;
     }
@@ -194,15 +209,27 @@ void SysTask_Delete(SysTask *task)
 
 void SysTask_SetCallback(SysTask *task, SysTaskFunc callback)
 {
+    // PROACTIVE HARDWARE CRASH FIX (2026-09-23): see the identical guard/comment on SysTask_Delete above.
+    if (task == NULL) {
+        return;
+    }
     task->callback = callback;
 }
 
 void *SysTask_GetParam(SysTask *task)
 {
+    // PROACTIVE HARDWARE CRASH FIX (2026-09-23): see the identical guard/comment on SysTask_Delete above.
+    if (task == NULL) {
+        return NULL;
+    }
     return task->param;
 }
 
 u32 SysTask_GetPriority(SysTask *task)
 {
+    // PROACTIVE HARDWARE CRASH FIX (2026-09-23): see the identical guard/comment on SysTask_Delete above.
+    if (task == NULL) {
+        return 0;
+    }
     return task->priority;
 }

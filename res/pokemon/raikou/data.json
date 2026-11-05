@@ -4,7 +4,7 @@
         "attack": 85,
         "defense": 75,
         "speed": 115,
-        "special_attack": 115,
+        "special_attack": 145,
         "special_defense": 100
     },
     "types": [ "TYPE_ELECTRIC", "TYPE_ELECTRIC" ],
@@ -19,8 +19,8 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "common": "ITEM_BRIGHTPOWDER",
+        "rare": "ITEM_BRIGHTPOWDER"
     },
     "gender_ratio": "GENDER_RATIO_NO_GENDER",
     "hatch_cycles": 80,
@@ -37,16 +37,24 @@
             [ 1, "MOVE_BITE" ],
             [ 1, "MOVE_LEER" ],
             [ 8, "MOVE_THUNDER_SHOCK" ],
+            [ 11, "MOVE_THUNDER_SHOCK" ],
             [ 15, "MOVE_ROAR" ],
+            [ 21, "MOVE_ROAR" ],
             [ 22, "MOVE_QUICK_ATTACK" ],
             [ 29, "MOVE_SPARK" ],
+            [ 31, "MOVE_QUICK_ATTACK" ],
             [ 36, "MOVE_REFLECT" ],
+            [ 41, "MOVE_SPARK" ],
             [ 43, "MOVE_CRUNCH" ],
             [ 50, "MOVE_THUNDER_FANG" ],
+            [ 51, "MOVE_REFLECT" ],
             [ 57, "MOVE_DISCHARGE" ],
+            [ 61, "MOVE_CRUNCH" ],
             [ 64, "MOVE_EXTRASENSORY" ],
             [ 71, "MOVE_RAIN_DANCE" ],
+            [ 71, "MOVE_THUNDER" ],
             [ 78, "MOVE_CALM_MIND" ],
+            [ 81, "MOVE_CALM_MIND" ],
             [ 85, "MOVE_THUNDER" ]
         ],
         "by_tm": [

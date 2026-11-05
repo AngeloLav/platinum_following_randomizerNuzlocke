@@ -11,7 +11,7 @@
     "type": "TYPE_PSYCHIC",
     "power": 1,
     "accuracy": 80,
-    "pp": 15,
+    "pp": 25,
     "effect": {
         "type": "BATTLE_EFFECT_RANDOM_DAMAGE_1_TO_150_LEVEL",
         "chance": 0

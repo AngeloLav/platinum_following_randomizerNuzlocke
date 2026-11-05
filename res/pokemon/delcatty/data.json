@@ -37,7 +37,8 @@
             [ 1, "MOVE_FAKE_OUT" ],
             [ 1, "MOVE_ATTRACT" ],
             [ 1, "MOVE_SING" ],
-            [ 1, "MOVE_DOUBLE_SLAP" ]
+            [ 1, "MOVE_DOUBLE_SLAP" ],
+            [ 1, "MOVE_GROWL" ]
         ],
         "by_tm": [
             "TM03",

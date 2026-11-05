@@ -37,7 +37,9 @@
             [ 1, "MOVE_FLASH" ],
             [ 1, "MOVE_TACKLE" ],
             [ 5, "MOVE_DOUBLE_TEAM" ],
+            [ 5, "MOVE_CONFUSE_RAY" ],
             [ 9, "MOVE_CONFUSE_RAY" ],
+            [ 9, "MOVE_DOUBLE_TEAM" ],
             [ 13, "MOVE_MOONLIGHT" ],
             [ 17, "MOVE_QUICK_ATTACK" ],
             [ 21, "MOVE_TAIL_GLOW" ],
@@ -45,6 +47,7 @@
             [ 29, "MOVE_PROTECT" ],
             [ 33, "MOVE_HELPING_HAND" ],
             [ 37, "MOVE_ZEN_HEADBUTT" ],
+            [ 37, "MOVE_DOUBLE_EDGE" ],
             [ 41, "MOVE_BUG_BUZZ" ],
             [ 45, "MOVE_DOUBLE_EDGE" ]
         ],

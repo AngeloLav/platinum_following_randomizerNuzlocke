@@ -1284,7 +1284,9 @@ VeilstoneCity_DeoxysMeteoriteSpeed:
     LockAll
     CheckPartyHasSpecies2 SPECIES_DEOXYS, VAR_RESULT
     GoToIfEq VAR_RESULT, FALSE, VeilstoneCity_MeteoriteFromTheStars
+    FollowerMonFormChangeBegin SPECIES_DEOXYS, VAR_RESULT
     ChangeDeoxysForm DEOXYS_FORM_SPEED
+    CallIfEq VAR_RESULT, TRUE, VeilstoneCity_DeoxysFollowerFormChange
     PlayCry SPECIES_DEOXYS
     Message VeilstoneCity_Text_MeteoriteSpeed
     WaitButton
@@ -1298,7 +1300,9 @@ VeilstoneCity_DeoxysMeteoriteDefense:
     LockAll
     CheckPartyHasSpecies2 SPECIES_DEOXYS, VAR_RESULT
     GoToIfEq VAR_RESULT, FALSE, VeilstoneCity_MeteoriteFromTheStars
+    FollowerMonFormChangeBegin SPECIES_DEOXYS, VAR_RESULT
     ChangeDeoxysForm DEOXYS_FORM_DEFENSE
+    CallIfEq VAR_RESULT, TRUE, VeilstoneCity_DeoxysFollowerFormChange
     PlayCry SPECIES_DEOXYS
     Message VeilstoneCity_Text_MeteoriteDefense
     WaitButton
@@ -1312,7 +1316,9 @@ VeilstoneCity_DeoxysMeteoriteAttack:
     LockAll
     CheckPartyHasSpecies2 SPECIES_DEOXYS, VAR_RESULT
     GoToIfEq VAR_RESULT, FALSE, VeilstoneCity_MeteoriteFromTheStars
+    FollowerMonFormChangeBegin SPECIES_DEOXYS, VAR_RESULT
     ChangeDeoxysForm DEOXYS_FORM_ATTACK
+    CallIfEq VAR_RESULT, TRUE, VeilstoneCity_DeoxysFollowerFormChange
     PlayCry SPECIES_DEOXYS
     Message VeilstoneCity_Text_MeteoriteAttack
     WaitButton
@@ -1326,7 +1332,9 @@ VeilstoneCity_DeoxysMeteoriteNormal:
     LockAll
     CheckPartyHasSpecies2 SPECIES_DEOXYS, VAR_RESULT
     GoToIfEq VAR_RESULT, FALSE, VeilstoneCity_MeteoriteFromTheStars
+    FollowerMonFormChangeBegin SPECIES_DEOXYS, VAR_RESULT
     ChangeDeoxysForm DEOXYS_FORM_NORMAL
+    CallIfEq VAR_RESULT, TRUE, VeilstoneCity_DeoxysFollowerFormChange
     PlayCry SPECIES_DEOXYS
     Message VeilstoneCity_Text_MeteoriteNormal
     WaitButton
@@ -1334,6 +1342,17 @@ VeilstoneCity_DeoxysMeteoriteNormal:
     CloseMessage
     ReleaseAll
     End
+
+@ ENTRY P106: Deoxys was following - as HG's Route 3 meteorites: fade out, the follower comes back next to the player with
+@ its new form, wait 10 frames, fade in.
+VeilstoneCity_DeoxysFollowerFormChange:
+    FadeScreenOut
+    WaitFadeScreen
+    FollowerMonFormChangeEnd @ ENTRY P107: new form in the same place (tile and height), not behind the player
+    WaitTime 10, VAR_RESULT
+    FadeScreenIn
+    WaitFadeScreen
+    Return
 
 VeilstoneCity_MeteoriteFromTheStars:
     Message VeilstoneCity_Text_MeteoriteFromTheStars

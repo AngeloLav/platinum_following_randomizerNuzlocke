@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_QUICK_CLAW"
+        "rare": "ITEM_NONE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 20,
@@ -36,17 +36,26 @@
         "by_level": [
             [ 1, "MOVE_SCRATCH" ],
             [ 3, "MOVE_DEFENSE_CURL" ],
+            [ 6, "MOVE_DEFENSE_CURL" ],
             [ 7, "MOVE_SAND_ATTACK" ],
             [ 9, "MOVE_POISON_STING" ],
+            [ 11, "MOVE_SAND_ATTACK" ],
             [ 13, "MOVE_RAPID_SPIN" ],
             [ 15, "MOVE_SWIFT" ],
+            [ 17, "MOVE_POISON_STING" ],
             [ 19, "MOVE_FURY_SWIPES" ],
             [ 21, "MOVE_ROLLOUT" ],
+            [ 23, "MOVE_SLASH" ],
             [ 25, "MOVE_FURY_CUTTER" ],
             [ 27, "MOVE_SAND_TOMB" ],
+            [ 30, "MOVE_SWIFT" ],
             [ 31, "MOVE_SLASH" ],
             [ 33, "MOVE_GYRO_BALL" ],
-            [ 37, "MOVE_SANDSTORM" ]
+            [ 37, "MOVE_SANDSTORM" ],
+            [ 37, "MOVE_FURY_SWIPES" ],
+            [ 45, "MOVE_SAND_TOMB" ],
+            [ 45, "MOVE_SANDSTORM" ],
+            [ 53, "MOVE_SANDSTORM" ]
         ],
         "by_tm": [
             "TM01",

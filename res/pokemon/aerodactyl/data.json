@@ -1,8 +1,8 @@
 {
     "base_stats": {
-        "hp": 80,
-        "attack": 105,
-        "defense": 65,
+        "hp": 110,
+        "attack": 135,
+        "defense": 85,
         "speed": 130,
         "special_attack": 60,
         "special_defense": 75
@@ -41,13 +41,21 @@
             [ 1, "MOVE_SUPERSONIC" ],
             [ 1, "MOVE_BITE" ],
             [ 1, "MOVE_SCARY_FACE" ],
+            [ 8, "MOVE_AGILITY" ],
             [ 9, "MOVE_ROAR" ],
+            [ 15, "MOVE_BITE" ],
             [ 17, "MOVE_AGILITY" ],
+            [ 22, "MOVE_SUPERSONIC" ],
             [ 25, "MOVE_ANCIENT_POWER" ],
+            [ 29, "MOVE_ANCIENT_POWER" ],
             [ 33, "MOVE_CRUNCH" ],
+            [ 36, "MOVE_SCARY_FACE" ],
             [ 41, "MOVE_TAKE_DOWN" ],
+            [ 43, "MOVE_TAKE_DOWN" ],
             [ 49, "MOVE_IRON_HEAD" ],
+            [ 50, "MOVE_HYPER_BEAM" ],
             [ 57, "MOVE_HYPER_BEAM" ],
+            [ 60, "MOVE_EXTREME_SPEED" ],
             [ 65, "MOVE_ROCK_SLIDE" ],
             [ 73, "MOVE_GIGA_IMPACT" ]
         ],

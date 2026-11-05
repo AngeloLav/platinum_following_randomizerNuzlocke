@@ -467,6 +467,23 @@ int Battler_SlotForMove(BattleMon *mon, u16 move);
 int BattleSystem_ApplyTypeChart(BattleSystem *battleSys, BattleContext *battleCtx, int move, int inType, int attacker, int defender, int damage, u32 *moveStatusMask);
 
 /**
+ * @brief ENTRY P99: if the current defender is an Arceus about to be hit by the current move, change it (battle data
+ * only) to the single type that makes the move hit it worst - an immune type if one exists, otherwise a resisting type,
+ * picked at random among equals - and set its form to match. Not in link battles; once per turn per Arceus.
+ *
+ * @return TRUE if Arceus changed type (the caller plays subscript_arceus_transform)
+ */
+BOOL BattleSystem_TryArceusTransform(BattleSystem *battleSys, BattleContext *battleCtx);
+
+// ENTRY P109: what the trainer AI knows of the Pokemon it faces (see battle_lib.c). The three Observe functions are called
+// by the battle as things are shown; Hide / Restore wrap every AI decision (nesting is fine).
+void BattleAI_ObserveMoveResult(BattleSystem *battleSys, BattleContext *battleCtx);
+void BattleAI_ObserveMoveUsed(BattleSystem *battleSys, BattleContext *battleCtx, int battler, u16 move);
+void BattleAI_ObserveAbility(BattleSystem *battleSys, BattleContext *battleCtx, int battler, int ability);
+void BattleAI_HideOpponentInfo(BattleSystem *battleSys, BattleContext *battleCtx, int aiBattler);
+void BattleAI_RestoreOpponentInfo(BattleContext *battleCtx);
+
+/**
  * @brief Calculate the effectiveness mask of the given move.
  *
  * @param battleCtx

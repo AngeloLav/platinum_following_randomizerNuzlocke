@@ -37,6 +37,7 @@
 #include "particle_system.h"
 #include "pltt_transfer.h"
 #include "pokemon.h"
+#include "pokemon_color_mod.h"
 #include "pokemon_sprite.h"
 #include "sound.h"
 #include "sound_playback.h"
@@ -1724,6 +1725,14 @@ static void BattleAnimScriptCmd_LoadPokemonSpriteIntoBg(BattleAnimSystem *system
         0,
         PLTT_DEST(BATTLE_BG_PALETTE_MON_SPRITE));
 
+    // COLOR MOD (port of PokeHeartGold ENTRY B item 2, "attack-animation flash fix" - BG copy): this loads
+    // the battler's own palette straight from its species NARC member into a BG-layer palette slot for
+    // animations that show the mon as a background element (e.g. some move-usage animations, per this
+    // command's own name), bypassing ENTRY P5's PokemonSpriteManager rotation hook the same way the temp
+    // OBJ sprite in BattleMonOBJData_New did (see that fix, a few functions up in this same file).
+    PersonalityRotatePalette(PaletteData_GetUnfadedBuffer(system->paletteData, PLTTBUF_MAIN_BG) + PLTT_DEST(BATTLE_BG_PALETTE_MON_SPRITE), PALETTE_SIZE, BattleAnimSystem_GetBattlerPersonality(system, battler));
+    PersonalityRotatePalette(PaletteData_GetFadedBuffer(system->paletteData, PLTTBUF_MAIN_BG) + PLTT_DEST(BATTLE_BG_PALETTE_MON_SPRITE), PALETTE_SIZE, BattleAnimSystem_GetBattlerPersonality(system, battler));
+
     Graphics_LoadTilemapToBgLayerFromOpenNARC(
         system->arcs[BATTLE_ANIM_SYSTEM_ARC_BATT_BG],
         memberIndex,
@@ -1931,6 +1940,12 @@ static void BattleAnimScriptCmd_AddPokemonSprite(BattleAnimSystem *system)
             PLTTBUF_MAIN_OBJ,
             PALETTE_SIZE_BYTES,
             PLTT_DEST(offset));
+
+        // COLOR MOD (port of PokeHeartGold ENTRY A/B): a third instance of the same bypass - this script
+        // command clones the battler into its own fresh 2D OBJ sprite for a specific animation, loading the
+        // mon's palette straight from its species NARC member, bypassing ENTRY P5's rotation hook.
+        PersonalityRotatePalette(PaletteData_GetUnfadedBuffer(system->paletteData, PLTTBUF_MAIN_OBJ) + PLTT_DEST(offset), PALETTE_SIZE, BattleAnimSystem_GetBattlerPersonality(system, battler));
+        PersonalityRotatePalette(PaletteData_GetFadedBuffer(system->paletteData, PLTTBUF_MAIN_OBJ) + PLTT_DEST(offset), PALETTE_SIZE, BattleAnimSystem_GetBattlerPersonality(system, battler));
     }
 
     GF_ASSERT(system->pokemonSprites[spriteID] == NULL);
@@ -3630,6 +3645,20 @@ int BattleAnimSystem_GetBattlerForm(BattleAnimSystem *system, int battler)
 
 int BattleAnimSystem_GetBattlerPersonality(BattleAnimSystem *system, int battler)
 {
+    // COLOR MOD FIX (2026-10-11, potion/bag-item flicker): the personalities in system->context come from the caller's
+    // MoveAnimation, and every bag-item / held-item / send-out sub-animation builds that struct with
+    // BattleController_SetMoveAnimation(..., battleCtx = NULL, ...), which leaves species/forms/personalities
+    // UNINITIALISED (stack garbage). The colour-rotation hooks that clone a battler's palette (AddPokemonSprite etc.) read
+    // this value, so during the Potion "restore HP" animation the clones were rotated by a random personality and flashed
+    // the wrong colours for a few frames. HeartGold never had this because its hook reads the personality from the live
+    // Pokepic itself. Do the same here: the battler's own on-screen sprite always carries the personality its colours were
+    // built with (including 0 for a Substitute doll), so prefer it and only fall back to the context value without a sprite.
+    PokemonSprite *sprite = BattleAnimSystem_GetBattlerSprite(system, battler);
+
+    if (sprite != NULL) {
+        return PokemonSprite_GetTemplate(sprite)->personality;
+    }
+
     return system->context->battlerPersonalities[battler];
 }
 
@@ -3958,6 +3987,20 @@ BattleMonOBJData *BattleMonOBJData_New(BattleSystem *battleSys, enum HeapID heap
                     paletteOffset = PlttTransfer_GetPlttOffset(paletteProxy, NNS_G2D_VRAM_TYPE_2DMAIN);
 
                     PaletteData_LoadBufferFromFileStart(btlMonObjData->spriteContext.plttData, narcID, paletteIdx, btlMonObjData->heapID, PLTTBUF_MAIN_OBJ, PALETTE_SIZE_BYTES, PLTT_DEST(paletteOffset));
+
+                    // COLOR MOD (port of PokeHeartGold ENTRY A - "battle send-out flash fix"): this loads the
+                    // battler's palette straight from its own species NARC member into a separate 2D OBJ
+                    // palette buffer, bypassing PokemonSpriteManager/BufferPokemonSpritePlttData entirely
+                    // (where ENTRY P5's rotation hook lives) - so without this, this temporary 2D OBJ replica
+                    // of the mon (used by specific battle animations/effects, e.g. around send-out) would
+                    // flash the plain, unrotated palette while the mon's real 3D sprite shows the correct
+                    // rotated color, exactly the bug HG's own ENTRY A found and fixed in its equivalent
+                    // function (BattleMonOBJData_New - HG's own notes identify this Platinum function by
+                    // name). PokemonSprite is a fully-exposed (non-opaque) struct here, so its own cached
+                    // personality (the same field ENTRY P5's hook reads, already populated for Spinda spots)
+                    // is read directly, rather than plumbing a new parameter through.
+                    PersonalityRotatePalette(PaletteData_GetUnfadedBuffer(btlMonObjData->spriteContext.plttData, PLTTBUF_MAIN_OBJ) + PLTT_DEST(paletteOffset), PALETTE_SIZE, pokemonSprite->template.personality);
+                    PersonalityRotatePalette(PaletteData_GetFadedBuffer(btlMonObjData->spriteContext.plttData, PLTTBUF_MAIN_OBJ) + PLTT_DEST(paletteOffset), PALETTE_SIZE, pokemonSprite->template.personality);
                 }
             }
         }

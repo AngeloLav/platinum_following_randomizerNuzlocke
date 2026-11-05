@@ -2,6 +2,7 @@
 
 #include <nitro.h>
 
+#include "generated/movement_actions.h"
 #include "generated/movement_types.h"
 #include "generated/object_events_gfx.h"
 #include "generated/genders.h"
@@ -11,22 +12,26 @@
 
 #include "billboard.h"
 #include "billboard_vram_transfer.h"
+#include "field_overworld_state.h"
 #include "field_script_context.h"
 #include "field_task.h"
 #include "follower_mon_talk.h"
 #include "inlines.h"
 #include "constants/graphics.h"
 #include "constants/map_object.h"
+#include "constants/player_avatar.h"
 #include "map_header.h"
 #include "map_object.h"
 #include "map_object_move.h"
 #include "party.h"
 #include "player_avatar.h"
 #include "pokemon.h"
+#include "pokemon_color_mod.h"
 #include "savedata.h"
 #include "script_manager.h"
 #include "system_flags.h"
 #include "terrain_collision_manager.h"
+#include "unk_020655F4.h"
 #include "vars_flags.h"
 #include "vram_transfer.h"
 
@@ -2087,6 +2092,56 @@ static const u16 *FollowerMon_GetHGShinyPalette(u16 graphicsID)
     }
 }
 
+// ENTRY P78: HeartGold's two per-species follower colour fixes, copied from PokeHeartGold src/follow_mon.c
+// (FollowMon_GetBrightnessPercent / FollowMon_GetHueOffsets / FollowMon_BrightenColor; Changelog ENTRY Z and AA).
+// Shiny Totodile's follower palette is a few shades too dark next to its status-screen sprite, so each colour is
+// scaled by FOLLOWER_HG_TOTODILE_SHINY_BRIGHTNESS_PERCENT per RGB channel BEFORE the personality rotation.
+#define FOLLOWER_HG_TOTODILE_SHINY_BRIGHTNESS_PERCENT 125
+
+static u32 FollowerMon_GetHGBrightnessPercent(u16 graphicsID, BOOL shiny)
+{
+    if (shiny && graphicsID == OBJ_EVENT_GFX_TOTODILE) {
+        return FOLLOWER_HG_TOTODILE_SHINY_BRIGHTNESS_PERCENT;
+    }
+
+    return 100;
+}
+
+// Per-colour hue nudges (units of 2 degrees): the shiny Totodile / Feraligatr follower body colours (palette
+// indexes 9-12) land 15-28 degrees higher on the hue wheel than the status sprite's after the same rotation
+// (blue drifting to purple), so HG pulls them back by 16 degrees (-8 * 2). All other colours are unchanged.
+static const s8 sFollowerHGShinyTotodileLineHueOffsets[PALETTE_SIZE] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, -8, -8, -8, -8, 0, 0, 0
+};
+
+static const s8 *FollowerMon_GetHGHueOffsets(u16 graphicsID, BOOL shiny)
+{
+    if (shiny && (graphicsID == OBJ_EVENT_GFX_TOTODILE || graphicsID == OBJ_EVENT_GFX_FERALIGATR)) {
+        return sFollowerHGShinyTotodileLineHueOffsets;
+    }
+
+    return NULL;
+}
+
+static u16 FollowerMon_BrightenColor(u16 color, u32 percent)
+{
+    u32 r = (color & 0x1F) * percent / 100;
+    u32 g = ((color >> 5) & 0x1F) * percent / 100;
+    u32 b = ((color >> 10) & 0x1F) * percent / 100;
+
+    if (r > 31) {
+        r = 31;
+    }
+    if (g > 31) {
+        g = 31;
+    }
+    if (b > 31) {
+        b = 31;
+    }
+
+    return (u16)(r | (g << 5) | (b << 10));
+}
+
 // First non-egg, non-fainted party member, or NULL if none (whole party fainted/eggs only/empty) - the
 // same "who is the active party leader" rule used elsewhere in this project (e.g. the sibling PokeHeartGold
 // project's FollowMon_GetLeadColorInfo uses the identical rule).
@@ -2202,6 +2257,13 @@ static u16 FollowerMon_GetDisplayGraphicsID(FieldSystem *fieldSystem, Pokemon *m
     return graphicsID;
 }
 
+// ENTRY P106: while TRUE an existing follower keeps its current look (FollowerMon_Refresh does not swap its graphics) -
+// set by FollowerMonFormChangeBegin so a form change happens behind a fade, as in HG. Cleared when the follower is
+// respawned or a new one is created.
+static BOOL sFollowerHoldGraphics = FALSE;
+
+static BOOL sFollowerWasCycling = FALSE; // ENTRY P105
+
 void FollowerMon_Despawn(FieldSystem *fieldSystem)
 {
     MapObject *existing = FollowerMon_GetMapObject(fieldSystem);
@@ -2257,7 +2319,7 @@ void FollowerMon_Refresh(FieldSystem *fieldSystem)
         // code in src/overlay008/gym_features.c and src/overlay009/ov9_02249960.c; NPC disguise-swap code
         // in src/unk_0205C22C.c) - this follower code was the only caller still using the bare, non-freeing
         // version for a live swap.
-        if (MapObject_GetGraphicsID(existing) != graphicsID) {
+        if (MapObject_GetGraphicsID(existing) != graphicsID && sFollowerHoldGraphics == FALSE) { // ENTRY P106: not while held
             sub_02061AD4(existing, graphicsID);
         }
         MapObject_SetScript(existing, FOLLOWER_MON_TALK_SCRIPT_ID); // ENTRY P63, see below
@@ -2307,12 +2369,86 @@ void FollowerMon_Refresh(FieldSystem *fieldSystem)
     sFollowerReleaseX = x;
     sFollowerReleaseZ = z;
     sFollowerReleaseGrace = 0;
+    FollowerMon_SetWhiteFlash(FALSE); // ENTRY P101
+    sFollowerHoldGraphics = FALSE; // ENTRY P106
 }
+
+// ENTRY P98: Continue (FieldMapChange_LoadObjects) restores the saved map objects, and the vanilla loader
+// (map_object.c sub_02061FF0) clears every object's hidden flag - so a follower saved while still in its ball came back
+// visible where it was saved: in the doorway just after leaving a building, or on the player's own tile after the
+// Pokemon Center hop. If the saved follower was hidden, or it stands on the player's tile, it is treated as in its
+// ball: hidden on the player's tile, and out with the Poke Ball effect on the player's first step (as after a door).
+void FollowerMon_RestoreAfterLoad(FieldSystem *fieldSystem)
+{
+    MapObject *followerObj = FollowerMon_GetMapObject(fieldSystem);
+
+    if (followerObj == NULL) {
+        return;
+    }
+
+    MapObject *playerObj = PlayerAvatar_GetMapObject(fieldSystem->playerAvatar);
+    int playerX = MapObject_GetX(playerObj);
+    int playerZ = MapObject_GetZ(playerObj);
+    int followerX = MapObject_GetX(followerObj);
+    int followerZ = MapObject_GetZ(followerObj);
+    BOOL inBall = followerX == playerX && followerZ == playerZ;
+
+    // ENTRY P107: saved on a bicycle - the follower is in its ball (ENTRY P105), so it stays there without the return
+    // effect FollowerMon_UpdateRelease would otherwise play for a follower that is out when cycling starts.
+    if (PlayerAvatar_GetPlayerState(fieldSystem->playerAvatar) == PLAYER_AVATAR_CYCLING) {
+        inBall = TRUE;
+        sFollowerWasCycling = TRUE;
+    }
+    const MapObjectSave *mapObjSave = ((FieldOverworldSave *)SaveData_GetFieldOverworldSave(fieldSystem->saveData))->unk_00;
+
+    for (int i = 0; i < 64 && inBall == FALSE; i++, mapObjSave++) {
+        if ((mapObjSave->status & MAP_OBJ_STATUS_0) && mapObjSave->movementType == MOVEMENT_TYPE_FOLLOW_PLAYER
+            && mapObjSave->x == followerX && mapObjSave->z == followerZ && mapObjSave->graphicsID == MapObject_GetGraphicsID(followerObj)) {
+            inBall = (mapObjSave->status & MAP_OBJ_STATUS_HIDE) != 0;
+        }
+    }
+
+    if (inBall == FALSE) {
+        return;
+    }
+
+    MapObject_SetPosDirFromCoords(followerObj, playerX, MapObject_GetY(playerObj), playerZ, MapObject_GetFacingDir(playerObj));
+    MapObject_SetHidden(followerObj, TRUE);
+    sFollowerReleasePending = TRUE;
+    sFollowerReleaseX = playerX;
+    sFollowerReleaseZ = playerZ;
+    sFollowerReleaseGrace = 0;
+}
+
+static void FollowerMon_ForceRenderUpdate(MapObject *followerObj);
 
 // ENTRY P87: called every field frame from FieldMap_Main (overlay 5 - FollowerMon_StartBallEffect lives there).
 void FollowerMon_UpdateRelease(FieldSystem *fieldSystem)
 {
+    FollowerMon_IsClearingPath(fieldSystem); // ENTRY P96: also finishes a step-aside animation nobody waited for
+
     MapObject *followerObj = FollowerMon_GetMapObject(fieldSystem);
+
+    // ENTRY P105: BICYCLE (HG). Getting on, the follower goes back into its Poke Ball (the white shrink, as at a door);
+    // while cycling it stays in it, its release tile following the player; after getting off, the normal release below
+    // brings it out of the ball on the tile the player steps off - the first step.
+    if (followerObj != NULL && PlayerAvatar_GetPlayerState(fieldSystem->playerAvatar) == PLAYER_AVATAR_CYCLING) {
+        MapObject *cyclistObj = PlayerAvatar_GetMapObject(fieldSystem->playerAvatar);
+
+        if (sFollowerWasCycling == FALSE && MapObject_CheckStatusFlag(followerObj, MAP_OBJ_STATUS_HIDE) == FALSE) {
+            FollowerMon_StartBallReturnEffect(followerObj);
+        }
+
+        sFollowerWasCycling = TRUE;
+        sFollowerReleasePending = TRUE;
+        sFollowerReleaseX = MapObject_GetX(cyclistObj);
+        sFollowerReleaseZ = MapObject_GetZ(cyclistObj);
+        sFollowerReleaseGrace = 0;
+        FollowerMon_ForceRenderUpdate(followerObj); // shows the shrink/hide even if the follower is paused
+        return;
+    }
+
+    sFollowerWasCycling = FALSE;
 
     if (followerObj == NULL || MapObject_CheckStatusFlag(followerObj, MAP_OBJ_STATUS_HIDE) == FALSE) {
         sFollowerReleasePending = FALSE;
@@ -2402,12 +2538,14 @@ BOOL ScrCmd_FollowerMonHealRespawn(ScriptContext *ctx)
     FieldSystem *fieldSystem = ctx->fieldSystem;
 
     sFollowerHeldLeadSlot = FOLLOWER_LEAD_SLOT_NONE;
+    sFollowerHoldGraphics = FALSE; // ENTRY P106
     FollowerMon_Despawn(fieldSystem);
     FollowerMon_Refresh(fieldSystem);
 
     MapObject *followerObj = FollowerMon_GetMapObject(fieldSystem);
 
-    if (followerObj == NULL) {
+    // ENTRY P106: on a bicycle it stays in its ball (ENTRY P105), as HG's meteorite script does.
+    if (followerObj == NULL || PlayerAvatar_GetPlayerState(fieldSystem->playerAvatar) == PLAYER_AVATAR_CYCLING) {
         return FALSE;
     }
 
@@ -2426,11 +2564,569 @@ BOOL ScrCmd_FollowerMonHealRespawn(ScriptContext *ctx)
     return FALSE;
 }
 
-// FOLLOWER PALETTE: every follower sprite comes from HeartGold with two palettes, normal (tsure_poke0) and shiny
-// (tsure_poke1), stored here as sFollowerHGPristinePalettes / sFollowerHGShinyPalettes (+ the bulk tables). The
-// billboard pipeline uploads the texture's own palette; this re-uploads the one matching the party leader's real
-// shininess into this one billboard's own VRAM palette slot. It runs every field frame because the normal pipeline
-// can re-upload the texture's palette on its own. Palettes are used exactly as HeartGold has them (no colour change).
+// ENTRY P106: DEOXYS METEORITES (Veilstone City), 1:1 with HG's Route 3 meteorites (scr_seq_0175_R03.s): if the Pokemon
+// whose form is about to change is the one following the player, HG changes the form, fades to black, reloads the map
+// (FollowMon_ChangeMon gives the follower its new form) with the follower placed next to the player, waits 10 frames and
+// fades back in before the cry and message; otherwise there is no fade. FollowerMonFormChangeBegin species, destVar (run
+// BEFORE the form change): destVar = TRUE and the follower keeps its current look (sFollowerHoldGraphics) if the follower
+// is out and its Pokemon is that species - the script then fades out, respawns it with FollowerMonHealRespawn, waits and
+// fades in. Without the hold the follower swapped its graphics in the middle of the message and was sometimes invisible
+// for a while (the new texture loads while the script has every object paused).
+BOOL ScrCmd_FollowerMonFormChangeBegin(ScriptContext *ctx)
+{
+    u16 species = ScriptContext_GetVar(ctx);
+    u16 *destVar = ScriptContext_GetVarPointer(ctx);
+    FieldSystem *fieldSystem = ctx->fieldSystem;
+    MapObject *followerObj = FollowerMon_GetMapObject(fieldSystem);
+    Pokemon *leadMon = FollowerMon_GetLeadMon(SaveData_GetParty(fieldSystem->saveData));
+
+    *destVar = FALSE;
+
+    if (followerObj != NULL && leadMon != NULL && MapObject_CheckStatusFlag(followerObj, MAP_OBJ_STATUS_HIDE) == FALSE
+        && Pokemon_GetValue(leadMon, MON_DATA_SPECIES, NULL) == species) {
+        sFollowerHoldGraphics = TRUE;
+        *destVar = TRUE;
+    }
+
+    return FALSE;
+}
+
+// ENTRY P107 (user: "the model should be placed in the same location it was before. Including vertical offsets in case
+// there are stairs. So if it isn't behind me when I press the meteor, dont attempt to spawn it behind me."):
+// FollowerMonFormChangeEnd, while the screen is black, replaces FollowerMonHealRespawn in the meteorite scripts. It drops
+// the hold and lets FollowerMon_Refresh swap the SAME follower object's graphics in place (sub_02061AD4) - same tile,
+// same height, same facing - then waits (max FOLLOWER_FORM_CHANGE_MAX_FRAMES) until the new form's billboard exists,
+// forcing render updates because the script has the follower paused.
+#define FOLLOWER_FORM_CHANGE_MAX_FRAMES 30
+
+static u8 sFollowerFormChangeFrames;
+
+static BOOL ScriptContext_FollowerMonFormChangeEnd(ScriptContext *ctx)
+{
+    MapObject *followerObj = FollowerMon_GetMapObject(ctx->fieldSystem);
+
+    if (followerObj == NULL) {
+        return TRUE;
+    }
+
+    FollowerMon_ForceRenderUpdate(followerObj);
+
+    return ov5_021EB1A0(followerObj) != NULL || ++sFollowerFormChangeFrames >= FOLLOWER_FORM_CHANGE_MAX_FRAMES;
+}
+
+BOOL ScrCmd_FollowerMonFormChangeEnd(ScriptContext *ctx)
+{
+    sFollowerHoldGraphics = FALSE;
+    FollowerMon_Refresh(ctx->fieldSystem);
+    sFollowerFormChangeFrames = 0;
+    ScriptContext_Pause(ctx, ScriptContext_FollowerMonFormChangeEnd);
+    return TRUE;
+}
+
+// ENTRY P96: NOBODY WALKS THROUGH THE FOLLOWER IN SCRIPTED EVENTS. Platinum's cutscene scripts were written without a
+// follower, so an NPC (or the player) moved by ApplyMovement could walk straight through it or stop on its tile. Before
+// such a movement starts, ScrCmd_ApplyMovement works out the tiles the object will cross (FollowerMonPath_FromAnimCmds);
+// if the follower stands on one of them it first steps onto a free neighbouring tile that is off that path - one next to
+// the player if possible - and turns to watch where the mover is going. Only if no such tile exists does it go back into
+// its Poke Ball (HG's return effect); it comes out again after the event, on the player's next step.
+static SysTask *sFollowerAsideTask = NULL;
+static BOOL sFollowerAsideReturning = FALSE;
+static u8 sFollowerAsideFrames = 0;
+static MapObjectAnimCmd sFollowerAsideCmds[3];
+
+#define FOLLOWER_ASIDE_RETURN_MAX_FRAMES 30
+
+// Tiles one movement action moves an object (0 = it stays on its tile), and in which direction.
+static int FollowerMon_GetActionTiles(u32 action, int *dir)
+{
+    if (action >= MOVEMENT_ACTION_WALK_SLOWER_NORTH && action <= MOVEMENT_ACTION_WALK_FASTER_EAST) {
+        *dir = (action - MOVEMENT_ACTION_WALK_SLOWER_NORTH) % 4;
+        return 1;
+    }
+
+    if (action >= MOVEMENT_ACTION_JUMP_NEAR_FAST_NORTH && action <= MOVEMENT_ACTION_JUMP_NEAR_FAST_EAST) {
+        *dir = action - MOVEMENT_ACTION_JUMP_NEAR_FAST_NORTH;
+        return 1;
+    }
+
+    if (action >= MOVEMENT_ACTION_JUMP_FAR_NORTH && action <= MOVEMENT_ACTION_JUMP_FAR_EAST) {
+        *dir = action - MOVEMENT_ACTION_JUMP_FAR_NORTH;
+        return 2;
+    }
+
+    if (action >= MOVEMENT_ACTION_WALK_SLIGHTLY_FAST_NORTH && action <= MOVEMENT_ACTION_RUN_EAST) {
+        *dir = (action - MOVEMENT_ACTION_WALK_SLIGHTLY_FAST_NORTH) % 4;
+        return 1;
+    }
+
+    if (action == MOVEMENT_ACTION_JUMP_NEAR_SLOW_WEST || action == MOVEMENT_ACTION_JUMP_NEAR_SLOW_EAST) {
+        *dir = action == MOVEMENT_ACTION_JUMP_NEAR_SLOW_WEST ? DIR_WEST : DIR_EAST;
+        return 1;
+    }
+
+    if (action == MOVEMENT_ACTION_JUMP_FARTHER_WEST || action == MOVEMENT_ACTION_JUMP_FARTHER_EAST) {
+        *dir = action == MOVEMENT_ACTION_JUMP_FARTHER_WEST ? DIR_WEST : DIR_EAST;
+        return 3;
+    }
+
+    if (action >= MOVEMENT_ACTION_WALK_EVER_SO_SLIGHTLY_FAST_NORTH && action <= MOVEMENT_ACTION_WALK_EVER_SO_SLIGHTLY_FAST_EAST) {
+        *dir = action - MOVEMENT_ACTION_WALK_EVER_SO_SLIGHTLY_FAST_NORTH;
+        return 1;
+    }
+
+    return 0;
+}
+
+void FollowerMonPath_FromAnimCmds(FollowerMonPath *path, const MapObject *mapObj, const MapObjectAnimCmd *cmds)
+{
+    int x = MapObject_GetX(mapObj);
+    int z = MapObject_GetZ(mapObj);
+
+    path->count = 0;
+
+    for (; cmds->movementAction != MOVEMENT_ACTION_END && path->count < FOLLOWER_PATH_MAX_TILES; cmds++) {
+        int dir;
+        int tiles = FollowerMon_GetActionTiles(cmds->movementAction, &dir);
+
+        for (int n = 0; n < cmds->count && tiles > 0; n++) {
+            for (int t = 0; t < tiles && path->count < FOLLOWER_PATH_MAX_TILES; t++) {
+                x += MapObject_GetDxFromDir(dir);
+                z += MapObject_GetDzFromDir(dir);
+                path->x[path->count] = x;
+                path->z[path->count] = z;
+                path->count++;
+            }
+        }
+    }
+}
+
+static BOOL FollowerMonPath_Contains(const FollowerMonPath *path, int x, int z)
+{
+    for (int i = 0; i < path->count; i++) {
+        if (path->x[i] == x && path->z[i] == z) {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+BOOL FollowerMon_ClearPath(FieldSystem *fieldSystem, const FollowerMonPath *path, const MapObject *mover)
+{
+    MapObject *followerObj = FollowerMon_GetMapObject(fieldSystem);
+
+    if (followerObj == NULL || followerObj == mover || path->count == 0
+        || MapObject_CheckStatusFlag(followerObj, MAP_OBJ_STATUS_HIDE) == TRUE) {
+        return FALSE;
+    }
+
+    if (sFollowerAsideTask != NULL || sFollowerAsideReturning) {
+        return TRUE; // already getting out of the way
+    }
+
+    int followerX = MapObject_GetX(followerObj);
+    int followerZ = MapObject_GetZ(followerObj);
+
+    if (FollowerMonPath_Contains(path, followerX, followerZ) == FALSE) {
+        return FALSE;
+    }
+
+    MapObject *playerObj = PlayerAvatar_GetMapObject(fieldSystem->playerAvatar);
+    int playerX = MapObject_GetX(playerObj);
+    int playerZ = MapObject_GetZ(playerObj);
+    int bestDir = DIR_NONE;
+    int bestScore = 0;
+
+    for (int dir = DIR_NORTH; dir < MAX_DIR; dir++) {
+        int x = followerX + MapObject_GetDxFromDir(dir);
+        int z = followerZ + MapObject_GetDzFromDir(dir);
+
+        if (FollowerMonPath_Contains(path, x, z) || (x == playerX && z == playerZ)) {
+            continue;
+        }
+
+        // terrain, height and every other object (player, NPCs, the mover itself)
+        if (sub_02063EBC(followerObj, dir) != 0) {
+            continue;
+        }
+
+        int dx = x - playerX;
+        int dz = z - playerZ;
+        int score = ((dx < 0 ? -dx : dx) + (dz < 0 ? -dz : dz)) == 1 ? 2 : 1; // next to the player is best
+
+        if (score > bestScore) {
+            bestScore = score;
+            bestDir = dir;
+        }
+    }
+
+    if (bestDir == DIR_NONE) {
+        // Nowhere to step: back into the ball until the event is over.
+        FollowerMon_StartBallReturnEffect(followerObj);
+        sFollowerAsideReturning = TRUE;
+        sFollowerAsideFrames = 0;
+        return TRUE;
+    }
+
+    int asideX = followerX + MapObject_GetDxFromDir(bestDir);
+    int asideZ = followerZ + MapObject_GetDzFromDir(bestDir);
+    int lookX = path->x[path->count - 1];
+    int lookZ = path->z[path->count - 1];
+    int lookDir = (lookX == asideX && lookZ == asideZ) ? bestDir : GetDirectionBetweenPoints(asideX, asideZ, lookX, lookZ);
+
+    sFollowerAsideCmds[0].movementAction = MovementAction_TurnActionTowardsDir(bestDir, MOVEMENT_ACTION_WALK_FAST_NORTH);
+    sFollowerAsideCmds[0].count = 1;
+    sFollowerAsideCmds[1].movementAction = MovementAction_TurnActionTowardsDir(lookDir, MOVEMENT_ACTION_FACE_NORTH);
+    sFollowerAsideCmds[1].count = 1;
+    sFollowerAsideCmds[2].movementAction = MOVEMENT_ACTION_END;
+    sFollowerAsideCmds[2].count = 0;
+
+    sFollowerAsideTask = MapObject_StartAnimation(followerObj, sFollowerAsideCmds);
+    return sFollowerAsideTask != NULL;
+}
+
+static void FollowerMon_ForceRenderUpdate(MapObject *followerObj);
+
+BOOL FollowerMon_IsClearingPath(FieldSystem *fieldSystem)
+{
+    if (sFollowerAsideTask != NULL) {
+        if (MapObject_HasAnimationEnded(sFollowerAsideTask) == FALSE) {
+            return TRUE;
+        }
+
+        MapObject_FinishAnimation(sFollowerAsideTask);
+        sFollowerAsideTask = NULL;
+    }
+
+    if (sFollowerAsideReturning) {
+        MapObject *followerObj = FollowerMon_GetMapObject(fieldSystem);
+
+        if (followerObj != NULL) {
+            FollowerMon_ForceRenderUpdate(followerObj); // ENTRY P97: a locked (paused) follower shows the shrink and the hide
+        }
+
+        if (followerObj != NULL && MapObject_CheckStatusFlag(followerObj, MAP_OBJ_STATUS_HIDE) == FALSE
+            && ++sFollowerAsideFrames < FOLLOWER_ASIDE_RETURN_MAX_FRAMES) {
+            return TRUE;
+        }
+
+        sFollowerAsideReturning = FALSE;
+    }
+
+    return FALSE;
+}
+
+// ENTRY P96: POKEMON CENTER - the follower hops onto the counter and goes into its ball, HG ScrCmd_599 (ov01_02205AEC /
+// task ov01_02205B14). After the player hands over the Pokemon: a follower behind the player walks around to the side
+// (HG: west, then north), a follower already beside the player stays; it faces the counter and hops onto the counter tile
+// in front of the player in 8 frames (sideways 2 units/frame, forward 4,4,4,2,2,2,0,0 and up 1,2,2,3,3,2,2,0 units -
+// HG's ov01_022096F0 / ov01_022096E0), plays HG's return-to-ball effect, and 20 frames later it is put back (hidden) on
+// the player's tile, from where it comes out again on the player's next step after the Center script. Anything that does
+// not fit (no follower, already in its ball, standing elsewhere) just skips the hop.
+enum FollowerHopState {
+    FOLLOWER_HOP_START = 0,
+    FOLLOWER_HOP_WALK,
+    FOLLOWER_HOP_JUMP,
+    FOLLOWER_HOP_RETURN,
+    FOLLOWER_HOP_WAIT,
+};
+
+#define FOLLOWER_HOP_FRAMES      8
+#define FOLLOWER_HOP_SIDE_SPEED  (FX32_ONE * 2)
+#define FOLLOWER_HOP_RETURN_WAIT 20
+
+static const u8 sFollowerHopForward[FOLLOWER_HOP_FRAMES] = { 4, 4, 4, 2, 2, 2, 0, 0 };
+static const u8 sFollowerHopUp[FOLLOWER_HOP_FRAMES] = { 1, 2, 2, 3, 3, 2, 2, 0 };
+
+static struct {
+    u8 state;
+    u8 frame;
+    u8 facing;
+    s8 sideDir;
+    BOOL restoreHeightUpdates;
+    SysTask *walkTask;
+    MapObjectAnimCmd walkCmds[4];
+} sFollowerHop;
+
+static BOOL FollowerMon_IsTileFree(FieldSystem *fieldSystem, MapObject *followerObj, int x, int z)
+{
+    MapObject *obj = sub_0206326C(fieldSystem->mapObjMan, x, z, FALSE);
+
+    return TerrainCollisionManager_CheckCollision(fieldSystem, x, z) == FALSE && (obj == NULL || obj == followerObj);
+}
+
+static void FollowerMon_HopStart(FieldSystem *fieldSystem, MapObject *followerObj)
+{
+    MapObject *playerObj = PlayerAvatar_GetMapObject(fieldSystem->playerAvatar);
+    int facing = PlayerAvatar_GetFacingDir(fieldSystem->playerAvatar);
+    int playerX = MapObject_GetX(playerObj);
+    int playerZ = MapObject_GetZ(playerObj);
+    int followerX = MapObject_GetX(followerObj);
+    int followerZ = MapObject_GetZ(followerObj);
+    int behind = Direction_GetOpposite(facing);
+    int sides[2];
+
+    // the player's left first, as HG (facing the counter = north, left = west)
+    if (facing == DIR_NORTH || facing == DIR_SOUTH) {
+        sides[0] = facing == DIR_NORTH ? DIR_WEST : DIR_EAST;
+    } else {
+        sides[0] = facing == DIR_WEST ? DIR_SOUTH : DIR_NORTH;
+    }
+    sides[1] = Direction_GetOpposite(sides[0]);
+
+    sFollowerHop.facing = facing;
+    sFollowerHop.sideDir = DIR_NONE;
+    sFollowerHop.walkTask = NULL;
+    MapObject_SetPauseMovementOn(followerObj);
+
+    for (int i = 0; i < 2; i++) {
+        int sideX = playerX + MapObject_GetDxFromDir(sides[i]);
+        int sideZ = playerZ + MapObject_GetDzFromDir(sides[i]);
+
+        if (followerX == sideX && followerZ == sideZ) {
+            sFollowerHop.sideDir = sides[i];
+            sFollowerHop.walkCmds[0].movementAction = MovementAction_TurnActionTowardsDir(facing, MOVEMENT_ACTION_FACE_NORTH);
+            sFollowerHop.walkCmds[0].count = 1;
+            sFollowerHop.walkCmds[1].movementAction = MOVEMENT_ACTION_END;
+            sFollowerHop.walkCmds[1].count = 0;
+            break;
+        }
+    }
+
+    if (sFollowerHop.sideDir == DIR_NONE
+        && followerX == playerX + MapObject_GetDxFromDir(behind) && followerZ == playerZ + MapObject_GetDzFromDir(behind)) {
+        for (int i = 0; i < 2; i++) {
+            int cornerX = followerX + MapObject_GetDxFromDir(sides[i]);
+            int cornerZ = followerZ + MapObject_GetDzFromDir(sides[i]);
+            int sideX = playerX + MapObject_GetDxFromDir(sides[i]);
+            int sideZ = playerZ + MapObject_GetDzFromDir(sides[i]);
+
+            if (FollowerMon_IsTileFree(fieldSystem, followerObj, cornerX, cornerZ) && FollowerMon_IsTileFree(fieldSystem, followerObj, sideX, sideZ)) {
+                sFollowerHop.sideDir = sides[i];
+                sFollowerHop.walkCmds[0].movementAction = MovementAction_TurnActionTowardsDir(sides[i], MOVEMENT_ACTION_WALK_NORMAL_NORTH);
+                sFollowerHop.walkCmds[0].count = 1;
+                sFollowerHop.walkCmds[1].movementAction = MovementAction_TurnActionTowardsDir(facing, MOVEMENT_ACTION_WALK_NORMAL_NORTH);
+                sFollowerHop.walkCmds[1].count = 1;
+                sFollowerHop.walkCmds[2].movementAction = MovementAction_TurnActionTowardsDir(facing, MOVEMENT_ACTION_FACE_NORTH);
+                sFollowerHop.walkCmds[2].count = 1;
+                sFollowerHop.walkCmds[3].movementAction = MOVEMENT_ACTION_END;
+                sFollowerHop.walkCmds[3].count = 0;
+                break;
+            }
+        }
+    }
+
+    if (sFollowerHop.sideDir == DIR_NONE) {
+        // Not behind or beside the player (or no way around): no hop, it just goes into its ball where it is.
+        sFollowerHop.state = FOLLOWER_HOP_RETURN;
+        return;
+    }
+
+    sFollowerHop.walkTask = MapObject_StartAnimation(followerObj, sFollowerHop.walkCmds);
+    sFollowerHop.state = sFollowerHop.walkTask != NULL ? FOLLOWER_HOP_WALK : FOLLOWER_HOP_RETURN;
+}
+
+// ENTRY P97 (fix for ENTRY P96): the follower's movement is paused for the whole Center script, and MapObject_Draw
+// (ov5_021ECC20.c) skips a paused object's renderer update unless a movement animation is running - so after the walk
+// its sprite froze beside the player: the hop (MapObject_SetPos), the return effect's hide and the move back to the
+// player's tile all stayed invisible until ReleaseAll at the end of the nurse's text. Same per-frame forced update as
+// the talk system's FollowerTalk_ForceRenderUpdate (src/follower_mon_talk.c).
+static void FollowerMon_ForceRenderUpdate(MapObject *followerObj)
+{
+    if (MapObject_IsMovementPaused(followerObj) == TRUE && sub_02062F7C(followerObj) == FALSE && sub_02062D4C(followerObj) == TRUE) {
+        sub_02062B68(followerObj);
+    }
+}
+
+static BOOL FollowerMon_HopStep(FieldSystem *fieldSystem, MapObject *followerObj);
+
+static BOOL ScriptContext_FollowerMonPokecenterHop(ScriptContext *ctx)
+{
+    FieldSystem *fieldSystem = ctx->fieldSystem;
+    MapObject *followerObj = FollowerMon_GetMapObject(fieldSystem);
+
+    if (followerObj == NULL) {
+        if (sFollowerHop.walkTask != NULL) {
+            MapObject_FinishAnimation(sFollowerHop.walkTask);
+            sFollowerHop.walkTask = NULL;
+        }
+
+        return TRUE;
+    }
+
+    BOOL done = FollowerMon_HopStep(fieldSystem, followerObj);
+
+    FollowerMon_ForceRenderUpdate(followerObj);
+    return done;
+}
+
+static BOOL FollowerMon_HopStep(FieldSystem *fieldSystem, MapObject *followerObj)
+{
+    switch (sFollowerHop.state) {
+    case FOLLOWER_HOP_START:
+        if (MapObject_CheckStatusFlag(followerObj, MAP_OBJ_STATUS_HIDE) == TRUE) {
+            return TRUE;
+        }
+
+        FollowerMon_HopStart(fieldSystem, followerObj);
+        return FALSE;
+
+    case FOLLOWER_HOP_WALK:
+        if (MapObject_HasAnimationEnded(sFollowerHop.walkTask) == FALSE) {
+            return FALSE;
+        }
+
+        MapObject_FinishAnimation(sFollowerHop.walkTask);
+        sFollowerHop.walkTask = NULL;
+        sFollowerHop.frame = 0;
+        sFollowerHop.state = FOLLOWER_HOP_JUMP;
+        return FALSE;
+
+    case FOLLOWER_HOP_JUMP: {
+        // sideways toward the player's column/row (opposite of the side it stands on), forward over the counter, and up
+        int toward = Direction_GetOpposite(sFollowerHop.sideDir);
+        VecFx32 pos;
+
+        if (sFollowerHop.frame == 0 && MapObject_CheckStatus(followerObj, MAP_OBJ_STATUS_12)) {
+            // Stop the per-frame terrain-height update (map_object_move.c sub_020634DC) from pulling it back down to the
+            // floor while it is up on the counter; restored when it is put back on the player's tile.
+            MapObject_SetStatusFlagOff(followerObj, MAP_OBJ_STATUS_12);
+            sFollowerHop.restoreHeightUpdates = TRUE;
+        }
+
+        MapObject_GetPosPtr(followerObj, &pos);
+        pos.x += MapObject_GetDxFromDir(toward) * FOLLOWER_HOP_SIDE_SPEED + MapObject_GetDxFromDir(sFollowerHop.facing) * (FX32_ONE * sFollowerHopForward[sFollowerHop.frame]);
+        pos.z += MapObject_GetDzFromDir(toward) * FOLLOWER_HOP_SIDE_SPEED + MapObject_GetDzFromDir(sFollowerHop.facing) * (FX32_ONE * sFollowerHopForward[sFollowerHop.frame]);
+        pos.y += FX32_ONE * sFollowerHopUp[sFollowerHop.frame];
+        MapObject_SetPos(followerObj, &pos);
+
+        if (++sFollowerHop.frame >= FOLLOWER_HOP_FRAMES) {
+            sFollowerHop.state = FOLLOWER_HOP_RETURN;
+        }
+
+        return FALSE;
+    }
+
+    case FOLLOWER_HOP_RETURN:
+        FollowerMon_StartBallReturnEffect(followerObj);
+        sFollowerHop.frame = 0;
+        sFollowerHop.state = FOLLOWER_HOP_WAIT;
+        return FALSE;
+
+    case FOLLOWER_HOP_WAIT:
+    default: {
+        if (++sFollowerHop.frame < FOLLOWER_HOP_RETURN_WAIT) {
+            return FALSE;
+        }
+
+        // Back in its ball, on the player's tile: it comes out on the player's next step after the Center script.
+        MapObject *playerObj = PlayerAvatar_GetMapObject(fieldSystem->playerAvatar);
+        int playerX = MapObject_GetX(playerObj);
+        int playerZ = MapObject_GetZ(playerObj);
+
+        MapObject_SetHidden(followerObj, TRUE);
+        MapObject_SetPosDirFromCoords(followerObj, playerX, MapObject_GetY(playerObj), playerZ, sFollowerHop.facing);
+
+        if (sFollowerHop.restoreHeightUpdates) {
+            MapObject_SetStatusFlagOn(followerObj, MAP_OBJ_STATUS_12);
+            sFollowerHop.restoreHeightUpdates = FALSE;
+        }
+
+        sFollowerReleasePending = TRUE;
+        sFollowerReleaseX = playerX;
+        sFollowerReleaseZ = playerZ;
+        sFollowerReleaseGrace = 0;
+        return TRUE;
+    }
+    }
+}
+
+BOOL ScrCmd_FollowerMonPokecenterHop(ScriptContext *ctx)
+{
+    sFollowerHop.state = FOLLOWER_HOP_START;
+    sFollowerHop.frame = 0;
+    sFollowerHop.walkTask = NULL;
+    sFollowerHop.restoreHeightUpdates = FALSE;
+    ScriptContext_Pause(ctx, ScriptContext_FollowerMonPokecenterHop);
+    return TRUE;
+}
+
+// ENTRY P100: ENTERING A DOOR. In HG the follower goes back into its Poke Ball behind the player as the player walks in. Same
+// return effect as the Pokemon Center hop (shrink, hidden, small ball - FollowerMon_StartBallReturnEffect), started where the
+// follower stands when the door sequence (unk_02056B30.c sub_02056E20) begins. The next map creates it in its ball anyway.
+void FollowerMon_EnterDoor(FieldSystem *fieldSystem)
+{
+    MapObject *followerObj = FollowerMon_GetMapObject(fieldSystem);
+
+    if (followerObj == NULL || MapObject_CheckStatusFlag(followerObj, MAP_OBJ_STATUS_HIDE) == TRUE) {
+        return;
+    }
+
+    FollowerMon_StartBallReturnEffect(followerObj);
+}
+
+// A follower paused during the door sequence would not show the shrink/hide otherwise (see FollowerMon_ForceRenderUpdate).
+void FollowerMon_UpdateEnterDoor(FieldSystem *fieldSystem)
+{
+    MapObject *followerObj = FollowerMon_GetMapObject(fieldSystem);
+
+    if (followerObj != NULL) {
+        FollowerMon_ForceRenderUpdate(followerObj);
+    }
+}
+
+// ENTRY P105: SCRIPTED DOORS (the Union Room and Colosseum doors at the back of the Pokemon Center 2F counter, which are
+// opened by the script instead of the field door sequence). FollowerMonEnterDoor, called right after the door opens:
+// the follower goes into its Poke Ball behind the player like at a normal door (FollowerMon_EnterDoor); the script waits
+// until it is hidden (at most FOLLOWER_SCRIPT_DOOR_MAX_FRAMES), then the player walks in while the ball is still shown.
+#define FOLLOWER_SCRIPT_DOOR_MAX_FRAMES 12
+
+static u8 sFollowerScriptDoorFrames;
+
+static BOOL ScriptContext_FollowerMonEnterDoor(ScriptContext *ctx)
+{
+    MapObject *followerObj = FollowerMon_GetMapObject(ctx->fieldSystem);
+
+    if (followerObj == NULL) {
+        return TRUE;
+    }
+
+    FollowerMon_ForceRenderUpdate(followerObj);
+
+    return MapObject_CheckStatusFlag(followerObj, MAP_OBJ_STATUS_HIDE) == TRUE || ++sFollowerScriptDoorFrames >= FOLLOWER_SCRIPT_DOOR_MAX_FRAMES;
+}
+
+BOOL ScrCmd_FollowerMonEnterDoor(ScriptContext *ctx)
+{
+    FollowerMon_EnterDoor(ctx->fieldSystem);
+    sFollowerScriptDoorFrames = 0;
+    ScriptContext_Pause(ctx, ScriptContext_FollowerMonEnterDoor);
+    return TRUE;
+}
+
+// FOLLOWER COLOR MOD (2026-09-23): personality-based palette rotation for the follower's OWN overworld
+// walking sprite - a separate problem from ENTRY P12's fix (which only covers Pokemon sprites built
+// through PokemonSpriteTemplate/PokemonSpriteManager: battle, PC box, summary screen, starter select).
+// The follower's on-map sprite is a species graphic (OBJ_EVENT_GFX_<SPECIES>) rendered through Platinum's
+// generic 2D "billboard" system instead - a textured quad in 3D space, backed by an ordinary
+// NNSG3dResTex/NNSGfdPlttKey pair (confirmed via src/billboard.c/billboard_vram_transfer.c - the same
+// underlying NNS_Gfd VRAM-transfer machinery the sibling PokeHeartGold project's own, 3D-model-based
+// follower already uses for this exact purpose - see that project's FollowMon_RefreshModelPalette, the
+// mechanism this is directly modeled on). Rather than splice a rotation into the vanilla billboard-loading
+// pipeline itself (src/overlay005/ov5_021EB1A0.c and friends - a large, largely undecompiled dispatch
+// system, real risk of subtly breaking every OTHER overworld object that reuses it, not just the
+// follower), this takes HG's own approach: let the normal pipeline load and upload the pristine palette
+// completely unmodified, then separately (and repeatedly, so it stays correct even if the normal pipeline
+// ever re-uploads the pristine version on its own) push a ROTATED COPY over the top, directly into this
+// one billboard's own VRAM palette slot only.
+// ENTRY P101: see FollowerMon_SetWhiteFlash (follower_mon.h).
+static BOOL sFollowerWhiteFlash = FALSE;
+
+void FollowerMon_SetWhiteFlash(BOOL on)
+{
+    sFollowerWhiteFlash = on;
+}
+
 void FollowerMon_RefreshPalette(FieldSystem *fieldSystem)
 {
     MapObject *followerObj = FollowerMon_GetMapObject(fieldSystem);
@@ -2444,35 +3140,91 @@ void FollowerMon_RefreshPalette(FieldSystem *fieldSystem)
         return;
     }
 
+    u32 personality = Pokemon_GetValue(leadMon, MON_DATA_PERSONALITY, NULL);
+
     // ov5_021EB1A0 (src/overlay005/ov5_021EB1A0.c) is overlay5-resident - only safe to call here because
     // every caller of THIS function (FieldMap_Main, src/overlay005/fieldmap.c - itself part of overlay5)
-    // is guaranteed to run only while overlay5 is already loaded.
+    // is guaranteed to run only while overlay5 is already loaded. It already knows how to find the right
+    // Billboard* for any graphics ID, including the generic-billboard case follower species use (confirmed
+    // by reading its own switch statement) - no need to duplicate that lookup logic here.
     Billboard *billboard = ov5_021EB1A0(followerObj);
     if (billboard == NULL) {
         // Not created yet (e.g. this is the same frame the follower object itself was just spawned) -
-        // FieldMap_Main calls this every frame, so it'll catch up shortly.
+        // nothing to rotate yet. FieldMap_Main calls this every frame, so it'll catch up shortly.
+        return;
+    }
+
+    NNSG3dResTex *texture = Billboard_GetTexture(billboard);
+    if (texture == NULL) {
         return;
     }
 
     u16 graphicsID = MapObject_GetGraphicsID(followerObj);
-    const u16 *pltt = FollowerMon_GetHGPristinePalette(graphicsID);
+    const u16 *hgPristinePltt = FollowerMon_GetHGPristinePalette(graphicsID);
 
-    if (pltt == NULL) {
-        // Not one of the HeartGold follower sprites: its texture's own palette is used as-is.
-        return;
+    static u16 sFollowerPlttRotated[PALETTE_SIZE];
+
+    if (hgPristinePltt != NULL) {
+        // ENTRY P23 (2026-10-01): use the verified-correct hardcoded palette instead of asking NNS_G3D to
+        // resolve it at runtime - see sFollowerHGPristinePalettes' own comment for the full investigation.
+        // ENTRY P52 (2026-10-01): if the party leader is shiny, use tsure_poke1's palette instead of
+        // tsure_poke0's - matching HG's own behavior (per the user's own report in ENTRY P23: "0 is nonshiny
+        // 1 is shiny. HG auto adjusts for shininess for follower mons to change their color").
+        // ENTRY P78: HeartGold's follower HSV rotation is now applied on top (ENTRY P22 had switched it off for
+        // HG-sourced species while chasing a shading question). Same order as HG's FollowMon_BuildRotatedPalette
+        // (PokeHeartGold src/follow_mon.c, Changelog ENTRY C/P/Z/AA): take the variant matching the leader's real
+        // shininess, brighten it for the one species HG brightens, then the personality hue/saturation/value
+        // rotation (with HG's per-colour hue nudge where HG has one). Index 0 (transparency) is never touched.
+        BOOL shiny = FALSE;
+        const u16 *hgShinyPltt = FollowerMon_GetHGShinyPalette(graphicsID);
+        if (Pokemon_IsShiny(leadMon) && hgShinyPltt != NULL) {
+            hgPristinePltt = hgShinyPltt;
+            shiny = TRUE;
+        }
+        MI_CpuCopy16(hgPristinePltt, sFollowerPlttRotated, sizeof(sFollowerPlttRotated));
+
+        u32 brightnessPercent = FollowerMon_GetHGBrightnessPercent(graphicsID, shiny);
+
+        if (brightnessPercent != 100) {
+            for (int i = 1; i < PALETTE_SIZE; i++) {
+                sFollowerPlttRotated[i] = FollowerMon_BrightenColor(sFollowerPlttRotated[i], brightnessPercent);
+            }
+        }
+
+        const s8 *hueOffsets = FollowerMon_GetHGHueOffsets(graphicsID, shiny);
+
+        if (hueOffsets != NULL) {
+            PersonalityRotatePaletteWithHueOffsets(sFollowerPlttRotated, PALETTE_SIZE, personality, hueOffsets);
+        } else {
+            PersonalityRotatePalette(sFollowerPlttRotated, PALETTE_SIZE, personality);
+        }
+    } else {
+        // The pristine (unrotated) palette lives inside the shared texture resource itself -
+        // GetPlttDataVRAMBuffer (src/billboard_vram_transfer.c) just computes a pointer into it, it does
+        // not copy or allocate. This resource may be shared by every OTHER object using the same graphics
+        // ID (e.g. if this same species also appears as an ordinary NPC elsewhere), so it must only ever
+        // be READ here, never written.
+        u16 *pristinePltt = GetPlttDataVRAMBuffer(texture, 0);
+        if (pristinePltt == NULL) {
+            return;
+        }
+
+        MI_CpuCopy16(pristinePltt, sFollowerPlttRotated, sizeof(sFollowerPlttRotated));
+
+        // ENTRY P22 (2026-10-01): skip the rotation entirely for the HG-sourced species (handled by the
+        // hgPristinePltt branch above) - native species still get it, unchanged from before ENTRY P22.
+        PersonalityRotatePalette(sFollowerPlttRotated, PALETTE_SIZE, personality);
     }
 
-    const u16 *shinyPltt = FollowerMon_GetHGShinyPalette(graphicsID);
-
-    if (Pokemon_IsShiny(leadMon) && shinyPltt != NULL) {
-        pltt = shinyPltt;
+    // ENTRY P101: going back into its Poke Ball the follower turns pure white, as in HG (index 0, transparency, untouched).
+    if (sFollowerWhiteFlash) {
+        for (int i = 1; i < PALETTE_SIZE; i++) {
+            sFollowerPlttRotated[i] = GX_RGB(31, 31, 31);
+        }
     }
 
-    static u16 sFollowerPltt[PALETTE_SIZE];
-
-    MI_CpuCopy16(pltt, sFollowerPltt, sizeof(sFollowerPltt));
-    DC_FlushRange(sFollowerPltt, sizeof(sFollowerPltt));
-    VramTransfer_Request(NNS_GFD_DST_3D_TEX_PLTT, NNS_GfdGetPlttKeyAddr(billboard->plttKey), sFollowerPltt, sizeof(sFollowerPltt));
+    DC_FlushRange(sFollowerPlttRotated, sizeof(sFollowerPlttRotated));
+    VramTransfer_Request(NNS_GFD_DST_3D_TEX_PLTT, NNS_GfdGetPlttKeyAddr(billboard->plttKey), sFollowerPlttRotated, sizeof(sFollowerPlttRotated));
 }
 
 // ENTRY P27/P28 (2026-10-01): two prior idle-animation attempts (a HG-species branch inside

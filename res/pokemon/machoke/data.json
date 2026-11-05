@@ -19,8 +19,8 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "common": "ITEM_BLACK_BELT",
+        "rare": "ITEM_FOCUS_BAND"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_25",
     "hatch_cycles": 20,
@@ -38,16 +38,33 @@
             [ 1, "MOVE_LEER" ],
             [ 1, "MOVE_FOCUS_ENERGY" ],
             [ 7, "MOVE_FOCUS_ENERGY" ],
+            [ 8, "MOVE_FOCUS_ENERGY" ],
             [ 10, "MOVE_KARATE_CHOP" ],
             [ 13, "MOVE_FORESIGHT" ],
+            [ 13, "MOVE_KARATE_CHOP" ],
+            [ 15, "MOVE_KARATE_CHOP" ],
             [ 19, "MOVE_SEISMIC_TOSS" ],
             [ 22, "MOVE_REVENGE" ],
+            [ 22, "MOVE_FORESIGHT" ],
+            [ 24, "MOVE_COMET_PUNCH" ],
             [ 25, "MOVE_VITAL_THROW" ],
+            [ 25, "MOVE_REVENGE" ],
+            [ 25, "MOVE_FORESIGHT" ],
             [ 32, "MOVE_SUBMISSION" ],
+            [ 33, "MOVE_VITAL_THROW" ],
+            [ 34, "MOVE_VITAL_THROW" ],
             [ 36, "MOVE_WAKE_UP_SLAP" ],
             [ 40, "MOVE_CROSS_CHOP" ],
+            [ 40, "MOVE_COMET_PUNCH" ],
+            [ 41, "MOVE_SUBMISSION" ],
+            [ 43, "MOVE_CROSS_CHOP" ],
             [ 44, "MOVE_SCARY_FACE" ],
-            [ 51, "MOVE_DYNAMIC_PUNCH" ]
+            [ 46, "MOVE_CROSS_CHOP" ],
+            [ 51, "MOVE_DYNAMIC_PUNCH" ],
+            [ 51, "MOVE_SCARY_FACE" ],
+            [ 52, "MOVE_SCARY_FACE" ],
+            [ 59, "MOVE_DYNAMIC_PUNCH" ],
+            [ 61, "MOVE_SUBMISSION" ]
         ],
         "by_tm": [
             "TM01",

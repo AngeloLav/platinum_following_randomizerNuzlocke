@@ -1,10 +1,10 @@
 {
     "base_stats": {
         "hp": 250,
-        "attack": 5,
-        "defense": 5,
+        "attack": 15,
+        "defense": 15,
         "speed": 50,
-        "special_attack": 35,
+        "special_attack": 65,
         "special_defense": 105
     },
     "types": [ "TYPE_NORMAL", "TYPE_NORMAL" ],
@@ -19,7 +19,7 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_OVAL_STONE",
+        "common": "ITEM_NONE",
         "rare": "ITEM_LUCKY_EGG"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_ONLY",
@@ -37,17 +37,27 @@
             [ 1, "MOVE_POUND" ],
             [ 1, "MOVE_GROWL" ],
             [ 5, "MOVE_TAIL_WHIP" ],
+            [ 5, "MOVE_GROWL" ],
             [ 9, "MOVE_REFRESH" ],
+            [ 9, "MOVE_TAIL_WHIP" ],
             [ 12, "MOVE_SOFTBOILED" ],
+            [ 13, "MOVE_SOFTBOILED" ],
             [ 16, "MOVE_DOUBLE_SLAP" ],
+            [ 17, "MOVE_DOUBLE_SLAP" ],
             [ 20, "MOVE_MINIMIZE" ],
             [ 23, "MOVE_SING" ],
+            [ 23, "MOVE_MINIMIZE" ],
             [ 27, "MOVE_FLING" ],
+            [ 29, "MOVE_SING" ],
             [ 31, "MOVE_DEFENSE_CURL" ],
             [ 34, "MOVE_LIGHT_SCREEN" ],
+            [ 35, "MOVE_EGG_BOMB" ],
             [ 38, "MOVE_EGG_BOMB" ],
+            [ 41, "MOVE_DEFENSE_CURL" ],
             [ 42, "MOVE_HEALING_WISH" ],
-            [ 46, "MOVE_DOUBLE_EDGE" ]
+            [ 46, "MOVE_DOUBLE_EDGE" ],
+            [ 49, "MOVE_LIGHT_SCREEN" ],
+            [ 57, "MOVE_DOUBLE_EDGE" ]
         ],
         "by_tm": [
             "TM01",

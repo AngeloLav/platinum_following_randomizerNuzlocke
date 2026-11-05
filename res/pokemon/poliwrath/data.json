@@ -38,7 +38,10 @@
             [ 1, "MOVE_HYPNOSIS" ],
             [ 1, "MOVE_DOUBLE_SLAP" ],
             [ 1, "MOVE_SUBMISSION" ],
+            [ 1, "MOVE_WATER_GUN" ],
+            [ 35, "MOVE_SUBMISSION" ],
             [ 43, "MOVE_DYNAMIC_PUNCH" ],
+            [ 51, "MOVE_MIND_READER" ],
             [ 53, "MOVE_MIND_READER" ]
         ],
         "by_tm": [

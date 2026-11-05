@@ -1,10 +1,10 @@
 {
     "base_stats": {
-        "hp": 100,
+        "hp": 200,
         "attack": 100,
         "defense": 90,
         "speed": 90,
-        "special_attack": 150,
+        "special_attack": 200,
         "special_defense": 140
     },
     "types": [ "TYPE_WATER", "TYPE_WATER" ],
@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "rare": "ITEM_HARD_STONE"
     },
     "gender_ratio": "GENDER_RATIO_NO_GENDER",
     "hatch_cycles": 120,
@@ -36,16 +36,25 @@
         "by_level": [
             [ 1, "MOVE_WATER_PULSE" ],
             [ 5, "MOVE_SCARY_FACE" ],
+            [ 15, "MOVE_BODY_SLAM" ],
             [ 15, "MOVE_ANCIENT_POWER" ],
+            [ 20, "MOVE_MUDDY_WATER" ],
             [ 20, "MOVE_BODY_SLAM" ],
+            [ 30, "MOVE_AQUA_RING" ],
             [ 30, "MOVE_CALM_MIND" ],
             [ 35, "MOVE_ICE_BEAM" ],
+            [ 45, "MOVE_ANCIENT_POWER" ],
             [ 45, "MOVE_HYDRO_PUMP" ],
+            [ 50, "MOVE_WATER_SPOUT" ],
             [ 50, "MOVE_REST" ],
+            [ 60, "MOVE_CALM_MIND" ],
             [ 60, "MOVE_SHEER_COLD" ],
+            [ 65, "MOVE_AQUA_TAIL" ],
             [ 65, "MOVE_DOUBLE_EDGE" ],
-            [ 75, "MOVE_AQUA_TAIL" ],
-            [ 80, "MOVE_WATER_SPOUT" ]
+            [ 75, "MOVE_SHEER_COLD" ],
+            [ 75, "MOVE_WATER_SPOUT" ],
+            [ 80, "MOVE_DOUBLE_EDGE" ],
+            [ 90, "MOVE_HYDRO_PUMP" ]
         ],
         "by_tm": [
             "TM03",

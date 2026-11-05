@@ -283,6 +283,10 @@ pokeplatinum_nds = custom_target('pokeplatinum.us.nds',
         nitrofs_files,
     ],
     command : [
+        # ENTRY P110: ysmguard.py runs the nitrorom command below, then fills the R4 / YSMenu guard table in the packed ROM
+        ysmguard_py,
+        '@OUTPUT0@',
+        '--',
         nitrorom_exe,
         'pack',
         '-DHEADER_TEMPLATE=@INPUT1@', # rom_header_template

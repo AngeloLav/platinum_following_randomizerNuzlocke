@@ -1,11 +1,11 @@
 {
     "base_stats": {
-        "hp": 78,
+        "hp": 98,
         "attack": 84,
-        "defense": 78,
+        "defense": 88,
         "speed": 100,
-        "special_attack": 109,
-        "special_defense": 85
+        "special_attack": 139,
+        "special_defense": 95
     },
     "types": [ "TYPE_FIRE", "TYPE_FIRE" ],
     "catch_rate": 45,
@@ -39,17 +39,22 @@
             [ 1, "MOVE_LEER" ],
             [ 1, "MOVE_SMOKE_SCREEN" ],
             [ 1, "MOVE_EMBER" ],
-            [ 4, "MOVE_SMOKE_SCREEN" ],
+            [ 6, "MOVE_SMOKE_SCREEN" ],
             [ 10, "MOVE_EMBER" ],
+            [ 12, "MOVE_EMBER" ],
             [ 13, "MOVE_QUICK_ATTACK" ],
             [ 20, "MOVE_FLAME_WHEEL" ],
+            [ 21, "MOVE_QUICK_ATTACK" ],
             [ 24, "MOVE_DEFENSE_CURL" ],
             [ 31, "MOVE_SWIFT" ],
+            [ 31, "MOVE_FLAME_WHEEL" ],
             [ 35, "MOVE_LAVA_PLUME" ],
             [ 42, "MOVE_FLAMETHROWER" ],
+            [ 45, "MOVE_SWIFT" ],
             [ 46, "MOVE_ROLLOUT" ],
             [ 53, "MOVE_DOUBLE_EDGE" ],
-            [ 57, "MOVE_ERUPTION" ]
+            [ 57, "MOVE_ERUPTION" ],
+            [ 60, "MOVE_FLAMETHROWER" ]
         ],
         "by_tm": [
             "TM01",

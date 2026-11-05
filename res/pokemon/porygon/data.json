@@ -1,11 +1,11 @@
 {
     "base_stats": {
-        "hp": 65,
-        "attack": 60,
-        "defense": 70,
-        "speed": 40,
-        "special_attack": 85,
-        "special_defense": 75
+        "hp": 85,
+        "attack": 70,
+        "defense": 80,
+        "speed": 60,
+        "special_attack": 95,
+        "special_defense": 85
     },
     "types": [ "TYPE_NORMAL", "TYPE_NORMAL" ],
     "catch_rate": 45,
@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "rare": "ITEM_UPGRADE"
     },
     "gender_ratio": "GENDER_RATIO_NO_GENDER",
     "hatch_cycles": 20,
@@ -39,13 +39,22 @@
             [ 1, "MOVE_CONVERSION" ],
             [ 1, "MOVE_SHARPEN" ],
             [ 7, "MOVE_PSYBEAM" ],
+            [ 9, "MOVE_AGILITY" ],
             [ 12, "MOVE_AGILITY" ],
+            [ 12, "MOVE_PSYBEAM" ],
             [ 18, "MOVE_RECOVER" ],
+            [ 20, "MOVE_RECOVER" ],
             [ 23, "MOVE_MAGNET_RISE" ],
+            [ 24, "MOVE_SHARPEN" ],
             [ 29, "MOVE_SIGNAL_BEAM" ],
+            [ 32, "MOVE_LOCK_ON" ],
             [ 34, "MOVE_RECYCLE" ],
+            [ 36, "MOVE_TRI_ATTACK" ],
             [ 40, "MOVE_DISCHARGE" ],
+            [ 44, "MOVE_RECYCLE" ],
+            [ 44, "MOVE_ZAP_CANNON" ],
             [ 45, "MOVE_LOCK_ON" ],
+            [ 48, "MOVE_ZAP_CANNON" ],
             [ 51, "MOVE_TRI_ATTACK" ],
             [ 56, "MOVE_MAGIC_COAT" ],
             [ 62, "MOVE_ZAP_CANNON" ]

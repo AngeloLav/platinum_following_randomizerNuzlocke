@@ -9,7 +9,7 @@
     },
     "types": [ "TYPE_ROCK", "TYPE_GROUND" ],
     "catch_rate": 255,
-    "base_exp_reward": 73,
+    "base_exp_reward": 86,
     "ev_yields": {
         "hp": 0,
         "attack": 0,
@@ -19,7 +19,7 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_HARD_STONE",
         "rare": "ITEM_EVERSTONE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
@@ -37,16 +37,27 @@
             [ 1, "MOVE_TACKLE" ],
             [ 1, "MOVE_DEFENSE_CURL" ],
             [ 4, "MOVE_MUD_SPORT" ],
+            [ 6, "MOVE_MUD_SPORT" ],
+            [ 6, "MOVE_DEFENSE_CURL" ],
             [ 8, "MOVE_ROCK_POLISH" ],
             [ 11, "MOVE_ROCK_THROW" ],
             [ 15, "MOVE_MAGNITUDE" ],
+            [ 16, "MOVE_MAGNITUDE" ],
             [ 18, "MOVE_SELFDESTRUCT" ],
+            [ 21, "MOVE_SELFDESTRUCT" ],
             [ 22, "MOVE_ROLLOUT" ],
             [ 25, "MOVE_ROCK_BLAST" ],
+            [ 26, "MOVE_ROLLOUT" ],
+            [ 26, "MOVE_HARDEN" ],
             [ 29, "MOVE_EARTHQUAKE" ],
+            [ 31, "MOVE_ROCK_BLAST" ],
+            [ 31, "MOVE_ROLLOUT" ],
             [ 32, "MOVE_EXPLOSION" ],
             [ 36, "MOVE_DOUBLE_EDGE" ],
-            [ 39, "MOVE_STONE_EDGE" ]
+            [ 36, "MOVE_EARTHQUAKE" ],
+            [ 39, "MOVE_STONE_EDGE" ],
+            [ 41, "MOVE_EXPLOSION" ],
+            [ 46, "MOVE_DOUBLE_EDGE" ]
         ],
         "by_tm": [
             "TM01",

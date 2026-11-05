@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "constants/map_object.h"
+#include "constants/scrcmd.h"
 #include "generated/movement_types.h"
 
 #include "struct_decls/map_object.h"
@@ -23,6 +24,7 @@
 #include "overlay005/ov5_021F37A8.h"
 #include "overlay005/ov5_021F3A50.h"
 
+#include "follower_mon.h"
 #include "map_object.h"
 #include "map_tile_behavior.h"
 #include "terrain_collision_manager.h"
@@ -620,6 +622,25 @@ u32 sub_02063EBC(const MapObject *mapObj, int dir)
     return sub_02063E94(mapObj, x, y, z, dir);
 }
 
+// ENTRY P112: the follower Pokemon keeps collision off (MAP_OBJ_STATUS_18, set by its movement type) so the player can
+// always walk into its tile. For every OTHER walker it is solid while it is out of its ball, just like the player:
+// patrolling / wandering NPCs no longer walk through it, and trainers can no longer see through it (IsPathInterrupted in
+// trainer_encounter.c tests every tile of the sight line with this function). A follower in its ball (hidden - cycling,
+// after a door, before the release) blocks nothing, so there is no "ghost" obstacle where no Pokemon is shown.
+// The player and a story partner that follows the player (MOVEMENT_TYPE_FOLLOW_PARTNER_TRAINER) are never blocked by it.
+static BOOL FollowerMonBlocksWalker(const MapObject *follower, const MapObject *walker)
+{
+    if (!FollowerMon_IsFollowerMonObject(follower) || MapObject_CheckStatus(follower, MAP_OBJ_STATUS_HIDE)) {
+        return FALSE;
+    }
+
+    if (MapObject_GetLocalID(walker) == LOCALID_PLAYER || MapObject_GetMovementType(walker) == MOVEMENT_TYPE_FOLLOW_PARTNER_TRAINER) {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 int sub_02063F00(const MapObject *mapObj, int x, int y, int z)
 {
     int maxObjects, objX, objZ;
@@ -631,7 +652,7 @@ int sub_02063F00(const MapObject *mapObj, int x, int y, int z)
     do {
         if (v4 != mapObj
             && MapObject_CheckStatus(v4, MAP_OBJ_STATUS_0)
-            && !MapObject_CheckStatus(v4, MAP_OBJ_STATUS_18)) {
+            && (!MapObject_CheckStatus(v4, MAP_OBJ_STATUS_18) || FollowerMonBlocksWalker(v4, mapObj))) {
             objX = MapObject_GetX(v4);
             objZ = MapObject_GetZ(v4);
 

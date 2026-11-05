@@ -46,9 +46,13 @@
             [ 20, "MOVE_SPARK" ],
             [ 25, "MOVE_ODOR_SLEUTH" ],
             [ 30, "MOVE_BITE" ],
+            [ 31, "MOVE_ROAR" ],
             [ 37, "MOVE_THUNDER_FANG" ],
+            [ 39, "MOVE_BITE" ],
             [ 42, "MOVE_ROAR" ],
+            [ 45, "MOVE_THUNDER" ],
             [ 49, "MOVE_DISCHARGE" ],
+            [ 53, "MOVE_CHARGE" ],
             [ 54, "MOVE_CHARGE" ],
             [ 61, "MOVE_THUNDER" ]
         ],

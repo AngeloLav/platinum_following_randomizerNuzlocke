@@ -19,7 +19,7 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_LEFTOVERS",
         "rare": "ITEM_NUGGET"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
@@ -40,15 +40,29 @@
             [ 1, "MOVE_MUD_SLAP" ],
             [ 4, "MOVE_HARDEN" ],
             [ 7, "MOVE_MUD_SLAP" ],
+            [ 8, "MOVE_DISABLE" ],
             [ 12, "MOVE_DISABLE" ],
+            [ 13, "MOVE_SLUDGE" ],
             [ 17, "MOVE_MINIMIZE" ],
+            [ 19, "MOVE_MINIMIZE" ],
             [ 20, "MOVE_SLUDGE" ],
             [ 23, "MOVE_MUD_BOMB" ],
+            [ 23, "MOVE_MINIMIZE" ],
+            [ 26, "MOVE_SCREECH" ],
             [ 28, "MOVE_FLING" ],
+            [ 31, "MOVE_SCREECH" ],
             [ 33, "MOVE_SCREECH" ],
+            [ 33, "MOVE_HARDEN" ],
+            [ 34, "MOVE_ACID_ARMOR" ],
             [ 36, "MOVE_SLUDGE_BOMB" ],
+            [ 37, "MOVE_DISABLE" ],
             [ 44, "MOVE_ACID_ARMOR" ],
+            [ 45, "MOVE_SLUDGE" ],
+            [ 45, "MOVE_ACID_ARMOR" ],
+            [ 47, "MOVE_SLUDGE_BOMB" ],
             [ 54, "MOVE_GUNK_SHOT" ],
+            [ 60, "MOVE_SLUDGE_BOMB" ],
+            [ 61, "MOVE_MEMENTO" ],
             [ 65, "MOVE_MEMENTO" ]
         ],
         "by_tm": [

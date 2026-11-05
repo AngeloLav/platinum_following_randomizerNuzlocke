@@ -9,9 +9,9 @@
     ],
     "class": "CLASS_SPECIAL",
     "type": "TYPE_FIRE",
-    "power": 120,
-    "accuracy": 85,
-    "pp": 5,
+    "power": 125,
+    "accuracy": 90,
+    "pp": 10,
     "effect": {
         "type": "BATTLE_EFFECT_BURN_HIT",
         "chance": 10

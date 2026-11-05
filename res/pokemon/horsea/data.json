@@ -37,15 +37,22 @@
             [ 1, "MOVE_BUBBLE" ],
             [ 4, "MOVE_SMOKE_SCREEN" ],
             [ 8, "MOVE_LEER" ],
+            [ 8, "MOVE_SMOKE_SCREEN" ],
             [ 11, "MOVE_WATER_GUN" ],
             [ 14, "MOVE_FOCUS_ENERGY" ],
+            [ 15, "MOVE_LEER" ],
             [ 18, "MOVE_BUBBLE_BEAM" ],
+            [ 22, "MOVE_WATER_GUN" ],
             [ 23, "MOVE_AGILITY" ],
             [ 26, "MOVE_TWISTER" ],
+            [ 29, "MOVE_TWISTER" ],
             [ 30, "MOVE_BRINE" ],
             [ 35, "MOVE_HYDRO_PUMP" ],
+            [ 36, "MOVE_AGILITY" ],
             [ 38, "MOVE_DRAGON_DANCE" ],
-            [ 42, "MOVE_DRAGON_PULSE" ]
+            [ 42, "MOVE_DRAGON_PULSE" ],
+            [ 43, "MOVE_HYDRO_PUMP" ],
+            [ 50, "MOVE_DRAGON_DANCE" ]
         ],
         "by_tm": [
             "TM03",

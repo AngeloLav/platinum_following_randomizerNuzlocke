@@ -1,6 +1,6 @@
 {
     "base_stats": {
-        "hp": 40,
+        "hp": 60,
         "attack": 20,
         "defense": 30,
         "speed": 55,
@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "rare": "ITEM_SILVERPOWDER"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 15,
@@ -35,18 +35,38 @@
     "learnset": {
         "by_level": [
             [ 1, "MOVE_TACKLE" ],
+            [ 1, "MOVE_MACH_PUNCH" ],
+            [ 1, "MOVE_LEECH_LIFE" ],
             [ 6, "MOVE_SUPERSONIC" ],
+            [ 8, "MOVE_SUPERSONIC" ],
             [ 9, "MOVE_COMET_PUNCH" ],
+            [ 10, "MOVE_MACH_PUNCH" ],
             [ 14, "MOVE_LIGHT_SCREEN" ],
             [ 14, "MOVE_REFLECT" ],
             [ 14, "MOVE_SAFEGUARD" ],
+            [ 15, "MOVE_COMET_PUNCH" ],
+            [ 15, "MOVE_FIRE_PUNCH" ],
+            [ 15, "MOVE_ICE_PUNCH" ],
+            [ 15, "MOVE_THUNDER_PUNCH" ],
             [ 17, "MOVE_MACH_PUNCH" ],
+            [ 18, "MOVE_CONFUSION" ],
+            [ 20, "MOVE_MEGA_PUNCH" ],
+            [ 20, "MOVE_MACH_PUNCH" ],
             [ 22, "MOVE_BATON_PASS" ],
+            [ 22, "MOVE_LIGHT_SCREEN" ],
+            [ 22, "MOVE_REFLECT" ],
+            [ 22, "MOVE_SAFEGUARD" ],
             [ 25, "MOVE_SILVER_WIND" ],
+            [ 29, "MOVE_BATON_PASS" ],
             [ 30, "MOVE_AGILITY" ],
+            [ 30, "MOVE_COMET_PUNCH" ],
+            [ 32, "MOVE_DYNAMIC_PUNCH" ],
             [ 33, "MOVE_SWIFT" ],
+            [ 36, "MOVE_SWIFT" ],
             [ 38, "MOVE_DOUBLE_EDGE" ],
-            [ 41, "MOVE_BUG_BUZZ" ]
+            [ 41, "MOVE_BUG_BUZZ" ],
+            [ 43, "MOVE_AGILITY" ],
+            [ 50, "MOVE_DOUBLE_EDGE" ]
         ],
         "by_tm": [
             "TM01",

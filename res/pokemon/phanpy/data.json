@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_PASSHO_BERRY"
+        "rare": "ITEM_NONE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 20,
@@ -39,14 +39,20 @@
             [ 1, "MOVE_GROWL" ],
             [ 1, "MOVE_DEFENSE_CURL" ],
             [ 6, "MOVE_FLAIL" ],
+            [ 9, "MOVE_DEFENSE_CURL" ],
             [ 10, "MOVE_TAKE_DOWN" ],
             [ 15, "MOVE_ROLLOUT" ],
+            [ 17, "MOVE_FLAIL" ],
             [ 19, "MOVE_NATURAL_GIFT" ],
             [ 24, "MOVE_SLAM" ],
+            [ 25, "MOVE_TAKE_DOWN" ],
             [ 28, "MOVE_ENDURE" ],
             [ 33, "MOVE_CHARM" ],
+            [ 33, "MOVE_ROLLOUT" ],
             [ 37, "MOVE_LAST_RESORT" ],
-            [ 42, "MOVE_DOUBLE_EDGE" ]
+            [ 41, "MOVE_ENDURE" ],
+            [ 42, "MOVE_DOUBLE_EDGE" ],
+            [ 49, "MOVE_DOUBLE_EDGE" ]
         ],
         "by_tm": [
             "TM05",

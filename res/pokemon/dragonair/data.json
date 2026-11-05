@@ -19,7 +19,7 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_DRAGON_SCALE",
         "rare": "ITEM_DRAGON_SCALE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
@@ -39,15 +39,23 @@
             [ 1, "MOVE_THUNDER_WAVE" ],
             [ 1, "MOVE_TWISTER" ],
             [ 5, "MOVE_THUNDER_WAVE" ],
+            [ 8, "MOVE_THUNDER_WAVE" ],
             [ 11, "MOVE_TWISTER" ],
             [ 15, "MOVE_DRAGON_RAGE" ],
+            [ 15, "MOVE_TWISTER" ],
             [ 21, "MOVE_SLAM" ],
+            [ 22, "MOVE_DRAGON_RAGE" ],
             [ 25, "MOVE_AGILITY" ],
+            [ 29, "MOVE_SLAM" ],
             [ 33, "MOVE_AQUA_TAIL" ],
+            [ 38, "MOVE_AGILITY" ],
             [ 39, "MOVE_DRAGON_RUSH" ],
+            [ 40, "MOVE_DRAGON_BREATH" ],
             [ 47, "MOVE_SAFEGUARD" ],
             [ 53, "MOVE_DRAGON_DANCE" ],
+            [ 56, "MOVE_OUTRAGE" ],
             [ 61, "MOVE_OUTRAGE" ],
+            [ 65, "MOVE_HYPER_BEAM" ],
             [ 67, "MOVE_HYPER_BEAM" ]
         ],
         "by_tm": [

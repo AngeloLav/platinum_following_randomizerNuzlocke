@@ -8,9 +8,9 @@
     ],
     "class": "CLASS_SPECIAL",
     "type": "TYPE_ICE",
-    "power": 55,
+    "power": 65,
     "accuracy": 95,
-    "pp": 15,
+    "pp": 25,
     "effect": {
         "type": "BATTLE_EFFECT_LOWER_SPEED_HIT",
         "chance": 100

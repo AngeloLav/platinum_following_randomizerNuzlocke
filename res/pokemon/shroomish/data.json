@@ -35,17 +35,26 @@
     "learnset": {
         "by_level": [
             [ 1, "MOVE_ABSORB" ],
+            [ 4, "MOVE_TACKLE" ],
             [ 5, "MOVE_TACKLE" ],
+            [ 7, "MOVE_STUN_SPORE" ],
             [ 9, "MOVE_STUN_SPORE" ],
+            [ 10, "MOVE_LEECH_SEED" ],
             [ 13, "MOVE_LEECH_SEED" ],
+            [ 16, "MOVE_MEGA_DRAIN" ],
             [ 17, "MOVE_MEGA_DRAIN" ],
             [ 21, "MOVE_HEADBUTT" ],
+            [ 22, "MOVE_HEADBUTT" ],
             [ 25, "MOVE_POISON_POWDER" ],
+            [ 28, "MOVE_POISON_POWDER" ],
             [ 29, "MOVE_WORRY_SEED" ],
             [ 33, "MOVE_GROWTH" ],
+            [ 36, "MOVE_GROWTH" ],
             [ 37, "MOVE_GIGA_DRAIN" ],
             [ 41, "MOVE_SEED_BOMB" ],
-            [ 45, "MOVE_SPORE" ]
+            [ 45, "MOVE_SPORE" ],
+            [ 45, "MOVE_GIGA_DRAIN" ],
+            [ 54, "MOVE_SPORE" ]
         ],
         "by_tm": [
             "TM06",

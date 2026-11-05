@@ -12,7 +12,7 @@
     "palette": "poke_ball_NCLR"
   },
   "gbaID": "GBA_ITEM_POKE_BALL",
-  "price": 200,
+  "price": 50,
   "effectParam": 0,
   "holdEffect": "HOLD_EFFECT_NONE",
   "pluckEffect": "PLUCK_EFFECT_NONE",

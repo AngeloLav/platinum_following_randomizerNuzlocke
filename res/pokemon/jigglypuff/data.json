@@ -19,7 +19,7 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_ORAN_BERRY",
         "rare": "ITEM_NONE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_75",
@@ -35,16 +35,25 @@
     "learnset": {
         "by_level": [
             [ 1, "MOVE_SING" ],
+            [ 4, "MOVE_DEFENSE_CURL" ],
             [ 5, "MOVE_DEFENSE_CURL" ],
             [ 9, "MOVE_POUND" ],
             [ 13, "MOVE_DISABLE" ],
+            [ 14, "MOVE_DISABLE" ],
             [ 17, "MOVE_ROLLOUT" ],
+            [ 19, "MOVE_ROLLOUT" ],
             [ 21, "MOVE_DOUBLE_SLAP" ],
+            [ 24, "MOVE_DOUBLE_SLAP" ],
             [ 25, "MOVE_REST" ],
             [ 29, "MOVE_BODY_SLAM" ],
+            [ 29, "MOVE_REST" ],
             [ 33, "MOVE_GYRO_BALL" ],
+            [ 34, "MOVE_BODY_SLAM" ],
             [ 37, "MOVE_WAKE_UP_SLAP" ],
+            [ 39, "MOVE_MIMIC" ],
+            [ 39, "MOVE_DOUBLE_EDGE" ],
             [ 41, "MOVE_MIMIC" ],
+            [ 44, "MOVE_HYPER_VOICE" ],
             [ 45, "MOVE_HYPER_VOICE" ],
             [ 49, "MOVE_DOUBLE_EDGE" ]
         ],

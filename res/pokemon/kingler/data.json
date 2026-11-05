@@ -1,10 +1,10 @@
 {
     "base_stats": {
-        "hp": 55,
+        "hp": 65,
         "attack": 130,
         "defense": 115,
         "speed": 75,
-        "special_attack": 50,
+        "special_attack": 90,
         "special_defense": 50
     },
     "types": [ "TYPE_WATER", "TYPE_WATER" ],
@@ -19,7 +19,7 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_KINGS_ROCK",
         "rare": "ITEM_NONE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
@@ -37,19 +37,35 @@
             [ 1, "MOVE_MUD_SPORT" ],
             [ 1, "MOVE_BUBBLE" ],
             [ 1, "MOVE_VICE_GRIP" ],
+            [ 1, "MOVE_METAL_CLAW" ],
+            [ 1, "MOVE_LEER" ],
+            [ 1, "MOVE_HARDEN" ],
             [ 5, "MOVE_VICE_GRIP" ],
+            [ 5, "MOVE_LEER" ],
             [ 9, "MOVE_LEER" ],
             [ 11, "MOVE_HARDEN" ],
+            [ 12, "MOVE_VICE_GRIP" ],
             [ 15, "MOVE_BUBBLE_BEAM" ],
+            [ 16, "MOVE_HARDEN" ],
             [ 19, "MOVE_MUD_SHOT" ],
             [ 21, "MOVE_METAL_CLAW" ],
+            [ 23, "MOVE_MUD_SHOT" ],
+            [ 23, "MOVE_STOMP" ],
             [ 25, "MOVE_STOMP" ],
+            [ 27, "MOVE_STOMP" ],
+            [ 27, "MOVE_GUILLOTINE" ],
             [ 32, "MOVE_PROTECT" ],
             [ 37, "MOVE_GUILLOTINE" ],
+            [ 38, "MOVE_GUILLOTINE" ],
+            [ 38, "MOVE_PROTECT" ],
+            [ 42, "MOVE_PROTECT" ],
             [ 44, "MOVE_SLAM" ],
+            [ 49, "MOVE_CRABHAMMER" ],
             [ 51, "MOVE_BRINE" ],
             [ 56, "MOVE_CRABHAMMER" ],
-            [ 63, "MOVE_FLAIL" ]
+            [ 57, "MOVE_CRABHAMMER" ],
+            [ 63, "MOVE_FLAIL" ],
+            [ 65, "MOVE_FLAIL" ]
         ],
         "by_tm": [
             "TM03",

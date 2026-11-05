@@ -9,9 +9,9 @@
     ],
     "class": "CLASS_PHYSICAL",
     "type": "TYPE_FIRE",
-    "power": 100,
-    "accuracy": 95,
-    "pp": 5,
+    "power": 130,
+    "accuracy": 100,
+    "pp": 15,
     "effect": {
         "type": "BATTLE_EFFECT_THAW_AND_BURN_HIT",
         "chance": 50

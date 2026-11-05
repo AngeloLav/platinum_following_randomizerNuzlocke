@@ -19,8 +19,8 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_RAWST_BERRY",
-        "rare": "ITEM_RAWST_BERRY"
+        "common": "ITEM_ASPEAR_BERRY",
+        "rare": "ITEM_ASPEAR_BERRY"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_75",
     "hatch_cycles": 20,
@@ -35,18 +35,35 @@
     "learnset": {
         "by_level": [
             [ 1, "MOVE_EMBER" ],
+            [ 1, "MOVE_TAIL_WHIP" ],
             [ 4, "MOVE_TAIL_WHIP" ],
+            [ 5, "MOVE_TAIL_WHIP" ],
             [ 7, "MOVE_ROAR" ],
+            [ 7, "MOVE_QUICK_ATTACK" ],
+            [ 9, "MOVE_ROAR" ],
             [ 11, "MOVE_QUICK_ATTACK" ],
+            [ 13, "MOVE_QUICK_ATTACK" ],
+            [ 13, "MOVE_ROAR" ],
             [ 14, "MOVE_WILL_O_WISP" ],
             [ 17, "MOVE_CONFUSE_RAY" ],
+            [ 17, "MOVE_WILL_O_WISP" ],
+            [ 19, "MOVE_CONFUSE_RAY" ],
             [ 21, "MOVE_IMPRISON" ],
+            [ 21, "MOVE_CONFUSE_RAY" ],
             [ 24, "MOVE_FLAMETHROWER" ],
+            [ 25, "MOVE_IMPRISON" ],
+            [ 25, "MOVE_SAFEGUARD" ],
             [ 27, "MOVE_SAFEGUARD" ],
+            [ 29, "MOVE_FLAMETHROWER" ],
             [ 31, "MOVE_PAYBACK" ],
+            [ 31, "MOVE_FLAMETHROWER" ],
+            [ 33, "MOVE_SAFEGUARD" ],
             [ 34, "MOVE_FIRE_SPIN" ],
             [ 37, "MOVE_CAPTIVATE" ],
+            [ 37, "MOVE_GRUDGE" ],
+            [ 37, "MOVE_FIRE_SPIN" ],
             [ 41, "MOVE_GRUDGE" ],
+            [ 41, "MOVE_FIRE_SPIN" ],
             [ 44, "MOVE_EXTRASENSORY" ],
             [ 47, "MOVE_FIRE_BLAST" ]
         ],

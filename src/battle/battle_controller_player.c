@@ -39,11 +39,13 @@
 #include "move_table.h"
 #include "party.h"
 #include "pokemon.h"
+#include "run_game.h"
 #include "screen_fade.h"
 #include "sound_playback.h"
 #include "trainer_info.h"
 
 #include "res/battle/scripts/sub_seq.naix"
+#include "res/text/bank/battle_strings.h"
 
 enum BattleControllerState {
     STATE_PROCESSING = 0,
@@ -68,6 +70,7 @@ static void BattleControllerPlayer_CheckSideConditions(BattleSystem *battleSys, 
 static void BattleControllerPlayer_TurnEnd(BattleSystem *battleSys, BattleContext *battleCtx);
 static void BattleControllerPlayer_FightCommand(BattleSystem *battleSys, BattleContext *battleCtx);
 static void BattleControllerPlayer_ItemCommand(BattleSystem *battleSys, BattleContext *battleCtx);
+static enum RunCapturePermission RunBattle_CapturePermission(BattleSystem *battleSys, BattleContext *battleCtx);
 static void BattleControllerPlayer_SwitchCommand(BattleSystem *battleSys, BattleContext *battleCtx);
 static void BattleControllerPlayer_FleeCommand(BattleSystem *battleSys, BattleContext *battleCtx);
 static void BattleControllerPlayer_SafariBallCommand(BattleSystem *battleSys, BattleContext *battleCtx);
@@ -372,6 +375,18 @@ static void BattleControllerPlayer_CommandSelectionInput(BattleSystem *battleSys
             if (BattleContext_IOBufferVal(battleCtx, i)) {
                 battleCtx->battlerActions[i][BATTLE_ACTION_SELECTED_COMMAND] = battleCtx->ioBuffer[i][0];
 
+                if ((BattleContext_IOBufferVal(battleCtx, i) == PLAYER_INPUT_PAL_PARK_BALL
+                        || BattleContext_IOBufferVal(battleCtx, i) == PLAYER_INPUT_SAFARI_BALL)
+                    && (battleType & (BATTLE_TYPE_PAL_PARK | BATTLE_TYPE_SAFARI))
+                    && RunBattle_CapturePermission(battleSys, battleCtx) > RUN_CAPTURE_INACTIVE) {
+                    msg.tags = TAG_NONE;
+                    msg.id = BattleStrings_Text_RunNoCaptures;
+                    BattleController_EmitSetAlertMessage(battleSys, i, msg);
+                    battleCtx->curCommandState[i] = COMMAND_SELECTION_ALERT_MESSAGE_WAIT;
+                    battleCtx->nextCommandState[i] = COMMAND_SELECTION_INIT;
+                    break;
+                }
+
                 if (battleType & BATTLE_TYPE_PAL_PARK) {
                     switch (BattleContext_IOBufferVal(battleCtx, i)) {
                     case PLAYER_INPUT_PAL_PARK_BALL:
@@ -562,6 +577,18 @@ static void BattleControllerPlayer_CommandSelectionInput(BattleSystem *battleSys
                 battleCtx->curCommandState[i] = COMMAND_SELECTION_INIT;
             } else if (BattleContext_IOBufferVal(battleCtx, i)) {
                 u32 *data = &battleCtx->ioBuffer[i][0];
+                BattleItemUse *item = (BattleItemUse *)data;
+                enum RunCapturePermission permission = RunBattle_CapturePermission(battleSys, battleCtx);
+                if (item->category == ITEM_BATTLE_CATEGORY_POKE_BALLS
+                    && permission != RUN_CAPTURE_ALLOWED && permission != RUN_CAPTURE_INACTIVE) {
+                    msg.tags = TAG_NONE;
+                    msg.id = permission == RUN_CAPTURE_DUPLICATE ? BattleStrings_Text_RunDuplicate
+                        : permission == RUN_CAPTURE_HISTORY_FULL ? BattleStrings_Text_RunHistoryFull : BattleStrings_Text_RunNoCaptures;
+                    BattleController_EmitSetAlertMessage(battleSys, i, msg);
+                    battleCtx->curCommandState[i] = COMMAND_SELECTION_ALERT_MESSAGE_WAIT;
+                    battleCtx->nextCommandState[i] = COMMAND_SELECTION_INIT;
+                    break;
+                }
                 battleCtx->battlerActions[i][BATTLE_ACTION_TEMP_VALUE] = *data;
                 battleCtx->curCommandState[i] = COMMAND_SELECTION_WAIT;
             }
@@ -1902,6 +1929,17 @@ static void BattleControllerPlayer_FightCommand(BattleSystem *battleSys, BattleC
     BattleController_EmitClearMessageBox(battleSys);
 }
 
+static enum RunCapturePermission RunBattle_CapturePermission(BattleSystem *battleSys, BattleContext *battleCtx)
+{
+    if (BattleSystem_GetBattleType(battleSys) & (BATTLE_TYPE_TRAINER | BATTLE_TYPE_CATCH_TUTORIAL)) return RUN_CAPTURE_INACTIVE;
+    for (int battler = BATTLER_ENEMY_1; battler < BattleSystem_GetMaxBattlers(battleSys); battler += 2) {
+        if (battleCtx->battleMons[battler].curHP != 0) {
+            return RunGame_CapturePermission(battler, battleCtx->selectedPartySlot[battler]);
+        }
+    }
+    return RUN_CAPTURE_INACTIVE;
+}
+
 static void BattleControllerPlayer_ItemCommand(BattleSystem *battleSys, BattleContext *battleCtx)
 {
     battleCtx->attacker = battleCtx->battlerActionOrder[battleCtx->turnOrderCounter];
@@ -1955,6 +1993,12 @@ static void BattleControllerPlayer_ItemCommand(BattleSystem *battleSys, BattleCo
             break;
 
         case ITEM_BATTLE_CATEGORY_POKE_BALLS:
+            if (RunBattle_CapturePermission(battleSys, battleCtx) > RUN_CAPTURE_INACTIVE) {
+                LOAD_SUBSEQ(subscript_run_capture_denied);
+                battleCtx->command = BATTLE_CONTROL_EXEC_SCRIPT;
+                battleCtx->commandNext = BATTLE_CONTROL_MOVE_END;
+                return;
+            }
             nextSeq = subscript_throw_pokeball;
             if ((BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_TRAINER) == FALSE
                 && (BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_CATCH_TUTORIAL) == FALSE) {
@@ -2020,6 +2064,14 @@ static void BattleControllerPlayer_FleeCommand(BattleSystem *battleSys, BattleCo
 
 static void BattleControllerPlayer_SafariBallCommand(BattleSystem *battleSys, BattleContext *battleCtx)
 {
+    battleCtx->attacker = BATTLER_US;
+    battleCtx->defender = BATTLER_THEM;
+    if (RunBattle_CapturePermission(battleSys, battleCtx) > RUN_CAPTURE_INACTIVE) {
+        LOAD_SUBSEQ(subscript_run_capture_denied);
+        battleCtx->command = BATTLE_CONTROL_EXEC_SCRIPT;
+        battleCtx->commandNext = BATTLE_CONTROL_MOVE_END;
+        return;
+    }
     LOAD_SUBSEQ(subscript_throw_safari_ball);
 
     battleCtx->attacker = BATTLER_US;

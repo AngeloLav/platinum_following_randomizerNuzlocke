@@ -14,6 +14,7 @@
 #include "heap.h"
 #include "party.h"
 #include "pokemon.h"
+#include "run_game.h"
 #include "save_catchrecords.h"
 #include "save_player.h"
 #include "savedata.h"
@@ -47,7 +48,8 @@ BOOL Pokemon_GiveMonFromScript(enum HeapID heapID, SaveData *saveData, u16 speci
 
     item = heldItem;
     Pokemon_SetValue(mon, MON_DATA_HELD_ITEM, &item);
-    result = Party_AddPokemon(party, mon);
+    result = Party_GetCurrentCount(party) < MAX_PARTY_SIZE && RunGame_AcceptScriptGift(mon)
+        && Party_AddPokemon(party, mon);
 
     if (result) {
         SaveData_UpdateCatchRecords(saveData, mon);
@@ -92,7 +94,7 @@ int Party_HasMonWithMove(Party *party, u16 moveID)
     for (i = 0; i < partyCount; i++) {
         Pokemon *mon = Party_GetPokemonBySlotIndex(party, i);
 
-        if (Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) != FALSE) {
+        if (Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) != FALSE || RunGame_Exhausted(Pokemon_GetBoxPokemon(mon))) {
             continue;
         }
 
@@ -104,7 +106,7 @@ int Party_HasMonWithMove(Party *party, u16 moveID)
         }
     }
 
-    return PARTY_SLOT_NONE;
+    return RunGame_FieldMoveSlot(party, moveID);
 }
 
 int Party_AliveMonsCount(const Party *party)

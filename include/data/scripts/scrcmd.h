@@ -851,6 +851,8 @@ ScriptCommand(SCRCMD_FOLLOWERMONHEALBEGIN,                                 ScrCm
 ScriptCommand(SCRCMD_FOLLOWERMONHEALCHECK,                                 ScrCmd_FollowerMonHealCheck) // ENTRY P87
 ScriptCommand(SCRCMD_FOLLOWERMONHEALRESPAWN,                               ScrCmd_FollowerMonHealRespawn) // ENTRY P87
 
+ScriptCommand(SCRCMD_GETRUNRULE, ScrCmd_GetRunRule)
+
 // clang-format on
 
 #endif // POKEPLATINUM_DATA_SCRIPTS_SCRCMD_H

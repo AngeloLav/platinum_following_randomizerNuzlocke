@@ -1,4 +1,5 @@
 #include "overlay005/fieldmap.h"
+#include "run_game.h"
 
 #include <nitro.h>
 #include <string.h>
@@ -56,6 +57,9 @@
 #include "field_system.h"
 #include "field_task.h"
 #include "follower_mon.h"
+#include "run_session.h"
+#include "run_world.h"
+#include "vars_flags.h"
 #include "game_overlay.h"
 #include "graphics.h"
 #include "gx_layers.h"
@@ -246,6 +250,11 @@ static BOOL FieldMap_Init(ApplicationManager *appMan, int *state)
 static BOOL FieldMap_Main(ApplicationManager *appMan, int *param1)
 {
     FieldSystem *fieldSystem = ApplicationManager_Args(appMan);
+    RunSession_SetZone(RunWorld_Zone(fieldSystem->location->mapHeaderID));
+    RunGame_ObserveParty(SaveData_GetParty(fieldSystem->saveData));
+    if (RunSession_Configured() && *VarsFlags_GetVarAddress(SaveData_GetVarsFlags(fieldSystem->saveData), VAR_ROUTE_202_STATE) >= 1) {
+        RunState_ActivateCapture(RunSession_State());
+    }
 
     // FOLLOWER LEADER-SWAP SYNC + COLOR MOD: both re-applied every field frame, independent of player
     // movement, so a party-leader swap via the menu (or a faint, evolution, trade, catch, etc.) takes

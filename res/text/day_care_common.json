@@ -284,6 +284,10 @@
     {
       "id": "DayCareCommon_Text_00041",
       "en_US": "{STRVAR_1 0, 0, 0}"
+    },
+    {
+      "id": "DayCareCommon_Text_RunQuarantine",
+      "en_US": "The Day Care is under quarantine.\nEgg production is suspended.\rWe can still look after your\nPokemon inside.\r"
     }
   ]
 }

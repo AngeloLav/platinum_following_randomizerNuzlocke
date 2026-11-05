@@ -1087,6 +1087,10 @@ EternaCity_GiveTogepiEgg:
     Message EternaCity_Text_KeepEggInYourParty
     CloseMessage
     GiveEgg SPECIES_TOGEPI, SPECIAL_METLOC_NAME_CYNTHIA
+    GetRunRule 2, VAR_RESULT
+    GoToIfEq VAR_RESULT, TRUE, EternaCity_RunGiftAccepted
+    CallCommonScript 0x80C
+EternaCity_RunGiftAccepted:
     SetVar VAR_ETERNA_CITY_STATE, 5
     Return
 

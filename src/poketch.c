@@ -1,4 +1,5 @@
 #include "poketch.h"
+#include "run_session.h"
 
 #include <nitro.h>
 #include <string.h>
@@ -64,6 +65,7 @@ void Poketch_Init(Poketch *poketch)
 void Poketch_Enable(Poketch *poketch)
 {
     poketch->poketchEnabled = 1;
+    if (RunSession_Configured()) Poketch_RegisterApp(poketch, POKETCH_APPID_RUN_TRACKER);
 }
 
 BOOL Poketch_IsEnabled(Poketch *poketch)

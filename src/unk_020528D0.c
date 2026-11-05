@@ -1,4 +1,5 @@
 #include "unk_020528D0.h"
+#include "run_game.h"
 
 #include <nitro.h>
 #include <string.h>
@@ -6,6 +7,7 @@
 #include "generated/text_banks.h"
 
 #include "field/field_system.h"
+#include "overlay005/save_info_window.h"
 
 #include "bg_window.h"
 #include "brightness_controller.h"
@@ -211,6 +213,7 @@ BOOL FieldTask_BlackOutFromBattle(FieldTask *task)
         u16 warpId = FieldOverworldState_GetBlackOutWarpId(fieldState);
 
         Location_InitBlackOut(warpId, &location);
+        RunGame_ConfineLocation(&location);
         Location_InitFly(warpId, FieldOverworldState_GetExitLocation(fieldState));
         FieldTask_ChangeMapByLocation(task, &location);
         FieldSystem_ClearPartnerTrainer(fieldSystem);
@@ -240,7 +243,12 @@ BOOL FieldTask_BlackOutFromBattle(FieldTask *task)
     case 5:
         BrightnessController_SetScreenBrightness(0, GX_BLEND_PLANEMASK_BG0 | GX_BLEND_PLANEMASK_BG1 | GX_BLEND_PLANEMASK_BG2 | GX_BLEND_PLANEMASK_BG3 | GX_BLEND_PLANEMASK_OBJ | GX_BLEND_PLANEMASK_BD, BRIGHTNESS_BOTH_SCREENS);
 
-        if (FieldOverworldState_GetDefaultWarpID() == FieldOverworldState_GetBlackOutWarpId(SaveData_GetFieldOverworldState(fieldSystem->saveData))) {
+        if (RunGame_Over()) {
+            // Only checkpoint this adventure. Never silently replace a previous
+            // adventure when New Game was selected over an existing save.
+            BOOL saved = !SaveData_OverwriteCheck(fieldSystem->saveData) && FieldSystem_Save(fieldSystem);
+            ScriptManager_Start(task, saved ? SCRIPT_ID(COMMON_SCRIPTS, 58) : SCRIPT_ID(COMMON_SCRIPTS, 59), NULL, NULL);
+        } else if (FieldOverworldState_GetDefaultWarpID() == FieldOverworldState_GetBlackOutWarpId(SaveData_GetFieldOverworldState(fieldSystem->saveData))) {
             ScriptManager_Start(task, SCRIPT_ID(COMMON_SCRIPTS, 20), NULL, NULL);
         } else {
             ScriptManager_Start(task, SCRIPT_ID(COMMON_SCRIPTS, 21), NULL, NULL);

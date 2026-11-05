@@ -37,11 +37,17 @@ VeilstoneCityNortheastHouse_AcceptPorygon:
     Message VeilstoneCityNortheastHouse_Text_PlayerAcceptedThePorygon
     WaitFanfare
     GivePokemon SPECIES_PORYGON, 25, ITEM_NONE, VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, VeilstoneCityNortheastHouse_RunGiftDenied
     SetFlag FLAG_RECEIVED_VEILSTONE_CITY_NORTHEAST_HOUSE_PORYGON
     Message VeilstoneCityNortheastHouse_Text_AskNicknamePorygon
     ShowYesNoMenu VAR_RESULT
     GoToIfEq VAR_RESULT, MENU_YES, VeilstoneCityNortheastHouse_NicknamePorygon
     GoToIfEq VAR_RESULT, MENU_NO, VeilstoneCityNortheastHouse_DontNicknamePorygon
+    End
+
+VeilstoneCityNortheastHouse_RunGiftDenied:
+    CallCommonScript 0x80C
+    ReleaseAll
     End
 
 VeilstoneCityNortheastHouse_NicknamePorygon:

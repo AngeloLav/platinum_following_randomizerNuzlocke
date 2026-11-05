@@ -36,11 +36,17 @@ HearthomeCityNorthwestHouse_AcceptEevee:
     Message HearthomeCityNorthwestHouse_Text_PlayerAcceptedTheEevee
     WaitFanfare
     GivePokemon SPECIES_EEVEE, 20, ITEM_NONE, VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, HearthomeCityNorthwestHouse_RunGiftDenied
     SetFlag FLAG_RECEIVED_HEARTHOME_CITY_NORTHWEST_HOUSE_EEVEE
     Message HearthomeCityNorthwestHouse_Text_WouldYouLikeToNicknameEevee
     ShowYesNoMenu VAR_RESULT
     GoToIfEq VAR_RESULT, MENU_YES, HearthomeCityNorthwestHouse_GiveNickname
     GoToIfEq VAR_RESULT, MENU_NO, HearthomeCityNorthwestHouse_DontGiveNickname
+    End
+
+HearthomeCityNorthwestHouse_RunGiftDenied:
+    CallCommonScript 0x80C
+    ReleaseAll
     End
 
 HearthomeCityNorthwestHouse_GiveNickname:

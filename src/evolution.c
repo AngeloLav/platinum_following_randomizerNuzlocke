@@ -35,6 +35,7 @@
 #include "party.h"
 #include "pokedex.h"
 #include "pokemon.h"
+#include "run_game.h"
 #include "pokemon_anim.h"
 #include "pokemon_sprite.h"
 #include "poketch.h"
@@ -729,6 +730,9 @@ static void Evolution_ProcessEvolutionEffects(EvolutionData *evolutionData)
 
             Pokemon *shedinja = Pokemon_New(evolutionData->heapID);
             Pokemon_Copy(evolutionData->mon, shedinja);
+            // Shedinja shares its parent's PID/OTID in vanilla. It needs a new
+            // run identity before any setter can synchronize the copied ID.
+            RunGame_ClearIdentity(Pokemon_GetBoxPokemon(shedinja));
 
             value = SPECIES_SHEDINJA;
             Pokemon_SetValue(shedinja, MON_DATA_SPECIES, &value);
@@ -770,6 +774,7 @@ static void Evolution_ProcessEvolutionEffects(EvolutionData *evolutionData)
             Pokemon_SetValue(shedinja, MON_DATA_GENDER, &i);
 
             Pokemon_CalcLevelAndStats(shedinja);
+            RunGame_DerivedIdentity(shedinja, evolutionData->mon);
             Party_AddPokemon(evolutionData->party, shedinja);
             Pokedex_Capture(evolutionData->pokedex, shedinja);
             GameRecords_IncrementRecordValue(evolutionData->records, RECORD_POKEMON_EVOLVED);
@@ -947,6 +952,9 @@ static void Evolution_CreateSprites(EvolutionData *evolutionData)
     mon = Pokemon_New(evolutionData->heapID);
 
     Pokemon_Copy(evolutionData->mon, mon);
+    // The sprite preview must not commit a species/evolution to run history;
+    // the player can still cancel this evolution.
+    RunGame_ClearIdentity(Pokemon_GetBoxPokemon(mon));
     Pokemon_SetValue(mon, MON_DATA_SPECIES, (u8 *)&evolutionData->targetSpecies);
     Pokemon_CalcLevelAndStats(mon);
     Pokemon_BuildSpriteTemplate(&monSpriteTemplate, mon, FACE_FRONT);

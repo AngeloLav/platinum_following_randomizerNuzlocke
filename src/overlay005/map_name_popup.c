@@ -18,6 +18,12 @@
 #include "sys_task.h"
 #include "sys_task_manager.h"
 #include "text.h"
+#include "font.h"
+#include "field_task.h"
+#include "screen_fade.h"
+#include "run_session.h"
+#include "run_world.h"
+#include "res/text/bank/run_engine.h"
 
 #define POPUP_WIDTH_TILES  17
 #define POPUP_HEIGHT_TILES 5
@@ -109,6 +115,8 @@ static void MapNamePopUp_Reset(MapNamePopUp *mapPopUp)
     mapPopUp->shouldSlideIn = FALSE;
     mapPopUp->entryID = 0;
     mapPopUp->bgConfig = NULL;
+    mapPopUp->capturePending = FALSE;
+    mapPopUp->fieldSystem = NULL;
 }
 
 static void MapNamePopUp_SetBgConfig(MapNamePopUp *mapPopUp, BgConfig *bgConfig)
@@ -165,6 +173,22 @@ static void SysTask_MapNamePopUpWindow(SysTask *task, void *data)
                 MapNamePopUp_DrawWindowFrame(mapPopUp, strWidth);
                 MapNamePopUp_PrintMapName(mapPopUp, mapPopUp->string);
                 mapPopUp->state = MAP_NAME_POPUP_STATE_SLIDE_IN;
+            } else if (mapPopUp->capturePending && mapPopUp->fieldSystem != NULL
+                && !FieldSystem_IsRunningTask(mapPopUp->fieldSystem) && IsScreenFadeDone()) {
+                mapPopUp->capturePending = FALSE;
+                MessageLoader *messages = MessageLoader_Init(MSG_LOADER_LOAD_ON_DEMAND,
+                    NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_RUN_ENGINE, HEAP_ID_FIELD1);
+                if (messages == NULL) {
+                    MapNamePopUp_Hide(mapPopUp);
+                    return;
+                }
+                u8 left = RunState_Remaining(RunSession_State(), mapPopUp->captureZone);
+                MessageLoader_GetString(messages, left ? Run_Text_PopupOne + left - 1 : Run_Text_PopupNone, mapPopUp->string);
+                MessageLoader_Free(messages);
+                strWidth = Font_CalcStringWidth(FONT_SYSTEM, mapPopUp->string, 0);
+                MapNamePopUp_DrawWindowFrame(mapPopUp, strWidth);
+                MapNamePopUp_PrintMapName(mapPopUp, mapPopUp->string);
+                mapPopUp->state = MAP_NAME_POPUP_STATE_SLIDE_IN;
             } else {
                 MapNamePopUp_Hide(mapPopUp);
                 return;
@@ -193,7 +217,7 @@ static void MapNamePopUp_StartSlideOut(MapNamePopUp *mapPopUp)
 MapNamePopUp *MapNamePopUp_Create(BgConfig *bgConfig)
 {
     MapNamePopUp *mapPopUp = Heap_Alloc(HEAP_ID_FIELD1, sizeof(MapNamePopUp));
-    mapPopUp->string = String_Init(22, HEAP_ID_FIELD1);
+    mapPopUp->string = String_Init(64, HEAP_ID_FIELD1);
 
     MapNamePopUp_SetBgConfig(mapPopUp, bgConfig);
     MapNamePopUp_CreateWindow(mapPopUp);
@@ -204,6 +228,7 @@ MapNamePopUp *MapNamePopUp_Create(BgConfig *bgConfig)
 
 void MapNamePopUp_Destroy(MapNamePopUp *mapPopUp)
 {
+    if (mapPopUp->task != NULL) SysTask_Done(mapPopUp->task);
     MessageLoader_Free(mapPopUp->msgLoader);
     Window_Remove(&mapPopUp->window);
     String_Free(mapPopUp->string);
@@ -267,6 +292,8 @@ void MapNamePopUp_Hide(MapNamePopUp *mapPopUp)
 
 void FieldSystem_RequestLocationName(FieldSystem *fieldSystem)
 {
+    u16 zone = RunWorld_Zone(fieldSystem->location->mapHeaderID);
+    BOOL newZone = RunSession_NoticeZone(zone);
     if (MapHeader_GetMapLabelWindowID(fieldSystem->location->mapHeaderID) == 0) {
         return;
     }
@@ -280,5 +307,12 @@ void FieldSystem_RequestLocationName(FieldSystem *fieldSystem)
         }
 
         MapNamePopUp_Show(fieldSystem->unk_04->mapPopup, mapLabelTextID, mapLabelWindowID);
+        MapNamePopUp *popup = fieldSystem->unk_04->mapPopup;
+        popup->fieldSystem = fieldSystem;
+        popup->captureZone = zone;
+        popup->capturePending = newZone && zone < RUN_ZONE_COUNT && RunSession_Configured()
+            && RunState_CaptureActivated(RunSession_State()) && RunSession_Config()->captureAttempts
+            && (RunSession_Config()->flags & RUN_AREA_NOTIFICATIONS)
+            && MapHeader_HasWildEncounters(fieldSystem->location->mapHeaderID);
     }
 }

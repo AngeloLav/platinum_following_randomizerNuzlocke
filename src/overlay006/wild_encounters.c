@@ -42,6 +42,7 @@
 #include "player_avatar.h"
 #include "pokedex.h"
 #include "pokemon.h"
+#include "run_game.h"
 #include "pokeradar.h"
 #include "roaming_pokemon.h"
 #include "rtc.h"
@@ -980,8 +981,9 @@ static u8 GetWildMonLevel(const EncounterSlot *slot, const WildEncounters_FieldP
 
 // Creates a mon with a personality that will make it shiny, and complies with Cute Charm/Synchronize.
 // It only has to check one or the other, not both, because only one ability can be in effect at a time.
-static void CreateWildMonShinyWithGenderOrNature(const u16 species, const u8 level, const int partySlot, const u32 param3, const WildEncounters_FieldParams *encounterFieldParams, Pokemon *firstPartyMon, FieldBattleDTO *battleParams)
+static void CreateWildMonShinyWithGenderOrNature(const u16 originalSpecies, const u8 level, const int partySlot, const u32 param3, const WildEncounters_FieldParams *encounterFieldParams, Pokemon *firstPartyMon, FieldBattleDTO *battleParams)
 {
+    u16 species = RunGame_RandomSpecies(battleParams->runEncounterSource, battleParams->mapHeaderID, partySlot, originalSpecies);
     u8 firstMonGender;
     u8 firstMonNature;
 
@@ -1046,6 +1048,7 @@ static void CreateWildMonShinyWithGenderOrNature(const u16 species, const u8 lev
 
 static void CreateWildMon(u16 species, u8 level, const int partyDest, const WildEncounters_FieldParams *encounterFieldParams, Pokemon *firstPartyMon, FieldBattleDTO *battleParams)
 {
+    species = RunGame_RandomSpecies(battleParams->runEncounterSource, battleParams->mapHeaderID, partyDest, species);
     Pokemon *newEncounter = Pokemon_New(HEAP_ID_FIELD2);
     Pokemon_Init(newEncounter);
     BOOL hasRandomGender = TRUE;
@@ -1226,6 +1229,8 @@ void CreateWildMon_HoneyTree(FieldSystem *fieldSystem, FieldBattleDTO *battlePar
 
 void CreateWildMon_Scripted(FieldSystem *fieldSystem, u16 species, u8 level, FieldBattleDTO *battleParams)
 {
+    battleParams->runEncounterSource = RUN_SOURCE_STATIC;
+    battleParams->runEventKey = ((u32)fieldSystem->location->mapHeaderID << 16) | species;
     Party *playerParty = SaveData_GetParty(fieldSystem->saveData);
     Pokemon *firstPartyMon = Party_GetPokemonBySlotIndex(playerParty, 0);
 
@@ -1530,6 +1535,11 @@ static void InitEncounterFieldParams(FieldSystem *fieldSystem, Pokemon *firstPar
     encounterFieldParams->firstBattlerLevel = 0;
     encounterFieldParams->repelActive = FALSE;
     encounterFieldParams->ignoreAbilityBlock = FALSE;
+    // Scripted encounters have no wild table. A randomized Shellos/Gastrodon
+    // or Unown must still get a valid form/table instead of stack contents.
+    encounterFieldParams->encounterRatesForms[0] = 0;
+    encounterFieldParams->encounterRatesForms[1] = 0;
+    encounterFieldParams->unownTableID = 0;
 
     if (encounterData != NULL) {
         encounterFieldParams->encounterRatesForms[0] = encounterData->encounterRatesForms[0];

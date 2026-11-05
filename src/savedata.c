@@ -11,6 +11,7 @@
 #include "inlines.h"
 #include "math_util.h"
 #include "savedata_misc.h"
+#include "run_session.h"
 #include "system.h"
 #include "unk_0209A74C.h"
 #include "unk_0209AA74.h"
@@ -95,6 +96,7 @@ SaveData *SaveData_Init(void)
         break;
     }
 
+    if (saveData->dataExists) RunSession_Load(saveData);
     return saveData;
 }
 
@@ -153,6 +155,7 @@ BOOL SaveData_Load(SaveData *saveData)
     if (loadSucceeded) {
         saveData->dataExists = TRUE;
         saveData->isNewGameData = FALSE;
+        RunSession_Load(saveData);
 
         int frontierResult, videoResult;
         SaveDataExtra_LoadCheck(saveData, &frontierResult, &videoResult);
@@ -169,6 +172,9 @@ int SaveData_Save(SaveData *saveData)
     }
 
     if (saveData->isNewGameData) {
+        // The first native save erases the old footers. Validate the run BEFORE
+        // that irreversible step, in addition to the write/commit-time check.
+        if (!RunSession_CanSave(saveData)) return SAVE_RESULT_CORRUPT;
         SleepLock(SLEEP_TYPE_SAVE_DATA);
 
         SaveBlockFooter_Erase(saveData, SAVE_BLOCK_ID_NORMAL, !saveData->blockOffsets[SAVE_BLOCK_ID_NORMAL]);
@@ -207,6 +213,7 @@ int SaveData_SaveBlock(SaveData *saveData, int saveBlockID)
 
 void SaveData_Clear(SaveData *saveData)
 {
+    RunSession_Reset();
     saveData->isNewGameData = TRUE;
     saveData->fullSaveRequired = TRUE;
 
@@ -671,6 +678,10 @@ static int SaveDataState_Main(SaveData *saveData, SaveDataState *state)
 
     switch (state->mainSequence) {
     case 0:
+        if (state->currentBlock == SAVE_BLOCK_ID_NORMAL
+            && !RunSession_PrepareSave(saveData, !saveData->blockOffsets[SAVE_BLOCK_ID_NORMAL])) {
+            return SAVE_RESULT_CORRUPT;
+        }
         state->lockID = SaveDataState_InitBlock(saveData, state->currentBlock, !saveData->blockOffsets[state->currentBlock]);
         state->locked = TRUE;
         state->mainSequence++;

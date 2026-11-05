@@ -19,6 +19,7 @@
 #include "party.h"
 #include "pc_boxes.h"
 #include "pokemon.h"
+#include "run_game.h"
 #include "ribbon.h"
 #include "save_player.h"
 #include "tv_segment.h"
@@ -28,6 +29,7 @@
 
 BOOL ScrCmd_GivePokemon(ScriptContext *ctx)
 {
+    u32 runEventKey = ((u32)ctx->fieldSystem->location->mapHeaderID << 16) | (u32)(ctx->scriptPtr - ctx->scripts);
     int metLocation = MapHeader_GetMapLabelTextID(ctx->fieldSystem->location->mapHeaderID);
     int metTerrain = TERRAIN_MAX;
     FieldSystem *fieldSystem = ctx->fieldSystem;
@@ -37,7 +39,11 @@ BOOL ScrCmd_GivePokemon(ScriptContext *ctx)
     u16 *success = ScriptContext_GetVarPointer(ctx);
 
     Party *unused = SaveData_GetParty(fieldSystem->saveData);
+    species = RunGame_RandomSpecies(RUN_SOURCE_GIFT, runEventKey, 0, species);
+    RunGame_SetGiftContext(RUN_SOURCE_GIFT, runEventKey);
     *success = Pokemon_GiveMonFromScript(HEAP_ID_FIELD2, fieldSystem->saveData, species, level, heldItem, metLocation, metTerrain);
+    RunGame_ClearGiftContext();
+    RunGame_SetGiftResult(*success);
 
     return FALSE;
 }
@@ -81,6 +87,8 @@ BOOL ScrCmd_CheckIsPartyMonOutsider(ScriptContext *ctx)
 
 BOOL ScrCmd_GiveEgg(ScriptContext *ctx)
 {
+    RunGame_SetGiftResult(FALSE);
+    u32 runEventKey = ((u32)ctx->fieldSystem->location->mapHeaderID << 16) | (u32)(ctx->scriptPtr - ctx->scripts);
     FieldSystem *fieldSystem = ctx->fieldSystem;
     TrainerInfo *trainer = SaveData_GetTrainerInfo(fieldSystem->saveData);
     u16 species = ScriptContext_GetVar(ctx);
@@ -94,9 +102,12 @@ BOOL ScrCmd_GiveEgg(ScriptContext *ctx)
         Pokemon_Init(egg);
 
         int specialMetLoc = SpecialMetLoc_GetId(1, eggGiver);
+        species = RunGame_RandomSpecies(RUN_SOURCE_EGG, runEventKey, 0, species);
         Egg_CreateEgg(egg, species, 1, trainer, 3, specialMetLoc);
 
-        Party_AddPokemon(party, egg);
+        RunGame_SetGiftContext(RUN_SOURCE_EGG, runEventKey);
+        if (RunGame_AcceptScriptGift(egg)) RunGame_SetGiftResult(Party_AddPokemon(party, egg));
+        RunGame_ClearGiftContext();
         Heap_Free(egg);
     }
 
@@ -149,7 +160,7 @@ BOOL ScrCmd_FindPartySlotWithMove(ScriptContext *ctx)
     for (slot = 0, *destVar = MAX_PARTY_SIZE; slot < partyCount; slot++) {
         Pokemon *mon = Party_GetPokemonBySlotIndex(SaveData_GetParty(fieldSystem->saveData), slot);
 
-        if (Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) != FALSE) {
+        if (Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) != FALSE || RunGame_Exhausted(Pokemon_GetBoxPokemon(mon))) {
             continue;
         }
 
@@ -162,6 +173,7 @@ BOOL ScrCmd_FindPartySlotWithMove(ScriptContext *ctx)
         }
     }
 
+    if (*destVar == MAX_PARTY_SIZE) *destVar = RunGame_FieldMoveSlot(SaveData_GetParty(fieldSystem->saveData), move);
     return FALSE;
 }
 

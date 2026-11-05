@@ -5387,6 +5387,12 @@
     CallCommonScript 0x809
     .endm
 
+    .macro GetRunRule rule, result
+    .short SCRCMD_GETRUNRULE
+    .short \rule
+    .short \result
+    .endm
+
     .text
     .globl _start
 _start:

@@ -15,6 +15,8 @@
 #include "play_time_manager.h"
 #include "pokemon.h"
 #include "record_mixed_rng.h"
+#include "run_menu.h"
+#include "run_session.h"
 #include "save_player.h"
 #include "savedata.h"
 #include "savedata_misc.h"
@@ -81,7 +83,7 @@ static BOOL GameStartRowanIntro_Main(ApplicationManager *appMan, int *state)
 static int GameStartRowanIntro_Exit(ApplicationManager *appMan, int *state)
 {
     Heap_Destroy(HEAP_ID_GAME_START);
-    EnqueueApplication(FS_OVERLAY_ID_NONE, &gRowanIntroAppTemplate);
+    EnqueueApplication(FS_OVERLAY_ID_NONE, &gRunConfigMenuTemplate);
     return TRUE;
 }
 
@@ -135,7 +137,11 @@ static int GameStartLoadSave_Main(ApplicationManager *appMan, int *state)
 static int GameStartLoadSave_Exit(ApplicationManager *appMan, int *state)
 {
     Heap_Destroy(HEAP_ID_GAME_START);
-    EnqueueApplication(FS_OVERLAY_ID_NONE, &gFieldSystemContinueTemplate);
+    if (RunSession_Damaged()) {
+        EnqueueApplication(FS_OVERLAY_ID_NONE, &gRunConfigMenuTemplate);
+    } else {
+        EnqueueApplication(FS_OVERLAY_ID_NONE, &gFieldSystemContinueTemplate);
+    }
     return TRUE;
 }
 

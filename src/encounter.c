@@ -23,6 +23,7 @@
 #include "enc_effects.h"
 #include "enums.h"
 #include "field_battle_data_transfer.h"
+#include "run_game.h"
 #include "field_comm_manager.h"
 #include "field_map_change.h"
 #include "field_overworld_state.h"
@@ -115,6 +116,7 @@ static BOOL FieldTask_RunBattle(FieldTask *task)
 
 static void CallBattleTask(FieldTask *task, FieldBattleDTO *dto)
 {
+    RunGame_BeginBattle(dto);
     FieldTask_InitCall(task, FieldTask_RunBattle, dto);
 }
 
@@ -154,6 +156,8 @@ static void UpdateFieldSystemFromDTO(const FieldBattleDTO *dto, FieldSystem *fie
         return;
     }
 
+    RunGame_EndBattle(dto);
+    if (RunGame_Over()) ScriptManager_StopForRunEnd(fieldSystem);
     FieldBattleDTO_UpdateFieldSystem(dto, fieldSystem);
 }
 

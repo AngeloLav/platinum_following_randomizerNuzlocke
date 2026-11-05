@@ -19,6 +19,14 @@ Static main
 	Object main.nef.p/src_debug.c.o
 	Object main.nef.p/src_list_menu.c.o
 	Object main.nef.p/src_game_version.c.o
+	Object main.nef.p/src_run_config.c.o
+	Object main.nef.p/src_run_randomizer.c.o
+	Object main.nef.p/src_run_state.c.o
+	Object main.nef.p/src_run_store.c.o
+	Object main.nef.p/src_run_session.c.o
+	Object main.nef.p/src_run_world.c.o
+	Object main.nef.p/src_run_menu.c.o
+	Object main.nef.p/src_run_game.c.o
 	Object main.nef.p/src_menu.c.o
 	Object main.nef.p/src_charcode_util.c.o
 	Object main.nef.p/src_render_text.c.o

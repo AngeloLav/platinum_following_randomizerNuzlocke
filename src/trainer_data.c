@@ -16,6 +16,7 @@
 #include "narc.h"
 #include "party.h"
 #include "pokemon.h"
+#include "run_game.h"
 #include "savedata.h"
 #include "savedata_misc.h"
 #include "string_gf.h"
@@ -310,6 +311,7 @@ static void TrainerData_BuildParty(FieldBattleDTO *dto, int battler, enum HeapID
     }
     }
 
+    RunGame_AdjustTrainerParty(dto->parties[battler], dto->trainerIDs[battler], battler, dto->battleType);
     Heap_Free(buf);
     Heap_Free(mon);
     LCRNG_SetSeed(oldSeed);

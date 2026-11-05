@@ -880,6 +880,26 @@
         "{STRVAR_1 1, 0, 0} is feeling better, so you\n",
         "decided to take {STRVAR_1 1, 0, 0} with you!\r"
       ]
+    },
+    {
+      "id": "CommonStrings_Text_RunEnded",
+      "en_US": [
+        "Your entire party is exhausted.\n",
+        "This run has ended.\r",
+        "You can view your history in the\n",
+        "Run Registry in the menu.\r",
+        "Choose Start a new run there to\n",
+        "restart. This erases this adventure\n",
+        "and its memorial.\r"
+      ]
+    },
+    {
+      "id": "CommonStrings_Text_RunSaveFailed",
+      "en_US": "This run could not be saved.\nUse SAVE before turning off.\rA different adventure will never\nbe overwritten automatically.\r"
+    },
+    {
+      "id": "CommonStrings_Text_RunGiftDenied",
+      "en_US": "Your run rules do not allow this\ngift here. No Pokemon was added.\rSeparate gift allowances can be\nselected when starting a new run.\r"
     }
   ]
 }

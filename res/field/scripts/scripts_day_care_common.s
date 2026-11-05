@@ -13,12 +13,21 @@ DayCareCommon_Man:
     PlaySE SE_CONFIRM_sseq_3
     LockAll
     FacePlayer
+    GetRunRule 1, VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, DayCareCommon_RunQuarantine
     BufferDaycareMonNicknames
     GetDaycareState VAR_RESULT
     GoToIfEq VAR_RESULT, DAYCARE_EGG_WAITING, DayCareCommon_ManEggWaiting
     GoToIfEq VAR_RESULT, DAYCARE_ONE_MON, DayCareCommon_ManOneMon
     GoToIfEq VAR_RESULT, DAYCARE_TWO_MONS, DayCareCommon_ManTwoMons
     Message DayCareCommon_Text_ImTheDayCareMan
+    WaitButton
+    CloseMessage
+    ReleaseAll
+    End
+
+DayCareCommon_RunQuarantine:
+    Message DayCareCommon_Text_RunQuarantine
     WaitButton
     CloseMessage
     ReleaseAll

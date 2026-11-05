@@ -77,6 +77,18 @@ static BOOL ScriptManager_SetHiddenItem(ScriptManager *scriptManager, u16 script
 static u16 FieldSystem_GetFixedInitScriptID(const u8 *initScriptBytes, u8 initScriptType);
 static u16 FieldSystem_GetFrameTableInitScriptID(FieldSystem *fieldSystem, const u8 *initScriptBytes, u8 initScriptType);
 
+void ScriptManager_StopForRunEnd(FieldSystem *fieldSystem)
+{
+    for (FieldTask *task = fieldSystem->task; task != NULL; task = task->prev) {
+        if (task->func != FieldTask_RunScript) continue;
+        ScriptManager *manager = FieldTask_GetEnv(task);
+        manager->function = NULL;
+        for (int i = 0; i < NUM_SCRIPT_CONTEXTS; i++) {
+            if (manager->ctx[i]) ScriptContext_Stop(manager->ctx[i]);
+        }
+    }
+}
+
 void ScriptManager_Set(FieldSystem *fieldSystem, u16 scriptID, MapObject *object)
 {
     ScriptManager *scriptManager = ScriptManager_New();

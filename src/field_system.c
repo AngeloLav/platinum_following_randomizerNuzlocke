@@ -25,6 +25,7 @@
 #include "field_map_change.h"
 #include "field_overworld_state.h"
 #include "field_system.h"
+#include "run_game.h"
 #include "field_task.h"
 #include "game_overlay.h"
 #include "heap.h"
@@ -204,6 +205,7 @@ static void ExecuteAndCleanupIfDone(ApplicationManager **appManPtr)
 
 static BOOL HandleInputsEventsAndProcesses(FieldSystem *fieldSystem)
 {
+    RunGame_PollEnd(fieldSystem);
     HandleFieldInput(fieldSystem);
     if (FieldTask_Run(fieldSystem) == TRUE && fieldSystem->unk_04 != NULL) {
         FieldSystem_SendPoketchEvent(fieldSystem, POKETCH_EVENT_SLEEP, 0);

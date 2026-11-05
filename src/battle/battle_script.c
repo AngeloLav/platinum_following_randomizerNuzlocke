@@ -54,6 +54,7 @@
 #include "party.h"
 #include "pc_boxes.h"
 #include "pokemon.h"
+#include "run_game.h"
 #include "pokemon_icon.h"
 #include "pokemon_sprite.h"
 #include "render_window.h"
@@ -1768,6 +1769,9 @@ static BOOL BtlCmd_TryFaintMon(BattleSystem *battleSys, BattleContext *battleCtx
 
     int battler = BattleScript_Battler(battleSys, battleCtx, inBattler);
     if (battleCtx->battleMons[battler].curHP == 0) {
+        if (BattleSystem_GetBattlerSide(battleSys, battler) == BATTLE_SIDE_PLAYER) {
+            RunGame_Exhaust(BattleSystem_GetPartyPokemon(battleSys, battler, battleCtx->selectedPartySlot[battler]));
+        }
         battleCtx->faintedMon = battler;
         battleCtx->battleStatusMask |= (FlagIndex(battler) << SYSCTL_MON_FAINTED_SHIFT);
         battleCtx->totalFainted[battler]++;
@@ -9767,7 +9771,9 @@ static void BattleScript_GetExpTask(SysTask *task, void *inData)
 
             u32 newExp = Pokemon_GetValue(mon, MON_DATA_EXPERIENCE, NULL);
             data->tmpData[GET_EXP_NEW_EXP] = newExp - Pokemon_GetCurrentLevelBaseExp(mon);
-            newExp += totalExp;
+            u32 boundedExp = RunGame_Experience(Pokemon_GetBoxPokemon(mon), newExp, totalExp);
+            totalExp = boundedExp > newExp ? boundedExp - newExp : 0;
+            newExp = boundedExp;
 
             if (slot == data->battleCtx->selectedPartySlot[expBattler]) {
                 data->battleCtx->battleMons[expBattler].exp = newExp;
@@ -10719,6 +10725,7 @@ static void BattleScript_CatchMonTask(SysTask *task, void *inData)
             BattleSystem_SetPokemonCatchData(data->battleSys, data->battleCtx, mon);
             BattleSystem_EnqueuePokemonHistory(data->battleSys, mon);
             BattleSystem_InitCaptureAttempt(data->battleSys, mon);
+            RunGame_Caught(mon, battler, data->battleCtx->selectedPartySlot[battler]);
             BattleController_EmitIncrementRecord(data->battleSys, 0, 0, RECORD_CAUGHT_POKEMON);
 
             if (Party_AddPokemon(party, mon) == TRUE) {

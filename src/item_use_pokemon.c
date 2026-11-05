@@ -10,6 +10,7 @@
 #include "generated/item_hold_effects.h"
 #include "generated/moves.h"
 #include "generated/species.h"
+#include "generated/items.h"
 
 #include "follower_mon_talk.h"
 #include "heap.h"
@@ -17,6 +18,7 @@
 #include "move_table.h"
 #include "party.h"
 #include "pokemon.h"
+#include "run_game.h"
 
 #define PP_UP_REQUIREMENT 5 // Moves with fewer max PP can't benefit from PP Ups (e.g. Sketch)
 
@@ -134,6 +136,7 @@ static u8 UpdatePokemonFriendship(Pokemon *mon, s32 current, s32 change, u16 loc
 
 u8 Pokemon_CheckItemEffects(Pokemon *mon, u16 itemId, u16 moveSlot, enum HeapID heapID)
 {
+    if (RunGame_Exhausted(Pokemon_GetBoxPokemon(mon)) || (itemId == ITEM_RARE_CANDY && !RunGame_CanUseCandy(mon))) return FALSE;
     // For some reason, the original developer decided to use an array to store what should have been individual variables
     // For more clarity on what each slot is used for, and to make them look more like individual variables,
     // convenience macros vCheck... are defined defined at the top of this file.
@@ -237,6 +240,7 @@ u8 Party_CheckItemEffectsOnMember(Party *party, u16 itemId, u8 partySlot, u8 mov
 
 u8 Pokemon_ApplyItemEffects(Pokemon *mon, u16 itemId, u16 moveSlot, u16 location, enum HeapID heapID)
 {
+    if (RunGame_Exhausted(Pokemon_GetBoxPokemon(mon)) || (itemId == ITEM_RARE_CANDY && !RunGame_CanUseCandy(mon))) return FALSE;
     // For some reason, the original developer decided to use an array to store what should have been individual variables
     // For more clarity on what each slot is used for, and to make them look more like individual variables,
     // convenience macros vApply... are defined at the top of this file.

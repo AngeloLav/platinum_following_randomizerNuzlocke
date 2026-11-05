@@ -1,0 +1,761 @@
+{
+  "key": 54176,
+  "messages": [
+    {
+      "id": "Run_Text_Title",
+      "en_US": "RUN SETTINGS"
+    },
+    {
+      "id": "Run_Text_Registry",
+      "en_US": "RUN REGISTRY"
+    },
+    {
+      "id": "Run_Text_Classic",
+      "en_US": "Classic Platinum"
+    },
+    {
+      "id": "Run_Text_Randomizer",
+      "en_US": "Randomizer"
+    },
+    {
+      "id": "Run_Text_Nuzlocke",
+      "en_US": "Classic Nuzlocke"
+    },
+    {
+      "id": "Run_Text_Hardcore",
+      "en_US": "Hardcore Randomizer"
+    },
+    {
+      "id": "Run_Text_Custom",
+      "en_US": "Custom"
+    },
+    {
+      "id": "Run_Text_Off",
+      "en_US": "OFF"
+    },
+    {
+      "id": "Run_Text_On",
+      "en_US": "ON"
+    },
+    {
+      "id": "Run_Text_Auto",
+      "en_US": "Automatic"
+    },
+    {
+      "id": "Run_Text_Manual",
+      "en_US": "Manual"
+    },
+    {
+      "id": "Run_Text_Preset",
+      "en_US": "Preset"
+    },
+    {
+      "id": "Run_Text_Wild",
+      "en_US": "Wild Pokemon"
+    },
+    {
+      "id": "Run_Text_Trainers",
+      "en_US": "Trainer Pokemon"
+    },
+    {
+      "id": "Run_Text_Tolerance",
+      "en_US": "BST Range"
+    },
+    {
+      "id": "Run_Text_Weight",
+      "en_US": "BST Similarity"
+    },
+    {
+      "id": "Run_Text_Legendaries",
+      "en_US": "Legendary pools"
+    },
+    {
+      "id": "Run_Text_Static",
+      "en_US": "Randomize statics"
+    },
+    {
+      "id": "Run_Text_Gifts",
+      "en_US": "Randomize gifts"
+    },
+    {
+      "id": "Run_Text_Eggs",
+      "en_US": "Randomize gift Eggs"
+    },
+    {
+      "id": "Run_Text_Attempts",
+      "en_US": "Area opportunities"
+    },
+    {
+      "id": "Run_Text_Dupes",
+      "en_US": "Family Dupes Clause"
+    },
+    {
+      "id": "Run_Text_Shiny",
+      "en_US": "Shiny Clause"
+    },
+    {
+      "id": "Run_Text_SeparateGifts",
+      "en_US": "Separate gifts"
+    },
+    {
+      "id": "Run_Text_SeparateEggs",
+      "en_US": "Separate gift Eggs"
+    },
+    {
+      "id": "Run_Text_Permadeath",
+      "en_US": "Permadeath"
+    },
+    {
+      "id": "Run_Text_Wipe",
+      "en_US": "Party wipe ends run"
+    },
+    {
+      "id": "Run_Text_DayCare",
+      "en_US": "Day Care Eggs"
+    },
+    {
+      "id": "Run_Text_Cap",
+      "en_US": "Level cap"
+    },
+    {
+      "id": "Run_Text_Allowance",
+      "en_US": "Cap allowance"
+    },
+    {
+      "id": "Run_Text_Scaling",
+      "en_US": "Trainer scaling"
+    },
+    {
+      "id": "Run_Text_Bonus",
+      "en_US": "Levels per badge"
+    },
+    {
+      "id": "Run_Text_Bosses",
+      "en_US": "Scale bosses"
+    },
+    {
+      "id": "Run_Text_Notifications",
+      "en_US": "Area notifications"
+    },
+    {
+      "id": "Run_Text_SeedMode",
+      "en_US": "Seed entry"
+    },
+    {
+      "id": "Run_Text_Seed",
+      "en_US": "Seed"
+    },
+    {
+      "id": "Run_Text_Confirm",
+      "en_US": "Confirm and begin"
+    },
+    {
+      "id": "Run_Text_Controls",
+      "en_US": "Up/Down: select  Left/Right: change\nA: edit  B: top  Last row: review"
+    },
+    {
+      "id": "Run_Text_ReadOnly",
+      "en_US": "L/R: pages  Up/Down: scroll\nA: details  B: back"
+    },
+    {
+      "id": "Run_Text_Locked",
+      "en_US": "Rules are locked during a run.\nChoose new rules in New Game."
+    },
+    {
+      "id": "Run_Text_ConfirmHelp",
+      "en_US": "Review all settings above.\nPress A to begin this run."
+    },
+    {
+      "id": "Run_Text_SeedHelp",
+      "en_US": "A: edit  Left/Right: digit\nUp/Down: value  A: done B: undo"
+    },
+    {
+      "id": "Run_Text_Digits",
+      "en_US": "0123456789ABCDEF()"
+    },
+    {
+      "id": "Run_Text_Cursor",
+      "en_US": "◆"
+    },
+    {
+      "id": "Run_Text_Active",
+      "en_US": "ACTIVE"
+    },
+    {
+      "id": "Run_Text_GameOver",
+      "en_US": "GAME OVER"
+    },
+    {
+      "id": "Run_Text_Badges",
+      "en_US": "Badges"
+    },
+    {
+      "id": "Run_Text_NextCap",
+      "en_US": "Next level cap"
+    },
+    {
+      "id": "Run_Text_CurrentBonus",
+      "en_US": "Trainer level bonus"
+    },
+    {
+      "id": "Run_Text_Area",
+      "en_US": "Current area"
+    },
+    {
+      "id": "Run_Text_Remaining",
+      "en_US": "Remaining"
+    },
+    {
+      "id": "Run_Text_NotActive",
+      "en_US": "Capture tracking not yet active."
+    },
+    {
+      "id": "Run_Text_NotVisited",
+      "en_US": "NOT VISITED"
+    },
+    {
+      "id": "Run_Text_Available",
+      "en_US": "AVAILABLE"
+    },
+    {
+      "id": "Run_Text_Partial",
+      "en_US": "PARTIALLY USED"
+    },
+    {
+      "id": "Run_Text_ExhaustedArea",
+      "en_US": "EXHAUSTED"
+    },
+    {
+      "id": "Run_Text_EncounterPending",
+      "en_US": "In progress"
+    },
+    {
+      "id": "Run_Text_Caught",
+      "en_US": "Caught"
+    },
+    {
+      "id": "Run_Text_Defeated",
+      "en_US": "Defeated"
+    },
+    {
+      "id": "Run_Text_Fled",
+      "en_US": "Fled"
+    },
+    {
+      "id": "Run_Text_Failed",
+      "en_US": "Failed"
+    },
+    {
+      "id": "Run_Text_Interrupted",
+      "en_US": "Interrupted"
+    },
+    {
+      "id": "Run_Text_Alive",
+      "en_US": "Alive"
+    },
+    {
+      "id": "Run_Text_ExhaustedMon",
+      "en_US": "EXHAUSTED"
+    },
+    {
+      "id": "Run_Text_Original",
+      "en_US": "Original species"
+    },
+    {
+      "id": "Run_Text_Evolution",
+      "en_US": "Evolution"
+    },
+    {
+      "id": "Run_Text_Origin",
+      "en_US": "Origin"
+    },
+    {
+      "id": "Run_Text_Death",
+      "en_US": "Defeat location"
+    },
+    {
+      "id": "Run_Text_Empty",
+      "en_US": "No records yet."
+    },
+    {
+      "id": "Run_Text_Reset",
+      "en_US": "Start a new run"
+    },
+    {
+      "id": "Run_Text_ResetWarning",
+      "en_US": "Erase this run and its memorial?\nA: erase and restart  B: cancel"
+    },
+    {
+      "id": "Run_Text_Damaged",
+      "en_US": "Run data could not be loaded.\nYour save was not overwritten."
+    },
+    {
+      "id": "Run_Text_DamagedHelp",
+      "en_US": "Restore a compatible backup.\nPress B to return to the title."
+    },
+    {
+      "id": "Run_Text_StaticHelp",
+      "en_US": "Static captures are always exempt\nfrom ordinary area limits."
+    },
+    {
+      "id": "Run_Text_CaptureHelp",
+      "en_US": "KO, fleeing and failed catches\nalso consume opportunities."
+    },
+    {
+      "id": "Run_Text_OffHelp",
+      "en_US": "This choice is inactive while\nits parent rule is OFF."
+    },
+    {
+      "id": "Run_Text_ExhaustedHelp",
+      "en_US": "This Pokemon cannot recover\nor be used again."
+    },
+    {
+      "id": "Run_Text_Quarantine",
+      "en_US": "Egg production is suspended\nduring the Day Care quarantine."
+    },
+    {
+      "id": "Run_Text_Overview",
+      "en_US": "RUN OVERVIEW"
+    },
+    {
+      "id": "Run_Text_Areas",
+      "en_US": "AREA REGISTRY"
+    },
+    {
+      "id": "Run_Text_History",
+      "en_US": "HISTORY"
+    },
+    {
+      "id": "Run_Text_Memorial",
+      "en_US": "MEMORIAL"
+    },
+    {
+      "id": "Run_Text_Specials",
+      "en_US": "SPECIALS"
+    },
+    {
+      "id": "Run_Text_Settings",
+      "en_US": "FULL SETTINGS"
+    },
+    {
+      "id": "Run_Text_ConfirmFailed",
+      "en_US": "Run data could not be initialized.\nNo save data was overwritten."
+    },
+    {
+      "id": "Run_Text_RulesTitle",
+      "en_US": "RULES"
+    },
+    {
+      "id": "Run_Text_Tracker",
+      "en_US": "RUN TRACKER"
+    },
+    {
+      "id": "Run_Text_StaticCategory",
+      "en_US": "Static encounters"
+    },
+    {
+      "id": "Run_Text_LegendaryCategory",
+      "en_US": "Legendary statics"
+    },
+    {
+      "id": "Run_Text_GiftCategory",
+      "en_US": "Gift Pokemon"
+    },
+    {
+      "id": "Run_Text_EggCategory",
+      "en_US": "Gift Eggs"
+    },
+    {
+      "id": "Run_Text_ShinyCategory",
+      "en_US": "Shiny bonus catches"
+    },
+    {
+      "id": "Run_Text_Result",
+      "en_US": "Result"
+    },
+    {
+      "id": "Run_Text_Failures",
+      "en_US": "Failed attempts"
+    },
+    {
+      "id": "Run_Text_NotEncountered",
+      "en_US": "NOT ENCOUNTERED"
+    },
+    {
+      "id": "Run_Text_PopupLeft",
+      "en_US": "Captures left: "
+    },
+    {
+      "id": "Run_Text_PopupNone",
+      "en_US": "No captures left"
+    },
+    {
+      "id": "Run_Text_ExhaustedBox",
+      "en_US": "Memorial"
+    },
+    {
+      "id": "Run_Text_PopupOne",
+      "en_US": "Captures left: 1"
+    },
+    {
+      "id": "Run_Text_PopupTwo",
+      "en_US": "Captures left: 2"
+    },
+    {
+      "id": "Run_Text_PopupThree",
+      "en_US": "Captures left: 3"
+    },
+    {
+      "id": "Run_Text_HMHelp",
+      "en_US": "Field HMs need their disc/badge.\nA living helper prevents softlocks."
+    },
+    {
+      "id": "Run_Text_BSTHelp",
+      "en_US": "BST Range sets the eligible pool.\nBST Similarity sets the preference."
+    },
+    {
+      "id": "Run_Text_FieldItems",
+      "en_US": "Randomize Field Items"
+    },
+    {
+      "id": "Run_Text_ShinyRate",
+      "en_US": "Shiny Rate"
+    },
+    {
+      "id": "Run_Text_RateOriginal",
+      "en_US": "1/8192 Original"
+    },
+    {
+      "id": "Run_Text_RateIncreased",
+      "en_US": "1/4096 Increased"
+    },
+    {
+      "id": "Run_Text_RateHigh",
+      "en_US": "1/2048 High"
+    },
+    {
+      "id": "Run_Text_RateVeryHigh",
+      "en_US": "1/1024 Very High"
+    },
+    {
+      "id": "Run_Text_Review",
+      "en_US": "Review and Confirm Run"
+    },
+    {
+      "id": "Run_Text_ReviewControls",
+      "en_US": "Up/Down: review  B: edit settings\nLast row: A to begin this run"
+    },
+    {
+      "id": "Run_Text_ConfigNav",
+      "en_US": "RUN SETTINGS   Up/Down: scroll"
+    },
+    {
+      "id": "Run_Text_NavRun",
+      "en_US": "L: prev     RUN 1/5     R: next"
+    },
+    {
+      "id": "Run_Text_NavAreas",
+      "en_US": "L: prev     AREAS 2/5   R: next"
+    },
+    {
+      "id": "Run_Text_NavHistory",
+      "en_US": "L: prev    POKEMON 3/5  R: next"
+    },
+    {
+      "id": "Run_Text_NavMemorial",
+      "en_US": "L: prev   MEMORIAL 4/5  R: next"
+    },
+    {
+      "id": "Run_Text_NavSpecial",
+      "en_US": "L: prev    SPECIAL 5/5 R: next"
+    },
+    {
+      "id": "Run_Text_AreaStatus",
+      "en_US": "Capture status"
+    },
+    {
+      "id": "Run_Text_FirstEncounter",
+      "en_US": "First encounter"
+    },
+    {
+      "id": "Run_Text_AttemptDetails",
+      "en_US": "View area attempts"
+    },
+    {
+      "id": "Run_Text_InactiveShort",
+      "en_US": "INACTIVE"
+    },
+    {
+      "id": "Run_Text_ProgressSection",
+      "en_US": "RUN PROGRESS"
+    },
+    {
+      "id": "Run_Text_RandomSection",
+      "en_US": "RANDOMIZER SUMMARY"
+    },
+    {
+      "id": "Run_Text_CaptureSection",
+      "en_US": "CAPTURE SUMMARY"
+    },
+    {
+      "id": "Run_Text_TotalAreas",
+      "en_US": "Eligible capture areas"
+    },
+    {
+      "id": "Run_Text_AvailableAreas",
+      "en_US": "Areas with chances left"
+    },
+    {
+      "id": "Run_Text_ExhaustedAreas",
+      "en_US": "Exhausted areas"
+    },
+    {
+      "id": "Run_Text_StaticCaught",
+      "en_US": "Static captures"
+    },
+    {
+      "id": "Run_Text_ShinyCaught",
+      "en_US": "Bonus shiny captures"
+    },
+    {
+      "id": "Run_Text_StarterChoose",
+      "en_US": "\nWill you choose this Pokemon?"
+    },
+    {
+      "id": "Run_Text_HelpPreset",
+      "en_US": "Choose a preset with Left/Right\nor A. It resets the rule choices.\nChange any setting afterward to\ncreate a Custom profile.\nThe resolved seed stays the same."
+    },
+    {
+      "id": "Run_Text_HelpWild",
+      "en_US": "Replaces ordinary wild species\nwith seeded choices. Grass, caves,\nsurfing, fishing and other normal\nmethods use BST Range and\nBST Similarity. Levels stay native."
+    },
+    {
+      "id": "Run_Text_HelpTrainers",
+      "en_US": "Replaces opposing trainer species\nusing the seed and team slot.\nParty size and held items stay\nnative. Changed species receive\nvalid level-up moves."
+    },
+    {
+      "id": "Run_Text_HelpRange",
+      "en_US": "Controls how much stronger or\nweaker a replacement Pokemon\ncan be, using its total base stats.\nBST does not depend on level.\nExample: BST 400 at 25% allows\nreplacement BSTs from 300 to 500."
+    },
+    {
+      "id": "Run_Text_HelpSimilarity",
+      "en_US": "Controls how likely similar BST\nvalues are chosen from the pool.\n0%: equal candidate chances.\n25%: slight preference.\n50%: moderate preference.\n75%: strong preference.\n100%: very strong preference.\nEvery eligible species can occur."
+    },
+    {
+      "id": "Run_Text_HelpLegendary",
+      "en_US": "Separates ordinary Pokemon from\nlegendary and mythical Pokemon.\nLegendary restrictions apply before\nBST weighting and any fallback."
+    },
+    {
+      "id": "Run_Text_HelpStatic",
+      "en_US": "Randomizes eligible scripted\nstatic species. Static capture\nexemptions remain mandatory.\nRoamers keep their stored species\nand native story bookkeeping."
+    },
+    {
+      "id": "Run_Text_HelpGifts",
+      "en_US": "Randomizes scripted gift Pokemon,\nincluding the three starters.\nStarter previews and the granted\nPokemon use the same mapping.\nTrades retain their native species."
+    },
+    {
+      "id": "Run_Text_HelpEggs",
+      "en_US": "Randomizes scripted gift Egg\nspecies. Hatching spends no new\narea opportunity. Breeding Eggs\nretain their parent-derived species."
+    },
+    {
+      "id": "Run_Text_HelpFieldItems",
+      "en_US": "Randomizes ordinary visible and\nhidden overworld pickups.\nImportant story items, Key Items,\nHMs, TMs, fossils and orbs stay\nnative. NPC gifts, shops and held\nitems are unaffected. Quantities\nand pickup flags are preserved."
+    },
+    {
+      "id": "Run_Text_HelpSeedMode",
+      "en_US": "Automatic creates a seed when\nthe run is configured. Manual lets\nyou edit its eight hexadecimal\ndigits on the Seed row. The resolved\nseed is stored with the run."
+    },
+    {
+      "id": "Run_Text_HelpSeed",
+      "en_US": "The same seed, rules and data\nproduce the same replacements.\nOrdinary battle RNG cannot change\nthem. A edits digits in settings;\nA accepts editing and B undoes it."
+    },
+    {
+      "id": "Run_Text_HelpAttempts",
+      "en_US": "Each eligible encounter reserves\none opportunity immediately.\nCatching, defeating or fleeing\nall spend it. With 2 or 3 chances,\nrepeat species do not reserve\nanother chance in the same area.\nOFF disables area capture limits."
+    },
+    {
+      "id": "Run_Text_HelpDupes",
+      "en_US": "Previously owned evolutionary\nfamilies are duplicates, including\nbranching evolutions and Pokemon\nthat died or were released.\nDuplicates spend no ordinary\nchance and cannot be caught."
+    },
+    {
+      "id": "Run_Text_HelpShinyClause",
+      "en_US": "Shiny wild Pokemon may be caught\nas bonus encounters despite dupes\nor an exhausted area. They spend\nno ordinary chance. This does not\nchange how often shinies appear."
+    },
+    {
+      "id": "Run_Text_HelpShinyRate",
+      "en_US": "Changes how often newly generated\nPokemon are shiny. A smaller\ndenominator means more shinies.\nExisting Pokemon never change.\nShiny Clause is a separate rule.\nForced shinies and special Egg\nrestrictions retain native behavior."
+    },
+    {
+      "id": "Run_Text_HelpSeparateGifts",
+      "en_US": "Gift Pokemon have their own event\nrecord and spend no area chance.\nOFF makes an eligible gift share\nthe ordinary area allowance."
+    },
+    {
+      "id": "Run_Text_HelpSeparateEggs",
+      "en_US": "Gift Eggs have their own event\nrecord and spend no area chance.\nOFF shares the area allowance.\nHatching never spends a chance."
+    },
+    {
+      "id": "Run_Text_HelpPermadeath",
+      "en_US": "A fainted owned Pokemon becomes\npermanently exhausted. Healing,\nRevives and PC storage cannot\nrestore it. Its history remains\navailable in the Memorial."
+    },
+    {
+      "id": "Run_Text_HelpWipe",
+      "en_US": "With permadeath, losing every\nusable party Pokemon ends the run,\neven with living PC reserves.\nThis rule follows Permadeath and\ncannot be disabled separately."
+    },
+    {
+      "id": "Run_Text_HelpDayCare",
+      "en_US": "ON permits native breeding Eggs.\nOFF quarantines Egg production\nand collection during this run.\nGift Eggs remain a separate system."
+    },
+    {
+      "id": "Run_Text_HelpCap",
+      "en_US": "Uses the next unscaled boss ace\nplus your allowance, at most 100.\nTrainer scaling never raises it.\nThe chosen Level Cap Mode controls\nEXP or battle-entry enforcement.\nAfter eight badges: Cynthia."
+    },
+    {
+      "id": "Run_Text_HelpAllowance",
+      "en_US": "Adds this many levels to the\nnormal cap. It never raises a cap\nabove level 100. Inactive when\nLevel Cap is OFF."
+    },
+    {
+      "id": "Run_Text_HelpScaling",
+      "en_US": "Adds levels to opposing trainer\nPokemon based on earned badges.\nWild levels remain unchanged.\nLink and facility battles keep\ntheir native parties."
+    },
+    {
+      "id": "Run_Text_HelpBonus",
+      "en_US": "Additional trainer levels equal\nbadges times Levels per badge.\nLevels cannot exceed 100.\nInactive when Trainer scaling\nis OFF."
+    },
+    {
+      "id": "Run_Text_HelpBosses",
+      "en_US": "Includes leaders, rivals and\nother classified strong trainers\nin badge-based scaling.\nOFF keeps their native levels.\nInactive when scaling is OFF."
+    },
+    {
+      "id": "Run_Text_HelpNotifications",
+      "en_US": "Shows remaining capture chances\nafter the native area-name popup.\nRepeated floors of one logical\narea do not repeat the notice.\nTracking works even when this\nnotification is disabled."
+    },
+    {
+      "id": "Run_Text_HelpReview",
+      "en_US": "Review all selected values before\nstarting. B returns to editing.\nAt the final Confirm and begin\nentry, A locks the rules and\nstarts the Rowan introduction."
+    },
+    {
+      "id": "Run_Text_HelpSettings",
+      "en_US": "Inspect the complete saved rules.\nThey are locked during a run.\nStart a New Game to choose\ndifferent rules and a new seed."
+    },
+    {
+      "id": "Run_Text_HelpCurrentArea",
+      "en_US": "Shows ordinary opportunities in\nyour current logical capture area.\nA on View area attempts opens\nthe individual species and results.\nStatic and shiny bonus captures\nare tracked separately."
+    },
+    {
+      "id": "Run_Text_HelpActivation",
+      "en_US": "Capture tracking not yet active.\nIt activates when you first obtain\na usable Poke Ball from any source,\nincluding a shop or a field pickup.\nOnce active, it stays active even\nwhen no Balls remain."
+    },
+    {
+      "id": "Run_Text_HelpTrackingOff",
+      "en_US": "Area capture restrictions are OFF.\nWild encounters do not consume\nordinary capture opportunities.\nOther enabled run systems remain\nindependent of this setting."
+    },
+    {
+      "id": "Run_Text_HelpProgress",
+      "en_US": "Current badges, level cap, next\ncap target, trainer bonus and run\nstatus. Progress is read from the\nnative save and persistent run."
+    },
+    {
+      "id": "Run_Text_HelpCaptureSummary",
+      "en_US": "Counts eligible ordinary capture\nzones and their remaining chances.\nCaught and failed results come\nfrom persistent opportunity slots.\nStatics and shiny bonus captures\nhave separate counters."
+    },
+    {
+      "id": "Run_Text_HelpAreas",
+      "en_US": "Review every known capture zone.\nCurrent area comes first, then\nvisited available areas, visited\nexhausted areas and other areas.\nA opens the three attempt slots."
+    },
+    {
+      "id": "Run_Text_HelpHistory",
+      "en_US": "Owned Pokemon remain linked\nthrough renaming, evolution and\nPC moves. A shows original species,\norigin, status and evolution history."
+    },
+    {
+      "id": "Run_Text_HelpMemorial",
+      "en_US": "Review permanently exhausted\nPokemon and their nicknames,\noriginal capture locations,\nevolutions and defeat locations.\nA opens the detailed history."
+    },
+    {
+      "id": "Run_Text_HelpSpecial",
+      "en_US": "Separate records for statics,\nlegendary statics, gift Pokemon,\ngift Eggs and bonus shiny catches.\nA opens a category, then an event.\nRepeatable events keep counters."
+    },
+    {
+      "id": "Run_Text_Legacy",
+      "en_US": "Legacy rules"
+    },
+    {
+      "id": "Run_Text_HelpLegacySimilarity",
+      "en_US": "This saved run uses the original\nlinear BST preference. Its mapping\nis preserved when loading this ROM.\nNew runs use a Gaussian mixture\nfor BST Similarity instead."
+    },
+    {
+      "id": "Run_Text_CapMode",
+      "en_US": "Level Cap Mode"
+    },
+    {
+      "id": "Run_Text_ObedienceCap",
+      "en_US": "Obedience Cap"
+    },
+    {
+      "id": "Run_Text_ExpLock",
+      "en_US": "EXP Lock"
+    },
+    {
+      "id": "Run_Text_EligibleParty",
+      "en_US": "Eligible party Pokemon"
+    },
+    {
+      "id": "Run_Text_RefusingParty",
+      "en_US": "Refusing to battle"
+    },
+    {
+      "id": "Run_Text_HelpCapMode",
+      "en_US": "Choose EXP Lock or Obedience Cap.\nEXP Lock is the default. This choice\nis ignored when Level Cap is OFF."
+    },
+    {
+      "id": "Run_Text_HelpObedience",
+      "en_US": "Pokemon gain EXP normally.\nAbove the cap, they refuse entry\nand switching into battle.\nAt the cap they remain eligible.\nAn active Pokemon that levels up\nmay finish the current battle.\nIf none can fight, your run ends,\neven with living PC reserves."
+    },
+    {
+      "id": "Run_Text_HelpExpLock",
+      "en_US": "EXP stops at the effective cap.\nA capped Pokemon receives 0 EXP.\nExcess EXP is discarded per Pokemon.\nOthers keep their normal shares.\nLost EXP is never redistributed.\nRare Candies and Day Care obey\nthe same cap."
+    },
+    {
+      "id": "Run_Text_HelpEligibility",
+      "en_US": "Eligible party Pokemon are alive,\nnot Eggs and not exhausted.\nIn Obedience Cap mode, their level\nmust also be at or below the cap.\nOverleveled Pokemon are not dead\nand may still be stored or follow."
+    },
+    {
+      "id": "Run_Text_HelpOneEligible",
+      "en_US": "Only one eligible Pokemon remains!\nIf none can fight after a battle,\nyour run ends, even with living\nPokemon in PC storage.\nOverleveled Pokemon are not dead.\nA later badge can make them\neligible again while the run is active."
+    },
+    {
+      "id": "Run_Text_HelpNoEligibleLoss",
+      "en_US": "This run ended because the party\nhad no eligible combatants.\nLiving overleveled Pokemon were\nnot marked dead or deleted.\nLiving PC reserves cannot prevent\nthis mandatory loss condition."
+    },
+    {
+      "id": "Run_Text_Refuses",
+      "en_US": "This Pokemon refuses to battle!\nIts level exceeds your current cap."
+    },
+    {
+      "id": "Run_Text_RefusesLabel",
+      "en_US": "NO BTL"
+    },
+    {
+      "id": "Run_Text_EventNotAvailable",
+      "en_US": "NOT AVAILABLE"
+    },
+    {
+      "id": "Run_Text_EventAvailable",
+      "en_US": "AVAILABLE"
+    },
+    {
+      "id": "Run_Text_EventEncountered",
+      "en_US": "ENCOUNTERED"
+    },
+    {
+      "id": "Run_Text_EventCaught",
+      "en_US": "CAUGHT"
+    },
+    {
+      "id": "Run_Text_EventFailed",
+      "en_US": "FAILED"
+    },
+    {
+      "id": "Run_Text_HelpMythicalEvent",
+      "en_US": "Original postgame event encounter.\nProfessor Oak in Eterna gives the\nKey Items once prerequisites are met.\nStatics ignore ordinary limits and\ndupes. Failed attempts retain native\nretry behavior and reuse one record."
+    }
+  ]
+}

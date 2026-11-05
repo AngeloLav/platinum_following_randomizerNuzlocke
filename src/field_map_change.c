@@ -1,4 +1,5 @@
 #include "field_map_change.h"
+#include "run_game.h"
 
 #include <nitro.h>
 #include <string.h>
@@ -222,6 +223,7 @@ static void FieldMapChange_SetNewLocation(FieldSystem *fieldSystem, const Locati
         *(fieldSystem->location) = *nextLocation;
     }
 
+    RunGame_ConfineLocation(fieldSystem->location);
     MapHeaderData_Load(fieldSystem, fieldSystem->location->mapHeaderID);
 
     if (fieldSystem->location->warpId != WARP_ID_NONE) {

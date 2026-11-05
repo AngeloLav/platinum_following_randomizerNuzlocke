@@ -6276,7 +6276,7 @@
         "stopped evolving!\r"
       ]
     },
-    {           
+    {
       "id": "BattleStrings_Text_EllipsesEllipses",
       "en_US": "... ...?\r"
     },
@@ -8488,6 +8488,38 @@
         "The Distortion World’s {STRVAR_1 1, 0, 0}\n",
         "appeared!\r"
       ]
+    },
+    {
+      "id": "BattleStrings_Text_RunNoCaptures",
+      "en_US": "This area’s capture limit has\nbeen reached!"
+    },
+    {
+      "id": "BattleStrings_Text_RunDuplicate",
+      "en_US": "You already own a Pokemon\nfrom this evolutionary family!"
+    },
+    {
+      "id": "BattleStrings_Text_RunHistoryFull",
+      "en_US": "The run’s Pokemon history is full.\nNo Poke Ball was used."
+    },
+    {
+      "id": "BattleStrings_Text_RunRepeatedSpecies",
+      "en_US": "This species was already attempted\nin this area! Choose another species."
+    },
+    {
+      "id": "BattleStrings_Text_RunRefuses",
+      "en_US": "This Pokemon refuses to battle!\nIts level exceeds your current cap."
+    },
+    {
+      "id": "BattleStrings_Text_RunCatchAllowed",
+      "en_US": "CATCH OK"
+    },
+    {
+      "id": "BattleStrings_Text_RunCatchBlocked",
+      "en_US": "NO CATCH"
+    },
+    {
+      "id": "BattleStrings_Text_RunOneFoe",
+      "en_US": "ONE FOE"
     }
   ]
 }

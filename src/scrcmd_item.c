@@ -11,6 +11,9 @@
 #include "field_script_context.h"
 #include "inlines.h"
 #include "item.h"
+#include "script_manager.h"
+#include "run_extras.h"
+#include "run_session.h"
 #include "unk_0205DFC4.h"
 
 BOOL ScrCmd_AddItem(ScriptContext *ctx)
@@ -41,6 +44,14 @@ BOOL ScrCmd_CanFitItem(ScriptContext *ctx)
     u16 item = ScriptContext_GetVar(ctx);
     u16 count = ScriptContext_GetVar(ctx);
     u16 *destVar = ScriptContext_GetVarPointer(ctx);
+
+    u16 scriptID = *(u16 *)FieldSystem_GetScriptMemberPtr(fieldSystem, SCRIPT_MANAGER_SCRIPT_ID);
+    if (scriptID >= SCRIPT_ID_OFFSET_VISIBLE_ITEMS && scriptID < SCRIPT_ID_OFFSET_HIDDEN_ITEMS) {
+        u16 localID = *(u16 *)FieldSystem_GetScriptMemberPtr(fieldSystem, SCRIPT_DATA_TARGET_OBJECT_ID);
+        item = RunExtras_FieldItem(RunSession_Config(),
+            (((u32)fieldSystem->location->mapHeaderID << 16) | scriptID) ^ (localID * 0x9E3779B9u), item);
+        *FieldSystem_GetVarPointer(fieldSystem, 0x8004) = item;
+    }
 
     *destVar = Bag_CanFitItem(SaveData_GetBag(fieldSystem->saveData), item, count, HEAP_ID_FIELD1);
     return FALSE;

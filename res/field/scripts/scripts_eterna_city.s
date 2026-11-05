@@ -1088,6 +1088,10 @@ EternaCity_GiveTogepiEgg:
     CloseMessage
     @ HG SYNC (port of PokeHeartGold ENTRY DA): Cynthia's egg is now a Deoxys (random forme, see ScrCmd_GiveEgg) instead of a Togepi.
     GiveEgg SPECIES_DEOXYS, SPECIAL_METLOC_NAME_CYNTHIA
+    GetRunRule 2, VAR_RESULT
+    GoToIfEq VAR_RESULT, TRUE, EternaCity_RunGiftAccepted
+    CallCommonScript 0x80C
+EternaCity_RunGiftAccepted:
     SetVar VAR_ETERNA_CITY_STATE, 5
     Return
 

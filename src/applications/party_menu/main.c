@@ -47,6 +47,7 @@
 #include "overlay_manager.h"
 #include "party.h"
 #include "pokemon.h"
+#include "run_game.h"
 #include "render_window.h"
 #include "screen_fade.h"
 #include "sound.h"
@@ -1425,7 +1426,7 @@ void PartyMenu_UpdateSlotPalette(PartyMenuApplication *application, u8 slot)
 
         if (Pokemon_GetValue(mon, MON_DATA_HP, 0) == 0) {
             palette += 2;
-        } else if (sub_0207F984(application, slot) == 1) {
+        } else if (RunGame_RefusesBattle(mon) || sub_0207F984(application, slot) == 1) {
             palette += 1;
         } else {
             palette += 0;
@@ -1798,7 +1799,7 @@ static u8 GetContextMenuEntriesForPartyMon(PartyMenuApplication *application, u8
     count++;
 
     if (FieldSystem_IsInBattleTowerSalon(application->partyMenu->fieldSystem) == FALSE) {
-        if (application->partyMembers[application->currPartySlot].isEgg == FALSE) {
+        if (application->partyMembers[application->currPartySlot].isEgg == FALSE && !RunGame_Exhausted(Pokemon_GetBoxPokemon(mon)) && !RunGame_Over()) {
             for (i = 0; i < 4; i++) {
                 move = (u16)Pokemon_GetValue(mon, MON_DATA_MOVE1 + i, NULL);
 
@@ -1848,6 +1849,11 @@ static u8 sub_020801AC(PartyMenuApplication *application, u8 *param1)
 
 static u8 sub_020801B8(PartyMenuApplication *application, u8 *param1)
 {
+    if (RunGame_Exhausted(Pokemon_GetBoxPokemon(Party_GetPokemonBySlotIndex(application->partyMenu->party, application->currPartySlot)))) {
+        param1[0] = 1;
+        param1[1] = 9;
+        return 2;
+    }
     if (application->partyMembers[application->currPartySlot].isEgg == FALSE) {
         param1[0] = 8;
         param1[1] = 1;

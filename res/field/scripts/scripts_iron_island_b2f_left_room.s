@@ -243,12 +243,20 @@ IronIslandB2FLeftRoom_AcceptedEgg:
     WaitFanfare
     Message IronIslandB2FLeftRoom_Text_ShowEggPokemonPlaces
     GiveEgg SPECIES_RIOLU, SPECIAL_METLOC_NAME_RILEY
+    GetRunRule 2, VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, IronIslandB2FLeftRoom_RunGiftDenied
     SetFlag FLAG_HIDE_IRON_ISLAND_B2F_LEFT_ROOM_RILEY
     ClearFlag FLAG_COULD_NOT_RECEIVE_RIOLU_EGG
     Call IronIslandB2FLeftRoom_SetFlagReceivedEgg
     Message IronIslandB2FLeftRoom_Text_LetsMeetAgain
     WaitButton
     CloseMessage
+    Return
+
+IronIslandB2FLeftRoom_RunGiftDenied:
+    SetFlag FLAG_COULD_NOT_RECEIVE_RIOLU_EGG
+    SetVar VAR_IRON_ISLAND_B2F_LEFT_ROOM_FOLLOWER_RILEY_STATE, 2
+    CallCommonScript 0x80C
     Return
 
 IronIslandB2FLeftRoom_NoRoomToTakeEgg:

@@ -84,7 +84,59 @@
     ScriptEntry CommonScript_SetLookerBGM @ 0x807
     ScriptEntry CommonScript_FadeToDefaultMusic @ 0x808
     ScriptEntry CommonScript_GriseousOrbCouldNotBeRemoved @ 0x809
+    ScriptEntry CommonScript_RunEnded @ 0x80A
+    ScriptEntry CommonScript_RunEndedSaveFailed @ 0x80B
+    ScriptEntry CommonScript_RunGiftDenied @ 0x80C
+    ScriptEntry CommonScript_RunActivated @ 0x80D
     ScriptEntryEnd
+
+CommonScript_RunActivated:
+    LockAll
+    GetRunRule 4, VAR_RESULT
+    GoToIfGt VAR_RESULT, 1, CommonScript_RunActivatedMultiple
+    Message CommonStrings_Text_RunActivatedOne
+    GoTo CommonScript_RunActivatedFinish
+
+CommonScript_RunActivatedMultiple:
+    Message CommonStrings_Text_RunActivatedMultiple
+
+CommonScript_RunActivatedFinish:
+    WaitButton
+    CloseMessage
+    GetRunRule 3, VAR_RESULT
+    ReleaseAll
+    End
+
+CommonScript_RunGiftDenied:
+    Message CommonStrings_Text_RunGiftDenied
+    WaitButton
+    CloseMessage
+    ReturnCommonScript
+    End
+
+CommonScript_RunEndedSaveFailed:
+    LockAll
+    Message CommonStrings_Text_RunSaveFailed
+    WaitButton
+    CloseMessage
+    GoTo CommonScript_RunEnded
+    End
+
+CommonScript_RunEnded:
+    LockAll
+    GetRunRule 5, VAR_RESULT
+    GoToIfEq VAR_RESULT, 2, CommonScript_RunEndedNoEligible
+    Message CommonStrings_Text_RunEnded
+    GoTo CommonScript_RunEndedFinish
+
+CommonScript_RunEndedNoEligible:
+    Message CommonStrings_Text_RunEndedNoEligible
+
+CommonScript_RunEndedFinish:
+    WaitButton
+    CloseMessage
+    ReleaseAll
+    End
 
 CommonScript_Dummy2010:
     End
@@ -96,6 +148,8 @@ CommonScript_PokecenterNurse:
     PlaySE SE_CONFIRM_sseq_3
     LockAll
     FacePlayer
+    GetRunRule 0, VAR_RESULT
+    GoToIfEq VAR_RESULT, TRUE, CommonScript_RunEnded
     GetTrainerCardLevel VAR_RESULT
     GoToIfGe VAR_RESULT, TRAINER_CARD_LEVEL_GOLD, CommonScript_NurseGoldCard
     SetVar VAR_0x8004, CommonStrings_Text_PokecenterGreeting_Day

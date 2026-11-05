@@ -30,6 +30,8 @@
 #include "charcode_util.h"
 #include "flags.h"
 #include "heap.h"
+#include "run_game.h"
+#include "run_session.h"
 #include "inlines.h"
 #include "item.h"
 #include "mail.h"
@@ -1335,6 +1337,18 @@ static u32 BoxPokemon_GetDataInternal(BoxPokemon *boxMon, enum PokemonDataParam 
 
 void Pokemon_SetValue(Pokemon *mon, enum PokemonDataParam param, const void *value)
 {
+    u16 runHP;
+    u32 runExperience;
+    if (param == MON_DATA_HP) {
+        runHP = RunGame_FilterHP(mon, *(const u16 *)value);
+        value = &runHP;
+    } else if (param == MON_DATA_EXPERIENCE && RunSession_Configured()
+        && (RunSession_Config()->flags & RUN_LEVEL_CAPS)) {
+        u32 current = Pokemon_GetValue(mon, MON_DATA_EXPERIENCE, NULL);
+        u32 desired = *(const u32 *)value;
+        runExperience = desired > current ? RunGame_Experience(&mon->box, current, desired - current) : desired;
+        value = &runExperience;
+    }
     if (mon->box.partyDecrypted == FALSE) {
         Pokemon_DecryptData(&mon->party, sizeof(PartyPokemon), mon->box.personality);
         Pokemon_DecryptData(&mon->box.dataBlocks, sizeof(PokemonDataBlock) * 4, mon->box.checksum);
@@ -1355,6 +1369,8 @@ void Pokemon_SetValue(Pokemon *mon, enum PokemonDataParam param, const void *val
         mon->box.checksum = Pokemon_GetDataChecksum(&mon->box.dataBlocks, sizeof(PokemonDataBlock) * 4);
         Pokemon_EncryptData(&mon->box.dataBlocks, sizeof(PokemonDataBlock) * 4, mon->box.checksum);
     }
+    if (param == MON_DATA_SPECIES || param == MON_DATA_NICKNAME || param == MON_DATA_NICKNAME_AND_FLAG
+        || param == MON_DATA_NICKNAME_STRING || param == MON_DATA_NICKNAME_STRING_AND_FLAG || param == MON_DATA_SPECIES_NAME || param == MON_DATA_IS_EGG) RunGame_Sync(&mon->box);
 }
 
 static void Pokemon_SetDataInternal(Pokemon *mon, enum PokemonDataParam param, const void *value)
@@ -1420,6 +1436,14 @@ static void Pokemon_SetDataInternal(Pokemon *mon, enum PokemonDataParam param, c
 
 void BoxPokemon_SetValue(BoxPokemon *boxMon, enum PokemonDataParam param, const void *value)
 {
+    u32 runExperience;
+    if (param == MON_DATA_EXPERIENCE && RunSession_Configured()
+        && (RunSession_Config()->flags & RUN_LEVEL_CAPS)) {
+        u32 current = BoxPokemon_GetValue(boxMon, MON_DATA_EXPERIENCE, NULL);
+        u32 desired = *(const u32 *)value;
+        runExperience = desired > current ? RunGame_Experience(boxMon, current, desired - current) : desired;
+        value = &runExperience;
+    }
     if (boxMon->boxDecrypted == FALSE) {
         Pokemon_DecryptData(boxMon->dataBlocks, sizeof(PokemonDataBlock) * 4, boxMon->checksum);
         u16 checksum = Pokemon_GetDataChecksum(boxMon->dataBlocks, sizeof(PokemonDataBlock) * 4);
@@ -1438,6 +1462,8 @@ void BoxPokemon_SetValue(BoxPokemon *boxMon, enum PokemonDataParam param, const 
         boxMon->checksum = Pokemon_GetDataChecksum(boxMon->dataBlocks, sizeof(PokemonDataBlock) * 4);
         Pokemon_EncryptData(boxMon->dataBlocks, sizeof(PokemonDataBlock) * 4, boxMon->checksum);
     }
+    if (param == MON_DATA_SPECIES || param == MON_DATA_NICKNAME || param == MON_DATA_NICKNAME_AND_FLAG
+        || param == MON_DATA_NICKNAME_STRING || param == MON_DATA_NICKNAME_STRING_AND_FLAG || param == MON_DATA_SPECIES_NAME || param == MON_DATA_IS_EGG) RunGame_Sync(boxMon);
 }
 
 static void BoxPokemon_SetDataInternal(BoxPokemon *boxMon, enum PokemonDataParam param, const void *value)
@@ -1891,6 +1917,13 @@ static void BoxPokemon_SetDataInternal(BoxPokemon *boxMon, enum PokemonDataParam
 
 void Pokemon_IncreaseValue(Pokemon *mon, enum PokemonDataParam param, int value)
 {
+    if (param == MON_DATA_HP && RunGame_Exhausted(&mon->box)) return;
+    if (param == MON_DATA_EXPERIENCE && value > 0 && RunSession_Configured()
+        && (RunSession_Config()->flags & RUN_LEVEL_CAPS)) {
+        u32 experience = RunGame_Experience(&mon->box, Pokemon_GetValue(mon, MON_DATA_EXPERIENCE, NULL), value);
+        Pokemon_SetValue(mon, MON_DATA_EXPERIENCE, &experience);
+        return;
+    }
     if (mon->box.partyDecrypted == FALSE) {
         Pokemon_DecryptData(&mon->party, sizeof(PartyPokemon), mon->box.personality);
         Pokemon_DecryptData(&mon->box.dataBlocks, sizeof(PokemonDataBlock) * 4, mon->box.checksum);
@@ -5413,6 +5446,7 @@ void Pokemon_ClearBallCapsuleData(Pokemon *mon)
 
 void BoxPokemon_RestorePP(BoxPokemon *boxMon)
 {
+    if (RunGame_Exhausted(boxMon)) return;
     BOOL reencrypt = BoxPokemon_EnterDecryptionContext(boxMon);
 
     for (int i = 0; i < LEARNED_MOVES_MAX; i++) {

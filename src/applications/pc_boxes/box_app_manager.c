@@ -44,6 +44,7 @@
 #include "party.h"
 #include "pc_boxes.h"
 #include "pokemon.h"
+#include "run_game.h"
 #include "ribbon_save_data.h"
 #include "save_player.h"
 #include "savedata.h"
@@ -1787,13 +1788,22 @@ static void BoxAppMan_PickUpMonAction(BoxApplicationManager *boxAppMan, u32 *sta
 enum PlaceMonState {
     PLACE_MON_DOWN,
     PLACE_ADJUST_PARTY_ANIMATION,
-    PLACE_MON_END
+    PLACE_MON_END,
+    PLACE_MON_RUN_BLOCKED
 };
 
 static void BoxAppMan_PlaceMonAction(BoxApplicationManager *boxAppMan, u32 *state)
 {
     switch (*state) {
     case PLACE_MON_DOWN:
+        if (BoxApp_GetCursorLocation(&boxAppMan->boxApp) == CURSOR_IN_PARTY
+            && (RunGame_Over() || RunGame_Exhausted(boxAppMan->boxApp.selection.boxMon))) {
+            Sound_PlayEffect(SEQ_SE_DP_BOX03_sseq);
+            BoxApp_SetBoxMessage(&boxAppMan->boxApp, BoxText_RunExhausted);
+            BoxGraphics_TaskHandler(boxAppMan->unk_114, FUNC_BoxGraphics_DisplayBoxMessage);
+            *state = PLACE_MON_RUN_BLOCKED;
+            break;
+        }
         BoxAppMan_PutDownCursorMon(boxAppMan, &boxAppMan->boxApp);
         BoxGraphics_TaskHandler(boxAppMan->unk_114, FUNC_BoxGraphics_PlaceMonDownFromCursor);
         Sound_PlayEffect(SEQ_SE_DP_BOX01_sseq);
@@ -1818,6 +1828,12 @@ static void BoxAppMan_PlaceMonAction(BoxApplicationManager *boxAppMan, u32 *stat
             *state = PLACE_MON_END;
         }
         break;
+    case PLACE_MON_RUN_BLOCKED:
+        if (BoxGraphics_CheckAllTasksDone(boxAppMan->unk_114) && JOY_NEW(PAD_BUTTON_A | PAD_BUTTON_B)) {
+            BoxGraphics_TaskHandler(boxAppMan->unk_114, FUNC_BoxGraphics_CloseMessageBox);
+            *state = PLACE_MON_END;
+        }
+        break;
     case PLACE_MON_END:
         if (BoxGraphics_CheckAllTasksDone(boxAppMan->unk_114)) {
             BoxAppMan_FlagRecordBoxUseInJournal(boxAppMan);
@@ -1829,6 +1845,11 @@ static void BoxAppMan_PlaceMonAction(BoxApplicationManager *boxAppMan, u32 *stat
 
 static BOOL BoxAppMan_CheckLastAliveMonReason(BoxApplicationManager *boxAppMan, u32 *destMessageID)
 {
+    if (BoxApp_GetCursorLocation(&boxAppMan->boxApp) == CURSOR_IN_PARTY
+        && (RunGame_Over() || RunGame_Exhausted(boxAppMan->boxApp.selection.boxMon))) {
+        *destMessageID = BoxText_RunExhausted;
+        return TRUE;
+    }
     if (BoxAppMan_OnLastAliveMon(boxAppMan)) {
         if (BoxApp_GetPreviewedMonValue(&boxAppMan->boxApp, MON_DATA_SANITY_IS_EGG, NULL)) {
             *destMessageID = BoxText_LastMon;
@@ -1906,6 +1927,13 @@ static void BoxAppMan_WithdrawMonAction(BoxApplicationManager *boxAppMan, u32 *s
 {
     switch (*state) {
     case WITHDRAW_START:
+        if (RunGame_Over() || RunGame_Exhausted(BoxApp_GetPreviewedBoxMon(&boxAppMan->boxApp))) {
+            BoxGraphics_TaskHandler(boxAppMan->unk_114, FUNC_ov19_021D6EC0);
+            BoxApp_SetBoxMessage(&boxAppMan->boxApp, BoxText_RunExhausted);
+            BoxGraphics_TaskHandler(boxAppMan->unk_114, FUNC_BoxGraphics_DisplayBoxMessage);
+            *state = WITHDRAW_CONFIRM_PARTY_FULL;
+            break;
+        }
         if (Party_GetCurrentCount(boxAppMan->party) != MAX_PARTY_SIZE) {
             BoxGraphics_TaskHandler(boxAppMan->unk_114, FUNC_BoxGraphics_CloseMessageBox);
 
@@ -2129,6 +2157,10 @@ static BOOL BoxAppMan_OnLastAliveMon(BoxApplicationManager *boxAppMan)
 
 static BOOL BoxAppMan_CheckReleaseMonValid(BoxApplicationManager *boxAppMan, int *destBoxMessageID)
 {
+    if (RunGame_Exhausted(BoxApp_GetPreviewedBoxMon(&boxAppMan->boxApp))) {
+        *destBoxMessageID = BoxText_RunExhausted;
+        return FALSE;
+    }
     if (BoxApp_GetPreviewedMonValue(&boxAppMan->boxApp, MON_DATA_SANITY_IS_EGG, NULL)) {
         *destBoxMessageID = BoxText_CantReleaseEgg;
         return FALSE;

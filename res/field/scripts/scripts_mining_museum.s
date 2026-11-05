@@ -226,12 +226,18 @@ MiningMuseum_PokemonRevival:
     Message MiningMuseum_Text_ReceivedPokemon
     WaitFanfare
     GivePokemon VAR_REVIVED_POKEMON_SPECIES, 20, ITEM_NONE, VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, MiningMuseum_RunGiftDenied
     IncrementGameRecord RECORD_POKEMON_RECEIVED_FROM_FOSSIL_REVIVAL
     SetVar VAR_REVIVED_POKEMON_SPECIES, 0
     Message MiningMuseum_Text_GiveNickname
     ShowYesNoMenu VAR_RESULT
     GoToIfEq VAR_RESULT, MENU_YES, MiningMuseum_NicknamePrompt
     GoToIfEq VAR_RESULT, MENU_NO, MiningMuseum_NoNickname
+    End
+
+MiningMuseum_RunGiftDenied:
+    CallCommonScript 0x80C
+    ReleaseAll
     End
 
 MiningMuseum_NicknamePrompt:

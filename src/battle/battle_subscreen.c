@@ -14,6 +14,9 @@
 
 #include "battle/battle_display.h"
 #include "battle/battle_system.h"
+#include "battle/battle_context.h"
+#include "run_game.h"
+#include "run_session.h"
 #include "battle/cursor_renderer.h"
 #include "battle/indicator.h"
 #include "overlay011/move_palettes.h"
@@ -1490,6 +1493,31 @@ static void BattleSubscreen_DrawActionMenu(BattleSubscreen *btlSubscreen, int un
     BattleSubscreen_NewFontOAM(btlSubscreen, &btlSubscreen->fontOAMEntry[2], pokemonOrMudText, FONT_SUBSCREEN, TEXT_COLOR(7, 8, 9), 2, 20023, 216, 170, 1, NULL);
     BattleSubscreen_NewFontOAM(btlSubscreen, &btlSubscreen->fontOAMEntry[3], runOrCancelText, FONT_SUBSCREEN, TEXT_COLOR(10, 11, 12), 2, 20023, 128, 178, 1, NULL);
 
+    u32 type = BattleSystem_GetBattleType(btlSubscreen->battleSys);
+    if (RunSession_Configured() && !(type & (BATTLE_TYPE_TRAINER | BATTLE_TYPE_LINK | BATTLE_TYPE_FRONTIER | BATTLE_TYPE_CATCH_TUTORIAL | BATTLE_TYPE_PAL_PARK))) {
+        BattleContext *ctx = BattleSystem_GetBattleContext(btlSubscreen->battleSys);
+        int foes = 0;
+        enum RunCapturePermission permission = RUN_CAPTURE_INACTIVE;
+        for (int target = 0; target < BattleSystem_GetMaxBattlers(btlSubscreen->battleSys); target++) {
+            if (BattleSystem_GetBattlerSide(btlSubscreen->battleSys, target) == BATTLE_SIDE_ENEMY && ctx->battleMons[target].curHP) {
+                foes++;
+                permission = RunGame_CapturePermission(target, ctx->selectedPartySlot[target]);
+            }
+        }
+        u16 flag = foes > 1 ? BattleStrings_Text_RunOneFoe
+            : (foes == 0 || permission > RUN_CAPTURE_INACTIVE)
+                ? BattleStrings_Text_RunCatchBlocked : BattleStrings_Text_RunCatchAllowed;
+        String *status = MessageLoader_GetNewString(msgLoader, flag);
+        // Native font objects subtract 8 from their center Y. Center 152 keeps
+        // all 16 pixels inside the Bag panel (top 144), above its label at 170.
+        // Slot 4 is unused by the action menu and freed by its normal teardown.
+        BOOL safari = (type & BATTLE_TYPE_SAFARI) != 0;
+        BattleSubscreen_NewFontOAM(btlSubscreen, &btlSubscreen->fontOAMEntry[4], status,
+            FONT_SYSTEM, safari ? TEXT_COLOR(1, 2, 3) : TEXT_COLOR(4, 5, 6), 2, 20023,
+            safari ? 128 : 40, safari ? 62 : 152, 1, NULL);
+        String_Free(status);
+    }
+
     String_Free(fightOrBallText);
     String_Free(bagOrBaitText);
     String_Free(pokemonOrMudText);
@@ -1534,6 +1562,7 @@ static void BattleSubscreen_DrawFirstBattleMenu(BattleSubscreen *btlSubscreen, i
     sub_020129D0(btlSubscreen->fontOAMEntry[1].fontOAM, 0);
     sub_020129D0(btlSubscreen->fontOAMEntry[2].fontOAM, 0);
     sub_020129D0(btlSubscreen->fontOAMEntry[3].fontOAM, 0);
+    if (btlSubscreen->fontOAMEntry[4].fontOAM) sub_020129D0(btlSubscreen->fontOAMEntry[4].fontOAM, 0);
 }
 
 static void BattleSubscreen_OpenPalParkMenu(BattleSubscreen *btlSubscreen, int unused1, int unused2)
@@ -2660,6 +2689,13 @@ static void SysTask_AnimateMenuButtonPress(SysTask *unused, void *subscreen)
         ApplyMoveSlotTilemap(btlSubscreen, btlSubscreen->menuButtonPressAnimState.ButtonPressAnimationState.keyframes, btlSubscreen->menuButtonPressAnimState.ButtonPressAnimationState.subscreenTilemapRect, btlSubscreen->menuButtonPressAnimState.ButtonPressAnimationState.srcBufIndex, 2);
         FontOAM_GetXY(btlSubscreen->fontOAMEntry[btlSubscreen->menuButtonPressAnimState.ButtonPressAnimationState.fontOAMIdx].fontOAM, &x, &y);
         FontOAM_SetXY(btlSubscreen->fontOAMEntry[btlSubscreen->menuButtonPressAnimState.ButtonPressAnimationState.fontOAMIdx].fontOAM, x, y + -2);
+        if (sBattleMenuConfigs[btlSubscreen->activeMenuConfigIndex].processInput == BattleSubscreen_ProcessActionInput
+            && btlSubscreen->menuButtonPressAnimState.ButtonPressAnimationState.fontOAMIdx
+                == ((BattleSystem_GetBattleType(btlSubscreen->battleSys) & BATTLE_TYPE_SAFARI) ? 0 : 1)
+            && btlSubscreen->fontOAMEntry[4].fontOAM) {
+            FontOAM_GetXY(btlSubscreen->fontOAMEntry[4].fontOAM, &x, &y);
+            FontOAM_SetXY(btlSubscreen->fontOAMEntry[4].fontOAM, x, y - 2);
+        }
 
         if (btlSubscreen->menuButtonPressAnimState.ButtonPressAnimationState.spriteIndex != 0xff && btlSubscreen->targetSelectPokeIconSprites[btlSubscreen->menuButtonPressAnimState.ButtonPressAnimationState.spriteIndex]) {
             ManagedSprite_OffsetPositionXY(btlSubscreen->targetSelectPokeIconSprites[btlSubscreen->menuButtonPressAnimState.ButtonPressAnimationState.spriteIndex], 0, -2);
@@ -2680,6 +2716,13 @@ static void SysTask_AnimateMenuButtonPress(SysTask *unused, void *subscreen)
         ApplyMoveSlotTilemap(btlSubscreen, btlSubscreen->menuButtonPressAnimState.ButtonPressAnimationState.keyframes, btlSubscreen->menuButtonPressAnimState.ButtonPressAnimationState.subscreenTilemapRect, btlSubscreen->menuButtonPressAnimState.ButtonPressAnimationState.srcBufIndex, 1);
         FontOAM_GetXY(btlSubscreen->fontOAMEntry[btlSubscreen->menuButtonPressAnimState.ButtonPressAnimationState.fontOAMIdx].fontOAM, &x, &y);
         FontOAM_SetXY(btlSubscreen->fontOAMEntry[btlSubscreen->menuButtonPressAnimState.ButtonPressAnimationState.fontOAMIdx].fontOAM, x, y + 1);
+        if (sBattleMenuConfigs[btlSubscreen->activeMenuConfigIndex].processInput == BattleSubscreen_ProcessActionInput
+            && btlSubscreen->menuButtonPressAnimState.ButtonPressAnimationState.fontOAMIdx
+                == ((BattleSystem_GetBattleType(btlSubscreen->battleSys) & BATTLE_TYPE_SAFARI) ? 0 : 1)
+            && btlSubscreen->fontOAMEntry[4].fontOAM) {
+            FontOAM_GetXY(btlSubscreen->fontOAMEntry[4].fontOAM, &x, &y);
+            FontOAM_SetXY(btlSubscreen->fontOAMEntry[4].fontOAM, x, y + 1);
+        }
 
         if (btlSubscreen->menuButtonPressAnimState.ButtonPressAnimationState.spriteIndex != 0xff && btlSubscreen->targetSelectPokeIconSprites[btlSubscreen->menuButtonPressAnimState.ButtonPressAnimationState.spriteIndex]) {
             ManagedSprite_OffsetPositionXY(btlSubscreen->targetSelectPokeIconSprites[btlSubscreen->menuButtonPressAnimState.ButtonPressAnimationState.spriteIndex], 0, 1);

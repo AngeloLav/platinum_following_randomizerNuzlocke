@@ -24,6 +24,8 @@
 #include "message_util.h"
 #include "party.h"
 #include "pokemon.h"
+#include "run_game.h"
+#include "run_session.h"
 #include "save_player.h"
 #include "savedata.h"
 #include "string_gf.h"
@@ -121,6 +123,7 @@ static void Daycare_MoveToDaycareMonFromParty(Party *party, int partySlot, Dayca
 
 void Daycare_MoveToEmptySlotFromParty(Party *party, int partySlot, Daycare *daycare, SaveData *saveData)
 {
+    if (RunGame_Exhausted(Pokemon_GetBoxPokemon(Party_GetPokemonBySlotIndex(party, partySlot)))) return;
     int daycareSlot;
     GameRecords *records = SaveData_GetGameRecords(saveData);
 
@@ -181,7 +184,7 @@ static int Daycare_MoveToPartyFromDaycareMon(Party *party, DaycareMon *daycareMo
 
     if (Pokemon_GetValue(mon, MON_DATA_LEVEL, NULL) != MAX_POKEMON_LEVEL) {
         experience = Pokemon_GetValue(mon, MON_DATA_EXPERIENCE, NULL);
-        experience += DaycareMon_GetSteps(daycareMon);
+        experience = RunGame_Experience(Pokemon_GetBoxPokemon(mon), experience, DaycareMon_GetSteps(daycareMon));
         Pokemon_SetValue(mon, MON_DATA_EXPERIENCE, (u8 *)&experience);
         ov5_021E63E0(mon);
     }
@@ -219,7 +222,7 @@ int BoxPokemon_GiveExperience(BoxPokemon *boxMon, u32 givenExp)
     BoxPokemon_Copy(boxMon, boxMonRef);
 
     exp = BoxPokemon_GetValue(boxMonRef, MON_DATA_EXPERIENCE, NULL);
-    exp += givenExp;
+    exp = RunGame_Experience(boxMonRef, exp, givenExp);
 
     BoxPokemon_SetValue(boxMonRef, MON_DATA_EXPERIENCE, (u8 *)&exp);
     level = BoxPokemon_GetLevel(boxMonRef);
@@ -806,6 +809,7 @@ void Egg_CreateEgg(Pokemon *egg, u16 species, u8 param2, TrainerInfo *trainerInf
     }
 
     UpdateMonStatusAndTrainerInfo(egg, trainerInfo, param4, metLocation, HEAP_ID_SYSTEM);
+    RunGame_ApplyShiny(egg);
 }
 
 static void Egg_SetInitialData(Pokemon *mon, u16 species, Daycare *daycare, u32 monOTID, u8 form)
@@ -972,6 +976,7 @@ static void Egg_ApplyParentalInheritance(Pokemon *egg, Daycare *daycare, const u
 
 void Daycare_GiveEggFromDaycare(Daycare *daycare, Party *party, TrainerInfo *trainerInfo)
 {
+    if (!RunGame_DayCareEggs()) return;
     u16 species;
     u8 parentSlots[NUM_DAYCARE_MONS], isEgg, speciesParentSlot;
     Pokemon *mon = Pokemon_New(HEAP_ID_FIELD1);
@@ -1004,6 +1009,13 @@ void Daycare_GiveEggFromDaycare(Daycare *daycare, Party *party, TrainerInfo *tra
     isEgg = TRUE;
     Pokemon_SetValue(mon, MON_DATA_IS_EGG, &isEgg);
 
+    RunGame_ApplyShiny(mon);
+    if (RunSession_Configured()) {
+        u32 event = 0xD0000000u ^ Pokemon_GetValue(mon, MON_DATA_PERSONALITY, NULL);
+        u16 special = RunState_SpecialAttempt(RunSession_State(), event, RunSession_Zone(), species, RUN_SOURCE_EGG);
+        u16 id = RunGame_Register(Pokemon_GetBoxPokemon(mon), RUN_SOURCE_EGG, special);
+        RunState_FinishSpecial(RunSession_State(), special, RUN_OUTCOME_CAUGHT, id);
+    }
     Party_AddPokemon(party, mon);
     Daycare_ResetPersonalityAndStepCounter(daycare);
     Heap_Free(mon);
@@ -1175,7 +1187,7 @@ BOOL Daycare_Update(Daycare *daycare, Party *party, FieldSystem *fieldSystem)
         }
     }
 
-    if ((Daycare_HasEgg(daycare) == FALSE) && (monCount == NUM_DAYCARE_MONS)) {
+    if (RunGame_DayCareEggs() && (Daycare_HasEgg(daycare) == FALSE) && (monCount == NUM_DAYCARE_MONS)) {
         if ((DaycareMon_GetSteps(Daycare_GetDaycareMon(daycare, 1)) & 0xff) == 0xff) {
             compatibilityScore = Daycare_GetCompatibilityScore(daycare);
 

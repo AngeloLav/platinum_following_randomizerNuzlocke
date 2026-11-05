@@ -184,6 +184,10 @@
     {
       "id": "BoxText_MonCantHoldItem",
       "en_US": "It can’t hold the {STRVAR_1 8, 0, 0}."
+    },
+    {
+      "id": "BoxText_RunExhausted",
+      "en_US": "This Pokemon cannot return to\nthe party. View it in the memorial."
     }
   ]
 }

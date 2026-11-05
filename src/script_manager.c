@@ -25,6 +25,8 @@
 #include "string_gf.h"
 #include "trainer_data.h"
 #include "vars_flags.h"
+#include "run_extras.h"
+#include "run_session.h"
 
 #include "res/field/scripts/scr_seq.naix"
 
@@ -73,9 +75,21 @@ static void ScriptContext_LoadFromCurrentMap(FieldSystem *fieldSystem, ScriptCon
 static void ScriptContext_JumpToOffsetID(ScriptContext *ctx, u16 param1);
 static void *ScriptContext_LoadScripts(int headerID);
 static u32 MapHeaderToMsgArchive(int headerID);
-static BOOL ScriptManager_SetHiddenItem(ScriptManager *scriptManager, u16 scriptID);
+static BOOL ScriptManager_SetHiddenItem(FieldSystem *fieldSystem, ScriptManager *scriptManager, u16 scriptID);
 static u16 FieldSystem_GetFixedInitScriptID(const u8 *initScriptBytes, u8 initScriptType);
 static u16 FieldSystem_GetFrameTableInitScriptID(FieldSystem *fieldSystem, const u8 *initScriptBytes, u8 initScriptType);
+
+void ScriptManager_StopForRunEnd(FieldSystem *fieldSystem)
+{
+    for (FieldTask *task = fieldSystem->task; task != NULL; task = task->prev) {
+        if (task->func != FieldTask_RunScript) continue;
+        ScriptManager *manager = FieldTask_GetEnv(task);
+        manager->function = NULL;
+        for (int i = 0; i < NUM_SCRIPT_CONTEXTS; i++) {
+            if (manager->ctx[i]) ScriptContext_Stop(manager->ctx[i]);
+        }
+    }
+}
 
 void ScriptManager_Set(FieldSystem *fieldSystem, u16 scriptID, MapObject *object)
 {
@@ -199,7 +213,7 @@ static void ScriptManager_Init(FieldSystem *fieldSystem, ScriptManager *scriptMa
     }
 
     if (scriptID >= SCRIPT_ID_OFFSET_HIDDEN_ITEMS && scriptID <= SCRIPT_ID_OFFSET_SAFARI_GAME - 1) {
-        ScriptManager_SetHiddenItem(scriptManager, scriptID);
+        ScriptManager_SetHiddenItem(fieldSystem, scriptManager, scriptID);
     }
 }
 
@@ -598,7 +612,7 @@ u8 Script_GetHiddenItemRange(u16 scriptID)
     return item[i].range;
 }
 
-static BOOL ScriptManager_SetHiddenItem(ScriptManager *scriptManager, u16 scriptID)
+static BOOL ScriptManager_SetHiddenItem(FieldSystem *fieldSystem, ScriptManager *scriptManager, u16 scriptID)
 {
     int i;
     u16 *scriptParam0 = ScriptManager_GetMemberPtr(scriptManager, SCRIPT_DATA_PARAMETER_0);
@@ -618,7 +632,8 @@ static BOOL ScriptManager_SetHiddenItem(ScriptManager *scriptManager, u16 script
         return FALSE;
     }
 
-    *scriptParam0 = item[i].item;
+    *scriptParam0 = RunExtras_FieldItem(RunSession_Config(),
+        ((u32)fieldSystem->location->mapHeaderID << 16) | scriptID, item[i].item);
     *scriptParam1 = item[i].qty;
     *scriptParam2 = Script_GetHiddenItemFlag(scriptID);
 

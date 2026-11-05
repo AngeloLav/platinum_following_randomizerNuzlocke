@@ -18,6 +18,8 @@
 #include "string_template.h"
 #include "sys_task_manager.h"
 
+void ScriptManager_StopForRunEnd(FieldSystem *fieldSystem);
+
 enum ScriptManagerMember {
     SCRIPT_MANAGER_FIELD_MENU_MANAGER = 0,
     SCRIPT_MANAGER_WINDOW,

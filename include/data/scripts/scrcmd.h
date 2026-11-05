@@ -855,6 +855,8 @@ ScriptCommand(SCRCMD_FOLLOWERMONENTERDOOR,                                 ScrCm
 ScriptCommand(SCRCMD_FOLLOWERMONFORMCHANGEBEGIN,                           ScrCmd_FollowerMonFormChangeBegin) // ENTRY P106
 ScriptCommand(SCRCMD_FOLLOWERMONFORMCHANGEEND,                             ScrCmd_FollowerMonFormChangeEnd) // ENTRY P107
 
+ScriptCommand(SCRCMD_GETRUNRULE, ScrCmd_GetRunRule)
+
 // clang-format on
 
 #endif // POKEPLATINUM_DATA_SCRIPTS_SCRCMD_H

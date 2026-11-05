@@ -88,6 +88,8 @@ typedef struct FieldBattleDTO {
     u8 recordedChatter[MAX_BATTLERS];
     SaveData *saveData;
     u32 recordingStopped;
+    u8 runEncounterSource;
+    u32 runEventKey;
 } FieldBattleDTO;
 
 FieldBattleDTO *FieldBattleDTO_New(enum HeapID heapID, u32 battleType);

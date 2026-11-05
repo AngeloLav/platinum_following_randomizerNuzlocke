@@ -1,6 +1,7 @@
 #include "applications/party_menu/windows.h"
 
 #include "constants/graphics.h"
+#include "constants/narc.h"
 #include "constants/heap.h"
 #include "constants/pokemon.h"
 #include "constants/string.h"
@@ -21,6 +22,9 @@
 #include "message.h"
 #include "party.h"
 #include "pokemon.h"
+#include "run_game.h"
+#include "generated/text_banks.h"
+#include "res/text/bank/run_engine.h"
 #include "pokemon_stats.h"
 #include "render_text.h"
 #include "render_window.h"
@@ -910,6 +914,19 @@ void PartyMenu_PrintMemberLevel(PartyMenuApplication *application, u8 slot)
 {
     Window *window = &application->windows[PARTY_MENU_WIN_LEVEL_MEMB0 + slot * PARTY_MENU_WIN_NUM_PER_MEMBER];
     if (application->partyMembers[slot].statusIcon != SUMMARY_CONDITION_NONE) {
+        Window_ScheduleCopyToVRAM(window);
+        return;
+    }
+
+    Pokemon *mon = Party_GetPokemonBySlotIndex(application->partyMenu->party, slot);
+    if (RunGame_RefusesBattle(mon) && Pokemon_GetValue(mon, MON_DATA_HP, NULL)) {
+        String *label = String_Init(16, HEAP_ID_PARTY_MENU);
+        MessageBank_GetStringFromNARC(NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_RUN_ENGINE,
+            Run_Text_RefusesLabel, HEAP_ID_PARTY_MENU, label);
+        Window_FillTilemap(window, 0);
+        Text_AddPrinterWithParamsAndColor(window, FONT_SYSTEM, label, 1, 0,
+            TEXT_SPEED_NO_TRANSFER, TEXT_COLOR(15, 14, 0), NULL);
+        String_Free(label);
         Window_ScheduleCopyToVRAM(window);
         return;
     }

@@ -49,6 +49,7 @@ static BOOL New(void **appData, PoketchSystem *poketchSys, BgConfig *bgConfig, u
                 unusedApp->data.appID = appID;
                 return TRUE;
             }
+            PoketchUnusedApp4Graphics_Free(unusedApp->graphics);
         }
 
         Heap_Free(unusedApp);
@@ -89,9 +90,10 @@ static void Task_Main(SysTask *task, void *appData)
 
     if (unusedApp->state < NELEMS(stateFuncs)) {
         if (stateFuncs[unusedApp->state](unusedApp)) {
+            PoketchSystem *poketchSys = unusedApp->poketchSys;
             Free(unusedApp);
             SysTask_Done(task);
-            PoketchSystem_NotifyAppUnloaded(unusedApp->poketchSys);
+            PoketchSystem_NotifyAppUnloaded(poketchSys);
         }
     }
 }
@@ -132,6 +134,7 @@ static BOOL State_LoadApp(PoketchUnusedApp4 *appData)
 
 static BOOL State_UpdateApp(PoketchUnusedApp4 *appData)
 {
+    PoketchUnusedApp4Graphics_Update(appData->graphics);
     if (appData->shouldExit) {
         ChangeState(appData, 2);
     }

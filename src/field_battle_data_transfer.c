@@ -42,6 +42,7 @@
 #include "pokemon.h"
 #include "poketch.h"
 #include "rtc.h"
+#include "run_game.h"
 #include "save_player.h"
 #include "savedata.h"
 #include "string_gf.h"
@@ -184,6 +185,7 @@ FieldBattleDTO *FieldBattleDTO_NewCatchingTutorial(enum HeapID heapID, const Fie
 
 void FieldBattleDTO_Free(FieldBattleDTO *dto)
 {
+    RunGame_EndBattle(dto);
     int i;
     for (i = 0; i < 4; i++) {
         GF_ASSERT(dto->parties[i] != NULL);
@@ -422,6 +424,7 @@ void FieldBattleDTO_UpdateFieldSystem(const FieldBattleDTO *dto, FieldSystem *fi
 
     TrainerInfo_Copy(dto->trainerInfo[BATTLER_PLAYER_1], trainerInfo);
     Party_Copy(dto->parties[BATTLER_PLAYER_1], party);
+    RunGame_StoreExhausted(fieldSystem->saveData);
     Bag_Copy(dto->bag, bag);
     Pokedex_Copy(dto->pokedex, pokedex);
 

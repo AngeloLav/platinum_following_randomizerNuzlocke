@@ -166,6 +166,27 @@ subdir('lib')
 ############################################################
 subdir('res')
 
+# Compact BST, evolution-family and classification tables. Keep data versioning
+# tied to the actual species data instead of loading personal.narc per candidate.
+run_species_python = find_program('python3', native: true)
+run_species_data = custom_target('run_species_data.h',
+    output: 'run_species_data.h',
+    input: [species_txt, files('tools/datagen/run_species_classes.json', 'tools/datagen/run_species.py')],
+    depend_files: species_data_files,
+    command: [run_species_python, files('tools/datagen/run_species.py'),
+        '--root', meson.project_source_root(), '--output', '@OUTPUT@'],
+)
+
+run_world_data = custom_target('run_world_data.h',
+    output: 'run_world_data.h',
+    input: files('tools/datagen/run_world.py', 'tools/datagen/run_zones.json',
+        'include/data/map_headers.h', 'generated/map_headers.txt', 'generated/trainers.txt',
+        'res/text/location_names.json'),
+    command: [run_species_python, files('tools/datagen/run_world.py'),
+        '--root', meson.project_source_root(), '--output', '@OUTPUT@', '--depfile', '@DEPFILE@'],
+    depfile: 'run_world_data.d',
+)
+
 ############################################################
 ###                     ARM9 BINARY                      ###
 ############################################################
@@ -198,6 +219,8 @@ main = executable('main',
         naix_headers,
         h_headers,
         embed_headers,
+        run_species_data,
+        run_world_data,
     ],
     objects: trainer_ai_o,
     c_args: [

@@ -24,6 +24,9 @@ typedef struct MapNamePopUp {
     void *tiles;
     MessageLoader *msgLoader;
     String *string;
+    BOOL capturePending;
+    u16 captureZone;
+    FieldSystem *fieldSystem;
 } MapNamePopUp;
 
 MapNamePopUp *MapNamePopUp_Create(BgConfig *bgConfig);

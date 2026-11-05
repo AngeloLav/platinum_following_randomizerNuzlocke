@@ -1,4 +1,6 @@
 #include "scrcmd.h"
+#include "run_game.h"
+#include "run_session.h"
 
 #include <nitro.h>
 #include <nitro/code16.h>
@@ -772,6 +774,21 @@ static const WindowTemplate sYesNoWindowTemplate = {
     .palette = FIELD_MESSAGE_PALETTE_INDEX,
     .baseTile = 0x21F,
 };
+
+static BOOL ScrCmd_GetRunRule(ScriptContext *ctx)
+{
+    u16 rule = ScriptContext_GetVar(ctx);
+    u16 *result = ScriptContext_GetVarPointer(ctx);
+    *result = rule == 0 ? RunGame_Over() : rule == 1 ? RunGame_DayCareEggs() : rule == 2 ? RunGame_GiftResult() : FALSE;
+    if (rule == 3) {
+        RunState_AcknowledgeActivation(RunSession_State());
+        *result = TRUE;
+    } else if (rule == 4) *result = RunSession_Config()->captureAttempts;
+    else if (rule == 5) *result = RunState_LossReason(RunSession_State());
+    else if (rule >= 6 && rule <= 9) *result = RunGame_EventOffer(ctx->fieldSystem->saveData,
+        (rule - 6) & 1, rule >= 8);
+    return FALSE;
+}
 
 const ScrCmdFunc gFieldScriptCommands[] = {
 #include "data/scripts/scrcmd.h"

@@ -1,6 +1,7 @@
 sub_seq_narc_order = files('sub_seq.order')
 
 subscript_files = files(
+    'subscript_run_capture_denied.s',
     'subscript_start_encounter.s',
     'subscript_use_move.s',
     'subscript_update_hp.s',

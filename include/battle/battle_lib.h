@@ -11,6 +11,7 @@
 #include "battle/btlcmd.h"
 
 #include "pokemon.h"
+u16 BattleSystem_RunAvailableHP(BattleSystem *battleSys, BattleContext *battleCtx, Pokemon *mon);
 
 enum CountAbilityMode {
     COUNT_ALL_BATTLERS_OUR_SIDE = 0, //< Count all the battlers on our side with the ability

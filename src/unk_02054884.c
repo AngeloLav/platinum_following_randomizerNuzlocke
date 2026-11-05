@@ -14,6 +14,7 @@
 #include "heap.h"
 #include "party.h"
 #include "pokemon.h"
+#include "run_game.h"
 #include "save_catchrecords.h"
 #include "save_player.h"
 #include "savedata.h"
@@ -44,10 +45,12 @@ BOOL Pokemon_GiveMonFromScript(enum HeapID heapID, SaveData *saveData, u16 speci
     Pokemon_Init(mon);
     Pokemon_InitWith(mon, species, level, INIT_IVS_RANDOM, FALSE, 0, OTID_NOT_SET, 0);
     Pokemon_SetCatchData(mon, trainerInfo, ITEM_POKE_BALL, metLocation, metTerrain, heapID);
+    RunGame_ApplyShiny(mon);
 
     item = heldItem;
     Pokemon_SetValue(mon, MON_DATA_HELD_ITEM, &item);
-    result = Party_AddPokemon(party, mon);
+    result = Party_GetCurrentCount(party) < MAX_PARTY_SIZE && RunGame_AcceptScriptGift(mon)
+        && Party_AddPokemon(party, mon);
 
     if (result) {
         SaveData_UpdateCatchRecords(saveData, mon);
@@ -92,7 +95,7 @@ int Party_HasMonWithMove(Party *party, u16 moveID)
     for (i = 0; i < partyCount; i++) {
         Pokemon *mon = Party_GetPokemonBySlotIndex(party, i);
 
-        if (Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) != FALSE) {
+        if (Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) != FALSE || RunGame_Exhausted(Pokemon_GetBoxPokemon(mon))) {
             continue;
         }
 
@@ -104,7 +107,7 @@ int Party_HasMonWithMove(Party *party, u16 moveID)
         }
     }
 
-    return PARTY_SLOT_NONE;
+    return RunGame_FieldMoveSlot(party, moveID);
 }
 
 int Party_AliveMonsCount(const Party *party)
@@ -157,7 +160,7 @@ Pokemon *Party_FindFirstHatchedMon(const Party *party)
 
 BOOL Party_HasTwoAliveMons(const Party *party)
 {
-    return Party_AliveMonsCount(party) >= 2;
+    return RunGame_EligibleCount(party) >= 2;
 }
 
 void Party_GiveChampionRibbons(Party *party)

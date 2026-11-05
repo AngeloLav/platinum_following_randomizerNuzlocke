@@ -1,11 +1,11 @@
 {
     "base_stats": {
-        "hp": 77,
+        "hp": 117,
         "attack": 85,
-        "defense": 51,
+        "defense": 81,
         "speed": 65,
         "special_attack": 55,
-        "special_defense": 51
+        "special_defense": 81
     },
     "types": [ "TYPE_BUG", "TYPE_BUG" ],
     "catch_rate": 45,
@@ -52,6 +52,7 @@
             "TM06",
             "TM10",
             "TM11",
+            "TM12",
             "TM15",
             "TM17",
             "TM18",

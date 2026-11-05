@@ -34,11 +34,11 @@
     "icon_palette": 2,
     "learnset": {
         "by_level": [
-            [ 1, "MOVE_SWITCHEROO" ],
             [ 1, "MOVE_TACKLE" ],
             [ 1, "MOVE_GROWL" ],
             [ 1, "MOVE_TAIL_WHIP" ],
             [ 1, "MOVE_HEADBUTT" ],
+            [ 1, "MOVE_SWITCHEROO" ],
             [ 5, "MOVE_TAIL_WHIP" ],
             [ 9, "MOVE_HEADBUTT" ],
             [ 13, "MOVE_SAND_ATTACK" ],

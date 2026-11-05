@@ -9,8 +9,8 @@
     ],
     "class": "CLASS_PHYSICAL",
     "type": "TYPE_WATER",
-    "power": 35,
-    "accuracy": 75,
+    "power": 85,
+    "accuracy": 95,
     "pp": 10,
     "effect": {
         "type": "BATTLE_EFFECT_BIND_HIT",

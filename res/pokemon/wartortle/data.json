@@ -42,14 +42,20 @@
             [ 10, "MOVE_WITHDRAW" ],
             [ 13, "MOVE_WATER_GUN" ],
             [ 16, "MOVE_BITE" ],
+            [ 19, "MOVE_BITE" ],
             [ 20, "MOVE_RAPID_SPIN" ],
             [ 24, "MOVE_PROTECT" ],
+            [ 25, "MOVE_RAPID_SPIN" ],
             [ 28, "MOVE_WATER_PULSE" ],
+            [ 31, "MOVE_PROTECT" ],
             [ 32, "MOVE_AQUA_TAIL" ],
             [ 36, "MOVE_SKULL_BASH" ],
+            [ 37, "MOVE_RAIN_DANCE" ],
             [ 40, "MOVE_IRON_DEFENSE" ],
             [ 44, "MOVE_RAIN_DANCE" ],
-            [ 48, "MOVE_HYDRO_PUMP" ]
+            [ 45, "MOVE_SKULL_BASH" ],
+            [ 48, "MOVE_HYDRO_PUMP" ],
+            [ 53, "MOVE_HYDRO_PUMP" ]
         ],
         "by_tm": [
             "TM01",

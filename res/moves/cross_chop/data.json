@@ -9,9 +9,9 @@
     ],
     "class": "CLASS_PHYSICAL",
     "type": "TYPE_FIGHTING",
-    "power": 100,
-    "accuracy": 80,
-    "pp": 5,
+    "power": 125,
+    "accuracy": 85,
+    "pp": 10,
     "effect": {
         "type": "BATTLE_EFFECT_HIGH_CRITICAL",
         "chance": 0

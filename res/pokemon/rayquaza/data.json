@@ -1,10 +1,10 @@
 {
     "base_stats": {
-        "hp": 105,
-        "attack": 150,
+        "hp": 155,
+        "attack": 205,
         "defense": 90,
-        "speed": 95,
-        "special_attack": 150,
+        "speed": 115,
+        "special_attack": 225,
         "special_defense": 90
     },
     "types": [ "TYPE_DRAGON", "TYPE_FLYING" ],
@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "rare": "ITEM_HARD_STONE"
     },
     "gender_ratio": "GENDER_RATIO_NO_GENDER",
     "hatch_cycles": 120,
@@ -36,16 +36,26 @@
         "by_level": [
             [ 1, "MOVE_TWISTER" ],
             [ 5, "MOVE_SCARY_FACE" ],
+            [ 15, "MOVE_CRUNCH" ],
             [ 15, "MOVE_ANCIENT_POWER" ],
+            [ 20, "MOVE_HYPER_VOICE" ],
             [ 20, "MOVE_DRAGON_CLAW" ],
+            [ 30, "MOVE_REST" ],
             [ 30, "MOVE_DRAGON_DANCE" ],
+            [ 35, "MOVE_AIR_SLASH" ],
             [ 35, "MOVE_CRUNCH" ],
+            [ 45, "MOVE_ANCIENT_POWER" ],
             [ 45, "MOVE_FLY" ],
+            [ 50, "MOVE_OUTRAGE" ],
             [ 50, "MOVE_REST" ],
+            [ 60, "MOVE_DRAGON_DANCE" ],
             [ 60, "MOVE_EXTREME_SPEED" ],
-            [ 65, "MOVE_HYPER_BEAM" ],
-            [ 75, "MOVE_DRAGON_PULSE" ],
-            [ 80, "MOVE_OUTRAGE" ]
+            [ 65, "MOVE_FLY" ],
+            [ 65, "MOVE_OUTRAGE" ],
+            [ 75, "MOVE_EXTREME_SPEED" ],
+            [ 75, "MOVE_HYPER_BEAM" ],
+            [ 80, "MOVE_HYPER_BEAM" ],
+            [ 90, "MOVE_DRAGON_PULSE" ]
         ],
         "by_tm": [
             "TM02",

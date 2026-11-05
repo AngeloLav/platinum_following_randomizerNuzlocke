@@ -1,6 +1,6 @@
 {
     "base_stats": {
-        "hp": 140,
+        "hp": 160,
         "attack": 70,
         "defense": 45,
         "speed": 45,
@@ -19,7 +19,7 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_ORAN_BERRY",
         "rare": "ITEM_NONE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_75",

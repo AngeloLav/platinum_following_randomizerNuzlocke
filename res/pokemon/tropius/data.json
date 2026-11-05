@@ -1,15 +1,15 @@
 {
     "base_stats": {
-        "hp": 99,
-        "attack": 68,
+        "hp": 199,
+        "attack": 88,
         "defense": 83,
         "speed": 51,
-        "special_attack": 72,
+        "special_attack": 92,
         "special_defense": 87
     },
     "types": [ "TYPE_GRASS", "TYPE_FLYING" ],
     "catch_rate": 200,
-    "base_exp_reward": 169,
+    "base_exp_reward": 219,
     "ev_yields": {
         "hp": 2,
         "attack": 0,
@@ -44,7 +44,9 @@
             [ 31, "MOVE_MAGICAL_LEAF" ],
             [ 37, "MOVE_BODY_SLAM" ],
             [ 41, "MOVE_SYNTHESIS" ],
+            [ 41, "MOVE_SOLAR_BEAM" ],
             [ 47, "MOVE_AIR_SLASH" ],
+            [ 47, "MOVE_SYNTHESIS" ],
             [ 51, "MOVE_SOLAR_BEAM" ],
             [ 57, "MOVE_NATURAL_GIFT" ],
             [ 61, "MOVE_LEAF_STORM" ]

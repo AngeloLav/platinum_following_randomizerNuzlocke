@@ -12,7 +12,7 @@
     "palette": "cherish_ball_NCLR"
   },
   "gbaID": "GBA_ITEM_NONE",
-  "price": 200,
+  "price": 0,
   "effectParam": 0,
   "holdEffect": "HOLD_EFFECT_NONE",
   "pluckEffect": "PLUCK_EFFECT_NONE",

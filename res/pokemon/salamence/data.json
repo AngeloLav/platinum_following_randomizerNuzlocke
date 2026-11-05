@@ -1,10 +1,10 @@
 {
     "base_stats": {
-        "hp": 95,
-        "attack": 135,
+        "hp": 115,
+        "attack": 155,
         "defense": 80,
-        "speed": 100,
-        "special_attack": 110,
+        "speed": 130,
+        "special_attack": 130,
         "special_defense": 80
     },
     "types": [ "TYPE_DRAGON", "TYPE_FLYING" ],
@@ -41,18 +41,27 @@
             [ 1, "MOVE_LEER" ],
             [ 1, "MOVE_HEADBUTT" ],
             [ 5, "MOVE_BITE" ],
+            [ 9, "MOVE_LEER" ],
             [ 10, "MOVE_LEER" ],
             [ 16, "MOVE_HEADBUTT" ],
+            [ 17, "MOVE_HEADBUTT" ],
             [ 20, "MOVE_FOCUS_ENERGY" ],
+            [ 21, "MOVE_FOCUS_ENERGY" ],
             [ 25, "MOVE_EMBER" ],
             [ 30, "MOVE_PROTECT" ],
             [ 32, "MOVE_DRAGON_BREATH" ],
             [ 37, "MOVE_ZEN_HEADBUTT" ],
+            [ 38, "MOVE_DRAGON_BREATH" ],
             [ 43, "MOVE_SCARY_FACE" ],
+            [ 47, "MOVE_SCARY_FACE" ],
             [ 50, "MOVE_FLY" ],
             [ 53, "MOVE_CRUNCH" ],
             [ 61, "MOVE_DRAGON_CLAW" ],
-            [ 70, "MOVE_DOUBLE_EDGE" ]
+            [ 61, "MOVE_CRUNCH" ],
+            [ 64, "MOVE_EXTREME_SPEED" ],
+            [ 70, "MOVE_DOUBLE_EDGE" ],
+            [ 79, "MOVE_DRAGON_CLAW" ],
+            [ 93, "MOVE_DOUBLE_EDGE" ]
         ],
         "by_tm": [
             "TM02",

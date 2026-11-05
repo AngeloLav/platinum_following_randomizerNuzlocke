@@ -19,8 +19,8 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
-        "rare": "ITEM_MAGMARIZER"
+        "common": "ITEM_ASPEAR_BERRY",
+        "rare": "ITEM_ASPEAR_BERRY"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_25",
     "hatch_cycles": 25,
@@ -36,16 +36,24 @@
         "by_level": [
             [ 1, "MOVE_SMOG" ],
             [ 1, "MOVE_LEER" ],
+            [ 1, "MOVE_EMBER" ],
             [ 7, "MOVE_EMBER" ],
+            [ 7, "MOVE_LEER" ],
             [ 10, "MOVE_SMOKE_SCREEN" ],
+            [ 13, "MOVE_SMOG" ],
             [ 16, "MOVE_FAINT_ATTACK" ],
             [ 19, "MOVE_FIRE_SPIN" ],
+            [ 19, "MOVE_FIRE_PUNCH" ],
             [ 25, "MOVE_CONFUSE_RAY" ],
+            [ 25, "MOVE_SMOKE_SCREEN" ],
             [ 28, "MOVE_FIRE_PUNCH" ],
+            [ 31, "MOVE_SUNNY_DAY" ],
             [ 34, "MOVE_LAVA_PLUME" ],
             [ 37, "MOVE_FLAMETHROWER" ],
             [ 43, "MOVE_SUNNY_DAY" ],
-            [ 46, "MOVE_FIRE_BLAST" ]
+            [ 43, "MOVE_CONFUSE_RAY" ],
+            [ 46, "MOVE_FIRE_BLAST" ],
+            [ 49, "MOVE_FIRE_BLAST" ]
         ],
         "by_tm": [
             "TM01",

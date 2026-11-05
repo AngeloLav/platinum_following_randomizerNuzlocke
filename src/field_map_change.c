@@ -380,6 +380,7 @@ static void FieldMapChange_LoadObjects(FieldSystem *fieldSystem)
     MapObjectMan_StopAllMovement(fieldSystem->mapObjMan);
 
     // FOLLOWER MON (new feature): see the identical hook/comment in FieldMapChange_CreateObjects above.
+    FollowerMon_RestoreAfterLoad(fieldSystem); // ENTRY P98: saved in its ball -> still in its ball
     FollowerMon_Refresh(fieldSystem);
 }
 

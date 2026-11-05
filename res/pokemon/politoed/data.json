@@ -4,7 +4,7 @@
         "attack": 75,
         "defense": 75,
         "speed": 70,
-        "special_attack": 90,
+        "special_attack": 130,
         "special_defense": 100
     },
     "types": [ "TYPE_WATER", "TYPE_WATER" ],
@@ -38,9 +38,12 @@
             [ 1, "MOVE_HYPNOSIS" ],
             [ 1, "MOVE_DOUBLE_SLAP" ],
             [ 1, "MOVE_PERISH_SONG" ],
+            [ 1, "MOVE_WATER_GUN" ],
             [ 27, "MOVE_SWAGGER" ],
+            [ 35, "MOVE_PERISH_SONG" ],
             [ 37, "MOVE_BOUNCE" ],
-            [ 48, "MOVE_HYPER_VOICE" ]
+            [ 48, "MOVE_HYPER_VOICE" ],
+            [ 51, "MOVE_SWAGGER" ]
         ],
         "by_tm": [
             "TM01",

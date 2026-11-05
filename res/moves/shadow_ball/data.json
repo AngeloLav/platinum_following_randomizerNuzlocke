@@ -9,9 +9,9 @@
     ],
     "class": "CLASS_SPECIAL",
     "type": "TYPE_GHOST",
-    "power": 80,
+    "power": 85,
     "accuracy": 100,
-    "pp": 15,
+    "pp": 20,
     "effect": {
         "type": "BATTLE_EFFECT_LOWER_SP_DEF_HIT",
         "chance": 20

@@ -1,11 +1,11 @@
 {
     "base_stats": {
-        "hp": 80,
-        "attack": 75,
-        "defense": 150,
+        "hp": 90,
+        "attack": 95,
+        "defense": 175,
         "speed": 50,
-        "special_attack": 75,
-        "special_defense": 150
+        "special_attack": 95,
+        "special_defense": 175
     },
     "types": [ "TYPE_STEEL", "TYPE_STEEL" ],
     "catch_rate": 3,
@@ -43,8 +43,10 @@
             [ 41, "MOVE_IRON_DEFENSE" ],
             [ 41, "MOVE_AMNESIA" ],
             [ 49, "MOVE_CHARGE_BEAM" ],
+            [ 49, "MOVE_ZAP_CANNON" ],
             [ 57, "MOVE_LOCK_ON" ],
             [ 65, "MOVE_ZAP_CANNON" ],
+            [ 65, "MOVE_HYPER_BEAM" ],
             [ 73, "MOVE_IRON_HEAD" ],
             [ 73, "MOVE_FLASH_CANNON" ],
             [ 81, "MOVE_HAMMER_ARM" ],

@@ -2,10 +2,10 @@
     "base_stats": {
         "hp": 50,
         "attack": 65,
-        "defense": 107,
+        "defense": 137,
         "speed": 86,
         "special_attack": 105,
-        "special_defense": 107
+        "special_defense": 147
     },
     "types": [ "TYPE_ELECTRIC", "TYPE_GHOST" ],
     "catch_rate": 45,

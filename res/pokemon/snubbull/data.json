@@ -41,14 +41,22 @@
             [ 1, "MOVE_SCARY_FACE" ],
             [ 1, "MOVE_TAIL_WHIP" ],
             [ 1, "MOVE_CHARM" ],
+            [ 4, "MOVE_TAIL_WHIP" ],
             [ 7, "MOVE_BITE" ],
+            [ 8, "MOVE_CHARM" ],
             [ 13, "MOVE_LICK" ],
+            [ 13, "MOVE_BITE" ],
             [ 19, "MOVE_HEADBUTT" ],
+            [ 19, "MOVE_LICK" ],
             [ 25, "MOVE_ROAR" ],
+            [ 26, "MOVE_ROAR" ],
             [ 31, "MOVE_RAGE" ],
+            [ 34, "MOVE_RAGE" ],
             [ 37, "MOVE_TAKE_DOWN" ],
             [ 43, "MOVE_PAYBACK" ],
-            [ 49, "MOVE_CRUNCH" ]
+            [ 43, "MOVE_TAKE_DOWN" ],
+            [ 49, "MOVE_CRUNCH" ],
+            [ 53, "MOVE_CRUNCH" ]
         ],
         "by_tm": [
             "TM01",

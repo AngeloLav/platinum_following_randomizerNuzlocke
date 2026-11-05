@@ -19,7 +19,7 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_LIGHT_BALL",
         "rare": "ITEM_ORAN_BERRY"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
@@ -37,7 +37,10 @@
             [ 1, "MOVE_THUNDER_SHOCK" ],
             [ 1, "MOVE_CHARM" ],
             [ 5, "MOVE_TAIL_WHIP" ],
+            [ 6, "MOVE_TAIL_WHIP" ],
+            [ 8, "MOVE_THUNDER_WAVE" ],
             [ 10, "MOVE_THUNDER_WAVE" ],
+            [ 11, "MOVE_SWEET_KISS" ],
             [ 13, "MOVE_SWEET_KISS" ],
             [ 18, "MOVE_NASTY_PLOT" ]
         ],

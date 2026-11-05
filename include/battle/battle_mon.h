@@ -34,7 +34,7 @@ typedef struct MoveEffectsData {
     u32 custapBerry : 1;
     u32 quickClaw : 1;
     u32 meFirst : 1;
-    u32 padding0004_1F : 1;
+    u32 arceusTransformed : 1; // ENTRY P99: Arceus keeps the type it transformed into (not its plate's) until it leaves the field
 
     int rechargeTurnNumber;
     int fakeOutTurnNumber;

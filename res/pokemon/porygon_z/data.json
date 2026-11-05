@@ -3,8 +3,8 @@
         "hp": 85,
         "attack": 80,
         "defense": 70,
-        "speed": 90,
-        "special_attack": 135,
+        "speed": 110,
+        "special_attack": 195,
         "special_defense": 75
     },
     "types": [ "TYPE_NORMAL", "TYPE_NORMAL" ],

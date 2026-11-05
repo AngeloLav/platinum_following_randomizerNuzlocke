@@ -11,7 +11,7 @@
     "type": "TYPE_ELECTRIC",
     "power": 95,
     "accuracy": 100,
-    "pp": 15,
+    "pp": 20,
     "effect": {
         "type": "BATTLE_EFFECT_PARALYZE_HIT",
         "chance": 10

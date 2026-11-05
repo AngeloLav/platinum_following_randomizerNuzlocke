@@ -12,7 +12,7 @@
     "palette": "ultra_ball_NCLR"
   },
   "gbaID": "GBA_ITEM_ULTRA_BALL",
-  "price": 1200,
+  "price": 1000,
   "effectParam": 0,
   "holdEffect": "HOLD_EFFECT_NONE",
   "pluckEffect": "PLUCK_EFFECT_NONE",

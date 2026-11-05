@@ -19,8 +19,8 @@
         "special_defense": 2
     },
     "held_items": {
-        "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "common": "ITEM_ASPEAR_BERRY",
+        "rare": "ITEM_NEVERMELTICE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 20,
@@ -38,22 +38,35 @@
             [ 1, "MOVE_GROWL" ],
             [ 1, "MOVE_SIGNAL_BEAM" ],
             [ 1, "MOVE_ICY_WIND" ],
+            [ 1, "MOVE_AURORA_BEAM" ],
             [ 3, "MOVE_GROWL" ],
+            [ 5, "MOVE_GROWL" ],
             [ 7, "MOVE_SIGNAL_BEAM" ],
+            [ 9, "MOVE_GROWL" ],
             [ 11, "MOVE_ICY_WIND" ],
             [ 13, "MOVE_ENCORE" ],
+            [ 16, "MOVE_AURORA_BEAM" ],
             [ 17, "MOVE_ICE_SHARD" ],
+            [ 17, "MOVE_ICY_WIND" ],
             [ 21, "MOVE_REST" ],
+            [ 21, "MOVE_AURORA_BEAM" ],
             [ 23, "MOVE_AQUA_RING" ],
             [ 27, "MOVE_AURORA_BEAM" ],
+            [ 29, "MOVE_REST" ],
             [ 31, "MOVE_AQUA_JET" ],
+            [ 32, "MOVE_TAKE_DOWN" ],
             [ 33, "MOVE_BRINE" ],
             [ 34, "MOVE_SHEER_COLD" ],
             [ 37, "MOVE_TAKE_DOWN" ],
             [ 41, "MOVE_DIVE" ],
+            [ 42, "MOVE_TAKE_DOWN" ],
             [ 43, "MOVE_AQUA_TAIL" ],
+            [ 43, "MOVE_ICE_BEAM" ],
             [ 47, "MOVE_ICE_BEAM" ],
-            [ 51, "MOVE_SAFEGUARD" ]
+            [ 51, "MOVE_SAFEGUARD" ],
+            [ 51, "MOVE_ICE_BEAM" ],
+            [ 60, "MOVE_SAFEGUARD" ],
+            [ 64, "MOVE_SAFEGUARD" ]
         ],
         "by_tm": [
             "TM03",

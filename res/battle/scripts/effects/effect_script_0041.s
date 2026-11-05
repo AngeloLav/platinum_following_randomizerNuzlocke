@@ -1,12 +1,17 @@
 #include "macros/btlcmd.inc"
 
+    // Dragon Rage. ENTRY P113: 1.75x the user's level, rounded up ((level * 7 + 3) / 4), was a flat 40.
 
 _000:
     CompareVarToValue OPCODE_FLAG_SET, BTLVAR_REGULATION_FLAG, 1, _013
     UpdateVar OPCODE_FLAG_ON, BTLVAR_BATTLE_CTX_STATUS, SYSCTL_IGNORE_TYPE_CHECKS
-    UpdateVar OPCODE_SET, BTLVAR_DAMAGE, -40
-    End 
+    UpdateMonDataFromVar OPCODE_GET, BTLSCR_ATTACKER, BATTLEMON_LEVEL, BTLVAR_DAMAGE
+    UpdateVar OPCODE_MUL, BTLVAR_DAMAGE, 7
+    UpdateVar OPCODE_ADD, BTLVAR_DAMAGE, 3
+    UpdateVar OPCODE_DIV, BTLVAR_DAMAGE, 4
+    UpdateVar OPCODE_MUL, BTLVAR_DAMAGE, -1
+    End
 
 _013:
     UpdateVar OPCODE_FLAG_ON, BTLVAR_MOVE_STATUS_FLAGS, MOVE_STATUS_FAILED
-    End 
+    End

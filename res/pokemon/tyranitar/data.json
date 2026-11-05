@@ -1,10 +1,10 @@
 {
     "base_stats": {
-        "hp": 100,
-        "attack": 134,
+        "hp": 165,
+        "attack": 164,
         "defense": 110,
-        "speed": 61,
-        "special_attack": 95,
+        "speed": 71,
+        "special_attack": 135,
         "special_defense": 100
     },
     "types": [ "TYPE_ROCK", "TYPE_DARK" ],
@@ -42,16 +42,25 @@
             [ 1, "MOVE_SANDSTORM" ],
             [ 1, "MOVE_SCREECH" ],
             [ 5, "MOVE_SANDSTORM" ],
+            [ 8, "MOVE_SANDSTORM" ],
             [ 10, "MOVE_SCREECH" ],
+            [ 10, "MOVE_MAGNITUDE" ],
             [ 14, "MOVE_ROCK_SLIDE" ],
+            [ 15, "MOVE_SCREECH" ],
             [ 19, "MOVE_SCARY_FACE" ],
+            [ 22, "MOVE_ROCK_SLIDE" ],
             [ 23, "MOVE_THRASH" ],
             [ 28, "MOVE_DARK_PULSE" ],
+            [ 29, "MOVE_THRASH" ],
             [ 34, "MOVE_PAYBACK" ],
+            [ 38, "MOVE_SCARY_FACE" ],
             [ 41, "MOVE_CRUNCH" ],
             [ 47, "MOVE_EARTHQUAKE" ],
+            [ 47, "MOVE_CRUNCH" ],
             [ 54, "MOVE_STONE_EDGE" ],
-            [ 70, "MOVE_HYPER_BEAM" ]
+            [ 61, "MOVE_EARTHQUAKE" ],
+            [ 70, "MOVE_HYPER_BEAM" ],
+            [ 75, "MOVE_HYPER_BEAM" ]
         ],
         "by_tm": [
             "TM01",

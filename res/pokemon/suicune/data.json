@@ -1,6 +1,6 @@
 {
     "base_stats": {
-        "hp": 100,
+        "hp": 140,
         "attack": 75,
         "defense": 115,
         "speed": 85,
@@ -19,8 +19,8 @@
         "special_defense": 2
     },
     "held_items": {
-        "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "common": "ITEM_MYSTIC_WATER",
+        "rare": "ITEM_MYSTIC_WATER"
     },
     "gender_ratio": "GENDER_RATIO_NO_GENDER",
     "hatch_cycles": 80,
@@ -37,16 +37,26 @@
             [ 1, "MOVE_BITE" ],
             [ 1, "MOVE_LEER" ],
             [ 8, "MOVE_BUBBLE_BEAM" ],
+            [ 11, "MOVE_BUBBLE_BEAM" ],
+            [ 11, "MOVE_WATER_GUN" ],
             [ 15, "MOVE_RAIN_DANCE" ],
+            [ 21, "MOVE_RAIN_DANCE" ],
+            [ 21, "MOVE_ROAR" ],
             [ 22, "MOVE_GUST" ],
             [ 29, "MOVE_AURORA_BEAM" ],
+            [ 31, "MOVE_GUST" ],
             [ 36, "MOVE_MIST" ],
+            [ 41, "MOVE_AURORA_BEAM" ],
+            [ 41, "MOVE_BUBBLE_BEAM" ],
             [ 43, "MOVE_MIRROR_COAT" ],
             [ 50, "MOVE_ICE_FANG" ],
+            [ 51, "MOVE_MIST" ],
             [ 57, "MOVE_TAILWIND" ],
+            [ 61, "MOVE_MIRROR_COAT" ],
             [ 64, "MOVE_EXTRASENSORY" ],
             [ 71, "MOVE_HYDRO_PUMP" ],
             [ 78, "MOVE_CALM_MIND" ],
+            [ 81, "MOVE_CALM_MIND" ],
             [ 85, "MOVE_BLIZZARD" ]
         ],
         "by_tm": [

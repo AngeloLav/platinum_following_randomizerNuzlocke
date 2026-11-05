@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_SMOKE_BALL"
+        "rare": "ITEM_NONE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 20,
@@ -38,16 +38,25 @@
             [ 1, "MOVE_TACKLE" ],
             [ 1, "MOVE_SMOG" ],
             [ 1, "MOVE_SMOKE_SCREEN" ],
+            [ 1, "MOVE_SELFDESTRUCT" ],
             [ 6, "MOVE_SMOG" ],
+            [ 9, "MOVE_SMOG" ],
             [ 10, "MOVE_SMOKE_SCREEN" ],
             [ 15, "MOVE_ASSURANCE" ],
+            [ 17, "MOVE_SELFDESTRUCT" ],
             [ 19, "MOVE_SELFDESTRUCT" ],
+            [ 21, "MOVE_SLUDGE" ],
             [ 24, "MOVE_SLUDGE" ],
+            [ 25, "MOVE_SMOKE_SCREEN" ],
             [ 28, "MOVE_HAZE" ],
             [ 33, "MOVE_DOUBLE_HIT" ],
+            [ 33, "MOVE_HAZE" ],
             [ 40, "MOVE_EXPLOSION" ],
+            [ 44, "MOVE_EXPLOSION" ],
             [ 48, "MOVE_SLUDGE_BOMB" ],
+            [ 51, "MOVE_DESTINY_BOND" ],
             [ 55, "MOVE_DESTINY_BOND" ],
+            [ 58, "MOVE_MEMENTO" ],
             [ 63, "MOVE_MEMENTO" ]
         ],
         "by_tm": [

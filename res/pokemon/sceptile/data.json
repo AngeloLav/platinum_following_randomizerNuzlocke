@@ -1,10 +1,10 @@
 {
     "base_stats": {
-        "hp": 70,
-        "attack": 85,
+        "hp": 90,
+        "attack": 105,
         "defense": 65,
         "speed": 120,
-        "special_attack": 105,
+        "special_attack": 135,
         "special_defense": 85
     },
     "types": [ "TYPE_GRASS", "TYPE_GRASS" ],
@@ -42,6 +42,7 @@
             [ 6, "MOVE_ABSORB" ],
             [ 11, "MOVE_QUICK_ATTACK" ],
             [ 16, "MOVE_X_SCISSOR" ],
+            [ 16, "MOVE_FURY_CUTTER" ],
             [ 17, "MOVE_PURSUIT" ],
             [ 23, "MOVE_SCREECH" ],
             [ 29, "MOVE_LEAF_BLADE" ],

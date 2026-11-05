@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_SOFT_SAND"
+        "rare": "ITEM_NONE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 20,
@@ -39,18 +39,32 @@
             [ 1, "MOVE_SCRATCH" ],
             [ 1, "MOVE_SAND_ATTACK" ],
             [ 1, "MOVE_GROWL" ],
+            [ 1, "MOVE_MAGNITUDE" ],
             [ 4, "MOVE_GROWL" ],
+            [ 5, "MOVE_GROWL" ],
             [ 7, "MOVE_ASTONISH" ],
+            [ 9, "MOVE_MAGNITUDE" ],
             [ 12, "MOVE_MAGNITUDE" ],
             [ 15, "MOVE_MUD_SLAP" ],
+            [ 17, "MOVE_DIG" ],
             [ 18, "MOVE_DIG" ],
+            [ 21, "MOVE_FURY_SWIPES" ],
             [ 23, "MOVE_SUCKER_PUNCH" ],
+            [ 25, "MOVE_MUD_SLAP" ],
+            [ 25, "MOVE_SAND_ATTACK" ],
             [ 26, "MOVE_SAND_TOMB" ],
+            [ 26, "MOVE_TRI_ATTACK" ],
             [ 28, "MOVE_EARTH_POWER" ],
             [ 33, "MOVE_MUD_BOMB" ],
+            [ 37, "MOVE_SLASH" ],
+            [ 38, "MOVE_SLASH" ],
             [ 40, "MOVE_SLASH" ],
             [ 45, "MOVE_EARTHQUAKE" ],
-            [ 50, "MOVE_FISSURE" ]
+            [ 49, "MOVE_EARTHQUAKE" ],
+            [ 50, "MOVE_FISSURE" ],
+            [ 51, "MOVE_EARTHQUAKE" ],
+            [ 61, "MOVE_FISSURE" ],
+            [ 64, "MOVE_FISSURE" ]
         ],
         "by_tm": [
             "TM06",

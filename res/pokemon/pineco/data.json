@@ -19,8 +19,8 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "common": "ITEM_SILVERPOWDER",
+        "rare": "ITEM_METAL_COAT"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 20,
@@ -37,17 +37,24 @@
             [ 1, "MOVE_TACKLE" ],
             [ 1, "MOVE_PROTECT" ],
             [ 6, "MOVE_SELFDESTRUCT" ],
+            [ 8, "MOVE_SELFDESTRUCT" ],
             [ 9, "MOVE_BUG_BITE" ],
             [ 12, "MOVE_TAKE_DOWN" ],
+            [ 15, "MOVE_TAKE_DOWN" ],
             [ 17, "MOVE_RAPID_SPIN" ],
             [ 20, "MOVE_BIDE" ],
+            [ 22, "MOVE_RAPID_SPIN" ],
             [ 23, "MOVE_NATURAL_GIFT" ],
             [ 28, "MOVE_SPIKES" ],
+            [ 29, "MOVE_BIDE" ],
             [ 31, "MOVE_PAYBACK" ],
             [ 34, "MOVE_EXPLOSION" ],
+            [ 36, "MOVE_EXPLOSION" ],
             [ 39, "MOVE_IRON_DEFENSE" ],
             [ 42, "MOVE_GYRO_BALL" ],
-            [ 45, "MOVE_DOUBLE_EDGE" ]
+            [ 43, "MOVE_SPIKES" ],
+            [ 45, "MOVE_DOUBLE_EDGE" ],
+            [ 50, "MOVE_DOUBLE_EDGE" ]
         ],
         "by_tm": [
             "TM06",

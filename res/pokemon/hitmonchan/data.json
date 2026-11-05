@@ -1,6 +1,6 @@
 {
     "base_stats": {
-        "hp": 50,
+        "hp": 70,
         "attack": 105,
         "defense": 79,
         "speed": 76,
@@ -19,7 +19,7 @@
         "special_defense": 2
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_BLACK_BELT",
         "rare": "ITEM_NONE"
     },
     "gender_ratio": "GENDER_RATIO_MALE_ONLY",
@@ -37,17 +37,30 @@
             [ 1, "MOVE_REVENGE" ],
             [ 1, "MOVE_COMET_PUNCH" ],
             [ 6, "MOVE_AGILITY" ],
+            [ 7, "MOVE_AGILITY" ],
             [ 11, "MOVE_PURSUIT" ],
+            [ 13, "MOVE_PURSUIT" ],
             [ 16, "MOVE_MACH_PUNCH" ],
             [ 16, "MOVE_BULLET_PUNCH" ],
+            [ 20, "MOVE_MACH_PUNCH" ],
             [ 21, "MOVE_FEINT" ],
             [ 26, "MOVE_VACUUM_WAVE" ],
+            [ 26, "MOVE_THUNDER_PUNCH" ],
+            [ 26, "MOVE_ICE_PUNCH" ],
+            [ 26, "MOVE_FIRE_PUNCH" ],
             [ 31, "MOVE_THUNDER_PUNCH" ],
             [ 31, "MOVE_ICE_PUNCH" ],
             [ 31, "MOVE_FIRE_PUNCH" ],
+            [ 32, "MOVE_SKY_UPPERCUT" ],
+            [ 32, "MOVE_MACH_PUNCH" ],
+            [ 35, "MOVE_COMET_PUNCH" ],
             [ 36, "MOVE_SKY_UPPERCUT" ],
+            [ 38, "MOVE_MEGA_PUNCH" ],
+            [ 40, "MOVE_COMET_PUNCH" ],
             [ 41, "MOVE_MEGA_PUNCH" ],
+            [ 44, "MOVE_DETECT" ],
             [ 46, "MOVE_DETECT" ],
+            [ 50, "MOVE_COUNTER" ],
             [ 51, "MOVE_COUNTER" ],
             [ 56, "MOVE_CLOSE_COMBAT" ]
         ],

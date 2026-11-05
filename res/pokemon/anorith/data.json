@@ -9,7 +9,7 @@
     },
     "types": [ "TYPE_ROCK", "TYPE_BUG" ],
     "catch_rate": 45,
-    "base_exp_reward": 99,
+    "base_exp_reward": 119,
     "ev_yields": {
         "hp": 0,
         "attack": 1,
@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "rare": "ITEM_NEVERMELTICE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_12_5",
     "hatch_cycles": 30,
@@ -37,14 +37,23 @@
             [ 1, "MOVE_SCRATCH" ],
             [ 1, "MOVE_HARDEN" ],
             [ 7, "MOVE_MUD_SPORT" ],
+            [ 7, "MOVE_HARDEN" ],
             [ 13, "MOVE_WATER_GUN" ],
+            [ 13, "MOVE_MUD_SPORT" ],
             [ 19, "MOVE_METAL_CLAW" ],
+            [ 19, "MOVE_WATER_GUN" ],
             [ 25, "MOVE_PROTECT" ],
+            [ 25, "MOVE_METAL_CLAW" ],
             [ 31, "MOVE_ANCIENT_POWER" ],
+            [ 31, "MOVE_PROTECT" ],
             [ 37, "MOVE_FURY_CUTTER" ],
+            [ 37, "MOVE_ANCIENT_POWER" ],
             [ 43, "MOVE_SLASH" ],
+            [ 43, "MOVE_FURY_CUTTER" ],
             [ 49, "MOVE_ROCK_BLAST" ],
+            [ 49, "MOVE_SLASH" ],
             [ 55, "MOVE_CRUSH_CLAW" ],
+            [ 55, "MOVE_ROCK_BLAST" ],
             [ 61, "MOVE_X_SCISSOR" ]
         ],
         "by_tm": [

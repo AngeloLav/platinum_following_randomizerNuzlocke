@@ -1359,7 +1359,11 @@ void PokemonSummaryScreen_UpdateMiscMonDataSprites(PokemonSummaryScreen *summary
         }
     }
 
-    if (summaryScreen->monData.isShiny == TRUE && summaryScreen->monData.isEgg == FALSE) {
+    // COLOR MOD (port of PokeHeartGold ENTRY AD item 6): the shiny star icon is now shown for every
+    // non-egg Pokemon regardless of its real shiny status. monData.isShiny itself is untouched and still
+    // used correctly elsewhere (e.g. the red Dex-number text and the sprite's own shiny palette), so only
+    // the star icon's visibility changes here.
+    if (summaryScreen->monData.isEgg == FALSE) {
         Sprite_SetDrawFlag2(summaryScreen->sprites[SUMMARY_SPRITE_SHINY_ICON], TRUE);
     } else {
         Sprite_SetDrawFlag2(summaryScreen->sprites[SUMMARY_SPRITE_SHINY_ICON], FALSE);

@@ -37,14 +37,21 @@
             [ 1, "MOVE_PECK" ],
             [ 1, "MOVE_GROWL" ],
             [ 5, "MOVE_LEER" ],
+            [ 7, "MOVE_LEER" ],
             [ 9, "MOVE_FURY_ATTACK" ],
             [ 13, "MOVE_PURSUIT" ],
+            [ 13, "MOVE_FURY_ATTACK" ],
             [ 17, "MOVE_AERIAL_ACE" ],
+            [ 19, "MOVE_PURSUIT" ],
             [ 21, "MOVE_MIRROR_MOVE" ],
             [ 25, "MOVE_AGILITY" ],
+            [ 25, "MOVE_AERIAL_ACE" ],
+            [ 25, "MOVE_PURSUIT" ],
             [ 29, "MOVE_ASSURANCE" ],
+            [ 31, "MOVE_MIRROR_MOVE" ],
             [ 33, "MOVE_ROOST" ],
-            [ 37, "MOVE_DRILL_PECK" ]
+            [ 37, "MOVE_DRILL_PECK" ],
+            [ 43, "MOVE_AGILITY" ]
         ],
         "by_tm": [
             "TM06",

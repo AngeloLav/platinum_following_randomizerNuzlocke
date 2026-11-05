@@ -36,15 +36,22 @@
         "by_level": [
             [ 1, "MOVE_ABSORB" ],
             [ 5, "MOVE_SWEET_SCENT" ],
+            [ 7, "MOVE_SWEET_SCENT" ],
             [ 9, "MOVE_ACID" ],
             [ 13, "MOVE_POISON_POWDER" ],
+            [ 14, "MOVE_POISON_POWDER" ],
             [ 15, "MOVE_STUN_SPORE" ],
+            [ 16, "MOVE_STUN_SPORE" ],
             [ 17, "MOVE_SLEEP_POWDER" ],
+            [ 18, "MOVE_SLEEP_POWDER" ],
             [ 21, "MOVE_MEGA_DRAIN" ],
+            [ 23, "MOVE_ACID" ],
             [ 25, "MOVE_LUCKY_CHANT" ],
             [ 29, "MOVE_NATURAL_GIFT" ],
+            [ 32, "MOVE_MOONLIGHT" ],
             [ 33, "MOVE_MOONLIGHT" ],
             [ 37, "MOVE_GIGA_DRAIN" ],
+            [ 39, "MOVE_PETAL_DANCE" ],
             [ 41, "MOVE_PETAL_DANCE" ]
         ],
         "by_tm": [

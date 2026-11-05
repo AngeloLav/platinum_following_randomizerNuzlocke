@@ -1115,10 +1115,8 @@ static void TeachMove(PartyMenuApplication *application, Pokemon *mon, u32 moveS
     Pokemon_SetValue(mon, MON_DATA_MOVE1_PP + moveSlot, &tempVar);
 
     if (application->partyMenu->usedItemID != ITEM_NONE) {
-        if (Item_IsHMMove(application->partyMenu->learnedMove) == FALSE) {
-            Bag_TryRemoveItem(application->partyMenu->bag, application->partyMenu->usedItemID, 1, HEAP_ID_PARTY_MENU);
-        }
-
+        // HG SYNC (port of PokeHeartGold ENTRY BB item 1): TMs are no longer used up when teaching a move (HMs never
+        // were) - the Bag_TryRemoveItem for non-HM moves that used to be here is gone.
         Pokemon_UpdateFriendship(mon, FRIENDSHIP_EVENT_LEARN_TMHM, (u16)GetCurrentMapLabel(application));
         FollowerMonTalk_AddMoodForMon(mon, FOLLOWER_MOOD_LEARN_TMHM); // ENTRY P64 (HG party_menu_items.c)
     }

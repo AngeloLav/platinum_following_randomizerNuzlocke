@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_CHILAN_BERRY"
+        "rare": "ITEM_NONE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 15,
@@ -38,15 +38,21 @@
             [ 1, "MOVE_TAIL_WHIP" ],
             [ 4, "MOVE_QUICK_ATTACK" ],
             [ 7, "MOVE_FOCUS_ENERGY" ],
+            [ 7, "MOVE_QUICK_ATTACK" ],
             [ 10, "MOVE_BITE" ],
             [ 13, "MOVE_PURSUIT" ],
+            [ 13, "MOVE_HYPER_FANG" ],
             [ 16, "MOVE_HYPER_FANG" ],
             [ 19, "MOVE_SUCKER_PUNCH" ],
+            [ 20, "MOVE_FOCUS_ENERGY" ],
             [ 22, "MOVE_CRUNCH" ],
             [ 25, "MOVE_ASSURANCE" ],
+            [ 27, "MOVE_PURSUIT" ],
             [ 28, "MOVE_SUPER_FANG" ],
             [ 31, "MOVE_DOUBLE_EDGE" ],
-            [ 34, "MOVE_ENDEAVOR" ]
+            [ 34, "MOVE_ENDEAVOR" ],
+            [ 34, "MOVE_SUPER_FANG" ],
+            [ 41, "MOVE_ENDEAVOR" ]
         ],
         "by_tm": [
             "TM06",

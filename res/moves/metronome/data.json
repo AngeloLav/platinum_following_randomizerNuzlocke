@@ -11,7 +11,7 @@
     "type": "TYPE_NORMAL",
     "power": 0,
     "accuracy": 0,
-    "pp": 10,
+    "pp": 20,
     "effect": {
         "type": "BATTLE_EFFECT_CALL_RANDOM_MOVE",
         "chance": 0

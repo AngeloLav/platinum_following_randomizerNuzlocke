@@ -19,6 +19,7 @@
 #include "palette.h"
 #include "particle_system.h"
 #include "pokemon.h"
+#include "pokemon_color_mod.h"
 #include "pokemon_sprite.h"
 #include "render_window.h"
 #include "screen_fade.h"
@@ -444,7 +445,17 @@ void EggHatch_LoadSpriteResources(EggHatchCutscene *eggHatch)
     PaletteData *plttData = eggHatch->graphics.plttData;
 
     SpriteSystem_LoadCharResObj(spriteSys, spriteMan, narcID, narcIdx[0][0], TRUE, vRamType, ID_EGG_CHAR);
-    SpriteSystem_LoadPaletteBuffer(plttData, PLTTBUF_MAIN_OBJ, spriteSys, spriteMan, narcID, narcIdx[0][1], FALSE, 1, vRamType, ID_EGG_PLTT);
+    u8 eggPaletteSlot = SpriteSystem_LoadPaletteBuffer(plttData, PLTTBUF_MAIN_OBJ, spriteSys, spriteMan, narcID, narcIdx[0][1], FALSE, 1, vRamType, ID_EGG_PLTT);
+
+    // COLOR MOD (2026-10-11, per user request; HG parity): the hatching egg's own palette is colour-rotated with the egg's
+    // personality - the same one the hatched Pokemon's sprite is rotated with - in both the unfaded and faded buffers.
+    if (eggPaletteSlot != (u8)-1) {
+        u32 eggPersonality = Pokemon_GetValue(eggHatch->app->args.mon, MON_DATA_PERSONALITY, NULL);
+
+        PersonalityRotatePalette(PaletteData_GetUnfadedBuffer(plttData, PLTTBUF_MAIN_OBJ) + PLTT_DEST(eggPaletteSlot), PALETTE_SIZE, eggPersonality);
+        PersonalityRotatePalette(PaletteData_GetFadedBuffer(plttData, PLTTBUF_MAIN_OBJ) + PLTT_DEST(eggPaletteSlot), PALETTE_SIZE, eggPersonality);
+    }
+
     SpriteSystem_LoadCellResObj(spriteSys, spriteMan, narcID, narcIdx[0][2], TRUE, ID_EGG_CELL);
     SpriteSystem_LoadAnimResObj(spriteSys, spriteMan, narcID, narcIdx[0][3], TRUE, ID_EGG_ANIM);
 

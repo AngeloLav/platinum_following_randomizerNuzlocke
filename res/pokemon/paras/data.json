@@ -37,13 +37,21 @@
             [ 1, "MOVE_SCRATCH" ],
             [ 6, "MOVE_STUN_SPORE" ],
             [ 6, "MOVE_POISON_POWDER" ],
+            [ 7, "MOVE_STUN_SPORE" ],
             [ 11, "MOVE_LEECH_LIFE" ],
+            [ 13, "MOVE_POISON_POWDER" ],
             [ 17, "MOVE_SPORE" ],
+            [ 19, "MOVE_LEECH_LIFE" ],
             [ 22, "MOVE_SLASH" ],
+            [ 25, "MOVE_SPORE" ],
             [ 27, "MOVE_GROWTH" ],
+            [ 31, "MOVE_SLASH" ],
             [ 33, "MOVE_GIGA_DRAIN" ],
+            [ 37, "MOVE_GROWTH" ],
             [ 38, "MOVE_AROMATHERAPY" ],
-            [ 43, "MOVE_X_SCISSOR" ]
+            [ 43, "MOVE_X_SCISSOR" ],
+            [ 43, "MOVE_GIGA_DRAIN" ],
+            [ 49, "MOVE_AROMATHERAPY" ]
         ],
         "by_tm": [
             "TM06",

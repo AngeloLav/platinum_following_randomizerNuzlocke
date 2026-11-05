@@ -19,7 +19,7 @@
         "special_defense": 2
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_MYSTIC_WATER",
         "rare": "ITEM_NONE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
@@ -42,16 +42,29 @@
             [ 1, "MOVE_SUPERSONIC" ],
             [ 1, "MOVE_BUBBLE_BEAM" ],
             [ 4, "MOVE_SUPERSONIC" ],
+            [ 8, "MOVE_SUPERSONIC" ],
             [ 10, "MOVE_BUBBLE_BEAM" ],
+            [ 10, "MOVE_SUPERSONIC" ],
             [ 13, "MOVE_HEADBUTT" ],
+            [ 15, "MOVE_BUBBLE_BEAM" ],
+            [ 18, "MOVE_BUBBLE_BEAM" ],
             [ 19, "MOVE_AGILITY" ],
             [ 22, "MOVE_WING_ATTACK" ],
+            [ 22, "MOVE_TAKE_DOWN" ],
+            [ 25, "MOVE_TAKE_DOWN" ],
             [ 28, "MOVE_WATER_PULSE" ],
+            [ 29, "MOVE_AGILITY" ],
             [ 31, "MOVE_TAKE_DOWN" ],
+            [ 32, "MOVE_AGILITY" ],
+            [ 36, "MOVE_WING_ATTACK" ],
             [ 37, "MOVE_CONFUSE_RAY" ],
             [ 40, "MOVE_BOUNCE" ],
+            [ 40, "MOVE_WING_ATTACK" ],
+            [ 43, "MOVE_WATER_PULSE" ],
             [ 46, "MOVE_AQUA_RING" ],
-            [ 49, "MOVE_HYDRO_PUMP" ]
+            [ 49, "MOVE_HYDRO_PUMP" ],
+            [ 49, "MOVE_CONFUSE_RAY" ],
+            [ 50, "MOVE_CONFUSE_RAY" ]
         ],
         "by_tm": [
             "TM03",

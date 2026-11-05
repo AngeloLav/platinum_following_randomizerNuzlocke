@@ -1,10 +1,10 @@
 {
     "base_stats": {
-        "hp": 95,
+        "hp": 115,
         "attack": 70,
         "defense": 73,
         "speed": 60,
-        "special_attack": 85,
+        "special_attack": 115,
         "special_defense": 90
     },
     "types": [ "TYPE_NORMAL", "TYPE_NORMAL" ],
@@ -37,7 +37,8 @@
             [ 1, "MOVE_SING" ],
             [ 1, "MOVE_DOUBLE_SLAP" ],
             [ 1, "MOVE_MINIMIZE" ],
-            [ 1, "MOVE_METRONOME" ]
+            [ 1, "MOVE_METRONOME" ],
+            [ 1, "MOVE_MOONLIGHT" ]
         ],
         "by_tm": [
             "TM01",

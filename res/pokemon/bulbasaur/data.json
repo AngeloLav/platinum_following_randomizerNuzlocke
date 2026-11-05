@@ -36,18 +36,27 @@
         "by_level": [
             [ 1, "MOVE_TACKLE" ],
             [ 3, "MOVE_GROWL" ],
+            [ 4, "MOVE_GROWL" ],
             [ 7, "MOVE_LEECH_SEED" ],
             [ 9, "MOVE_VINE_WHIP" ],
+            [ 10, "MOVE_VINE_WHIP" ],
             [ 13, "MOVE_POISON_POWDER" ],
             [ 13, "MOVE_SLEEP_POWDER" ],
             [ 15, "MOVE_TAKE_DOWN" ],
+            [ 15, "MOVE_POISON_POWDER" ],
+            [ 15, "MOVE_SLEEP_POWDER" ],
             [ 19, "MOVE_RAZOR_LEAF" ],
+            [ 20, "MOVE_RAZOR_LEAF" ],
             [ 21, "MOVE_SWEET_SCENT" ],
             [ 25, "MOVE_GROWTH" ],
+            [ 25, "MOVE_SWEET_SCENT" ],
             [ 27, "MOVE_DOUBLE_EDGE" ],
             [ 31, "MOVE_WORRY_SEED" ],
+            [ 32, "MOVE_GROWTH" ],
             [ 33, "MOVE_SYNTHESIS" ],
-            [ 37, "MOVE_SEED_BOMB" ]
+            [ 37, "MOVE_SEED_BOMB" ],
+            [ 39, "MOVE_SYNTHESIS" ],
+            [ 46, "MOVE_SOLAR_BEAM" ]
         ],
         "by_tm": [
             "TM06",

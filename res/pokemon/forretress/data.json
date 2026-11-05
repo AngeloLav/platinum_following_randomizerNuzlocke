@@ -1,15 +1,15 @@
 {
     "base_stats": {
-        "hp": 75,
+        "hp": 95,
         "attack": 90,
-        "defense": 140,
+        "defense": 180,
         "speed": 40,
-        "special_attack": 60,
-        "special_defense": 60
+        "special_attack": 90,
+        "special_defense": 160
     },
     "types": [ "TYPE_BUG", "TYPE_STEEL" ],
     "catch_rate": 75,
-    "base_exp_reward": 118,
+    "base_exp_reward": 198,
     "ev_yields": {
         "hp": 0,
         "attack": 0,
@@ -19,7 +19,7 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_METAL_COAT",
         "rare": "ITEM_NONE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
@@ -40,18 +40,26 @@
             [ 1, "MOVE_SELFDESTRUCT" ],
             [ 1, "MOVE_BUG_BITE" ],
             [ 6, "MOVE_SELFDESTRUCT" ],
+            [ 8, "MOVE_SELFDESTRUCT" ],
             [ 9, "MOVE_BUG_BITE" ],
             [ 12, "MOVE_TAKE_DOWN" ],
+            [ 15, "MOVE_TAKE_DOWN" ],
             [ 17, "MOVE_RAPID_SPIN" ],
             [ 20, "MOVE_BIDE" ],
+            [ 22, "MOVE_RAPID_SPIN" ],
             [ 23, "MOVE_NATURAL_GIFT" ],
             [ 28, "MOVE_SPIKES" ],
+            [ 29, "MOVE_BIDE" ],
             [ 31, "MOVE_MIRROR_SHOT" ],
+            [ 31, "MOVE_ZAP_CANNON" ],
             [ 33, "MOVE_PAYBACK" ],
             [ 38, "MOVE_EXPLOSION" ],
+            [ 39, "MOVE_EXPLOSION" ],
             [ 45, "MOVE_IRON_DEFENSE" ],
+            [ 49, "MOVE_SPIKES" ],
             [ 50, "MOVE_GYRO_BALL" ],
             [ 55, "MOVE_DOUBLE_EDGE" ],
+            [ 59, "MOVE_DOUBLE_EDGE" ],
             [ 62, "MOVE_MAGNET_RISE" ],
             [ 67, "MOVE_ZAP_CANNON" ]
         ],

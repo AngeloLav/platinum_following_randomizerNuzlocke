@@ -36,17 +36,26 @@
         "by_level": [
             [ 1, "MOVE_LEER" ],
             [ 1, "MOVE_NIGHT_SHADE" ],
+            [ 5, "MOVE_DISABLE" ],
             [ 6, "MOVE_DISABLE" ],
             [ 9, "MOVE_FORESIGHT" ],
+            [ 12, "MOVE_FORESIGHT" ],
             [ 14, "MOVE_ASTONISH" ],
+            [ 16, "MOVE_ASTONISH" ],
             [ 17, "MOVE_CONFUSE_RAY" ],
             [ 22, "MOVE_SHADOW_SNEAK" ],
+            [ 23, "MOVE_CONFUSE_RAY" ],
             [ 25, "MOVE_PURSUIT" ],
+            [ 27, "MOVE_PURSUIT" ],
             [ 30, "MOVE_CURSE" ],
             [ 33, "MOVE_WILL_O_WISP" ],
+            [ 34, "MOVE_CURSE" ],
             [ 38, "MOVE_MEAN_LOOK" ],
+            [ 38, "MOVE_WILL_O_WISP" ],
             [ 41, "MOVE_PAYBACK" ],
-            [ 46, "MOVE_FUTURE_SIGHT" ]
+            [ 45, "MOVE_MEAN_LOOK" ],
+            [ 46, "MOVE_FUTURE_SIGHT" ],
+            [ 49, "MOVE_FUTURE_SIGHT" ]
         ],
         "by_tm": [
             "TM04",

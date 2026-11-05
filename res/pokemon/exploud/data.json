@@ -1,10 +1,10 @@
 {
     "base_stats": {
         "hp": 104,
-        "attack": 91,
+        "attack": 121,
         "defense": 63,
         "speed": 68,
-        "special_attack": 91,
+        "special_attack": 121,
         "special_defense": 63
     },
     "types": [ "TYPE_NORMAL", "TYPE_NORMAL" ],
@@ -49,6 +49,7 @@
             [ 29, "MOVE_STOMP" ],
             [ 37, "MOVE_SCREECH" ],
             [ 40, "MOVE_CRUNCH" ],
+            [ 40, "MOVE_HYPER_BEAM" ],
             [ 45, "MOVE_ROAR" ],
             [ 55, "MOVE_REST" ],
             [ 55, "MOVE_SLEEP_TALK" ],

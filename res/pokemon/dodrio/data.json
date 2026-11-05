@@ -19,7 +19,7 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_SHARP_BEAK",
         "rare": "ITEM_SHARP_BEAK"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
@@ -39,16 +39,26 @@
             [ 1, "MOVE_GROWL" ],
             [ 1, "MOVE_QUICK_ATTACK" ],
             [ 1, "MOVE_RAGE" ],
+            [ 1, "MOVE_PURSUIT" ],
+            [ 1, "MOVE_FURY_ATTACK" ],
             [ 5, "MOVE_QUICK_ATTACK" ],
+            [ 9, "MOVE_PURSUIT" ],
             [ 10, "MOVE_RAGE" ],
+            [ 13, "MOVE_FURY_ATTACK" ],
             [ 14, "MOVE_FURY_ATTACK" ],
             [ 19, "MOVE_PURSUIT" ],
+            [ 21, "MOVE_TRI_ATTACK" ],
             [ 23, "MOVE_UPROAR" ],
+            [ 25, "MOVE_RAGE" ],
             [ 28, "MOVE_ACUPRESSURE" ],
             [ 34, "MOVE_TRI_ATTACK" ],
+            [ 38, "MOVE_UPROAR" ],
+            [ 38, "MOVE_DRILL_PECK" ],
             [ 41, "MOVE_AGILITY" ],
             [ 47, "MOVE_DRILL_PECK" ],
-            [ 54, "MOVE_ENDEAVOR" ]
+            [ 47, "MOVE_AGILITY" ],
+            [ 54, "MOVE_ENDEAVOR" ],
+            [ 60, "MOVE_AGILITY" ]
         ],
         "by_tm": [
             "TM06",

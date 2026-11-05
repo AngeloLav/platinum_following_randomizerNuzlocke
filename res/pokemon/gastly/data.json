@@ -19,7 +19,7 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_SPELL_TAG",
         "rare": "ITEM_NONE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
@@ -38,16 +38,31 @@
             [ 1, "MOVE_LICK" ],
             [ 5, "MOVE_SPITE" ],
             [ 8, "MOVE_MEAN_LOOK" ],
+            [ 8, "MOVE_SPITE" ],
             [ 12, "MOVE_CURSE" ],
+            [ 13, "MOVE_CURSE" ],
+            [ 13, "MOVE_MEAN_LOOK" ],
             [ 15, "MOVE_NIGHT_SHADE" ],
+            [ 16, "MOVE_NIGHT_SHADE" ],
+            [ 16, "MOVE_CURSE" ],
             [ 19, "MOVE_CONFUSE_RAY" ],
+            [ 21, "MOVE_CONFUSE_RAY" ],
+            [ 21, "MOVE_NIGHT_SHADE" ],
             [ 22, "MOVE_SUCKER_PUNCH" ],
             [ 26, "MOVE_PAYBACK" ],
+            [ 28, "MOVE_DREAM_EATER" ],
+            [ 28, "MOVE_CONFUSE_RAY" ],
             [ 29, "MOVE_SHADOW_BALL" ],
             [ 33, "MOVE_DREAM_EATER" ],
+            [ 33, "MOVE_DESTINY_BOND" ],
             [ 36, "MOVE_DARK_PULSE" ],
+            [ 36, "MOVE_SHADOW_BALL" ],
+            [ 36, "MOVE_DESTINY_BOND" ],
             [ 40, "MOVE_DESTINY_BOND" ],
-            [ 43, "MOVE_NIGHTMARE" ]
+            [ 40, "MOVE_SHADOW_BALL" ],
+            [ 41, "MOVE_NIGHTMARE" ],
+            [ 43, "MOVE_NIGHTMARE" ],
+            [ 48, "MOVE_MEAN_LOOK" ]
         ],
         "by_tm": [
             "TM06",

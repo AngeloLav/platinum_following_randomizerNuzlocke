@@ -1,7 +1,7 @@
 {
     "base_stats": {
-        "hp": 105,
-        "attack": 95,
+        "hp": 145,
+        "attack": 125,
         "defense": 80,
         "speed": 90,
         "special_attack": 40,
@@ -19,7 +19,7 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_SILK_SCARF",
         "rare": "ITEM_NONE"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_ONLY",
@@ -37,15 +37,26 @@
             [ 1, "MOVE_COMET_PUNCH" ],
             [ 1, "MOVE_LEER" ],
             [ 7, "MOVE_FAKE_OUT" ],
+            [ 7, "MOVE_BITE" ],
+            [ 7, "MOVE_LEER" ],
             [ 10, "MOVE_TAIL_WHIP" ],
             [ 13, "MOVE_BITE" ],
+            [ 13, "MOVE_TAIL_WHIP" ],
             [ 19, "MOVE_MEGA_PUNCH" ],
+            [ 19, "MOVE_FAKE_OUT" ],
+            [ 19, "MOVE_TAIL_WHIP" ],
             [ 22, "MOVE_RAGE" ],
             [ 25, "MOVE_DIZZY_PUNCH" ],
+            [ 25, "MOVE_MEGA_PUNCH" ],
+            [ 30, "MOVE_COMET_PUNCH" ],
             [ 31, "MOVE_CRUNCH" ],
+            [ 31, "MOVE_RAGE" ],
             [ 34, "MOVE_ENDURE" ],
             [ 37, "MOVE_OUTRAGE" ],
+            [ 37, "MOVE_ENDURE" ],
             [ 43, "MOVE_DOUBLE_HIT" ],
+            [ 43, "MOVE_DIZZY_PUNCH" ],
+            [ 45, "MOVE_BODY_SLAM" ],
             [ 46, "MOVE_SUCKER_PUNCH" ],
             [ 49, "MOVE_REVERSAL" ]
         ],

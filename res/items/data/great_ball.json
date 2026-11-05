@@ -12,7 +12,7 @@
     "palette": "great_ball_NCLR"
   },
   "gbaID": "GBA_ITEM_GREAT_BALL",
-  "price": 600,
+  "price": 400,
   "effectParam": 0,
   "holdEffect": "HOLD_EFFECT_NONE",
   "pluckEffect": "PLUCK_EFFECT_NONE",

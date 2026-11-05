@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_HEART_SCALE",
-        "rare": "ITEM_NONE"
+        "rare": "ITEM_CHESTO_BERRY"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_75",
     "hatch_cycles": 20,
@@ -38,14 +38,21 @@
             [ 4, "MOVE_CHARM" ],
             [ 7, "MOVE_WATER_GUN" ],
             [ 9, "MOVE_AGILITY" ],
+            [ 12, "MOVE_WATER_GUN" ],
             [ 14, "MOVE_TAKE_DOWN" ],
+            [ 16, "MOVE_AGILITY" ],
             [ 17, "MOVE_LUCKY_CHANT" ],
             [ 22, "MOVE_ATTRACT" ],
+            [ 24, "MOVE_TAKE_DOWN" ],
             [ 27, "MOVE_SWEET_KISS" ],
+            [ 28, "MOVE_ATTRACT" ],
             [ 31, "MOVE_WATER_PULSE" ],
+            [ 36, "MOVE_SWEET_KISS" ],
             [ 37, "MOVE_AQUA_RING" ],
             [ 40, "MOVE_CAPTIVATE" ],
+            [ 40, "MOVE_FLAIL" ],
             [ 46, "MOVE_FLAIL" ],
+            [ 48, "MOVE_SAFEGUARD" ],
             [ 51, "MOVE_SAFEGUARD" ]
         ],
         "by_tm": [

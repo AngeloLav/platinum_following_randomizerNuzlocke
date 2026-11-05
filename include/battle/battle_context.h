@@ -64,7 +64,8 @@ typedef struct TurnFlags {
     u32 roosting : 1;
     u32 fleeing : 2;
     u32 enduring : 1;
-    u32 padding00_0A : 22;
+    u32 arceusTransformed : 1; // ENTRY P99: this Arceus already transformed this turn (once per turn)
+    u32 padding00_0B : 21;
 
     int physicalDamageTakenFrom[MAX_BATTLERS];
     int physicalDamageLastAttacker;
@@ -124,6 +125,24 @@ typedef struct BattleScriptTaskData {
     int tmpData[8];
     void *tmpPtr[2];
 } BattleScriptTaskData;
+
+// ENTRY P109: what the trainer AI has seen of one Pokemon in this battle, kept per party slot so it survives switching (see
+// BattleAI_HideOpponentInfo in battle_lib.c).
+#define AI_KNOWLEDGE_MAX_OBSERVATIONS 16
+#define AI_KNOWLEDGE_NOT_IMMUNE       0xFF // obsMul: the move was not stopped by a type, its exact effectiveness was not shown
+#define AI_KNOWLEDGE_MOVE_CHECKED     (1u << 31) // seenMoveTypes: worked out (trainer_ai.c)
+
+typedef struct AIMonKnowledge {
+    u8 numObs;
+    u8 nextObs; // once full, the oldest observation (overwritten next)
+    u8 knownAbility; // its own ability, once named in a battle message
+    u8 padding;
+    u8 obsMoveType[AI_KNOWLEDGE_MAX_OBSERVATIONS]; // hits seen: move type,
+    u8 obsRules[AI_KNOWLEDGE_MAX_OBSERVATIONS]; // type chart rows known to be switched off (AI_CHART_*),
+    u8 obsMul[AI_KNOWLEDGE_MAX_OBSERVATIONS]; // effectiveness x10 (0, 2, 5, 10, 20, 40) or AI_KNOWLEDGE_NOT_IMMUNE
+    u16 seenMoves[LEARNED_MOVES_MAX]; // moves seen used
+    u32 seenMoveTypes[LEARNED_MOVES_MAX]; // AI_KNOWLEDGE_MOVE_CHECKED | the types one of which it must have (none: says nothing)
+} AIMonKnowledge;
 
 struct BattleContext {
     u8 curCommandState[MAX_BATTLERS];
@@ -317,7 +336,10 @@ struct BattleContext {
     int waitingBattlers;
 
     u32 battleProgressFlag : 1;
-    u32 padding3154_01 : 31;
+    u32 arceusTransformPending : 3; // ENTRY P99: battler + 1 whose transform plays after the next attack message, 0 = none
+    u32 padding3154_04 : 28;
+
+    AIMonKnowledge aiMonKnowledge[MAX_BATTLERS][MAX_PARTY_SIZE]; // ENTRY P109: [first battler using the party][party slot]
 };
 
 #endif // POKEPLATINUM_BATTLE_BATTLE_CONTEXT_H

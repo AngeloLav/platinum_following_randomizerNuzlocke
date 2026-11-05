@@ -1,11 +1,11 @@
 {
     "base_stats": {
-        "hp": 80,
+        "hp": 120,
         "attack": 82,
-        "defense": 100,
+        "defense": 130,
         "speed": 80,
-        "special_attack": 83,
-        "special_defense": 100
+        "special_attack": 113,
+        "special_defense": 130
     },
     "types": [ "TYPE_GRASS", "TYPE_GRASS" ],
     "catch_rate": 45,
@@ -38,18 +38,27 @@
             [ 1, "MOVE_GROWL" ],
             [ 1, "MOVE_RAZOR_LEAF" ],
             [ 1, "MOVE_POISON_POWDER" ],
+            [ 1, "MOVE_REFLECT" ],
             [ 6, "MOVE_RAZOR_LEAF" ],
+            [ 8, "MOVE_RAZOR_LEAF" ],
             [ 9, "MOVE_POISON_POWDER" ],
             [ 12, "MOVE_SYNTHESIS" ],
+            [ 12, "MOVE_REFLECT" ],
+            [ 15, "MOVE_POISON_POWDER" ],
             [ 18, "MOVE_REFLECT" ],
             [ 22, "MOVE_MAGICAL_LEAF" ],
+            [ 23, "MOVE_SYNTHESIS" ],
             [ 26, "MOVE_NATURAL_GIFT" ],
+            [ 31, "MOVE_BODY_SLAM" ],
             [ 32, "MOVE_PETAL_DANCE" ],
             [ 34, "MOVE_SWEET_SCENT" ],
             [ 40, "MOVE_LIGHT_SCREEN" ],
+            [ 41, "MOVE_LIGHT_SCREEN" ],
             [ 46, "MOVE_BODY_SLAM" ],
+            [ 51, "MOVE_SAFEGUARD" ],
             [ 54, "MOVE_SAFEGUARD" ],
             [ 60, "MOVE_AROMATHERAPY" ],
+            [ 61, "MOVE_SOLAR_BEAM" ],
             [ 66, "MOVE_SOLAR_BEAM" ]
         ],
         "by_tm": [

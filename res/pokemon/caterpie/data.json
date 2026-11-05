@@ -1,7 +1,7 @@
 {
     "base_stats": {
-        "hp": 45,
-        "attack": 30,
+        "hp": 55,
+        "attack": 40,
         "defense": 35,
         "speed": 45,
         "special_attack": 20,
@@ -9,7 +9,7 @@
     },
     "types": [ "TYPE_BUG", "TYPE_BUG" ],
     "catch_rate": 255,
-    "base_exp_reward": 53,
+    "base_exp_reward": 73,
     "ev_yields": {
         "hp": 1,
         "attack": 0,
@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "rare": "ITEM_SILVERPOWDER"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 15,
@@ -36,6 +36,7 @@
         "by_level": [
             [ 1, "MOVE_TACKLE" ],
             [ 1, "MOVE_STRING_SHOT" ],
+            [ 1, "MOVE_LEECH_LIFE" ],
             [ 15, "MOVE_BUG_BITE" ]
         ],
         "by_tm": [  ],

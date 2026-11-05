@@ -18,7 +18,7 @@
             "species": "SPECIES_SPIRITOMB",
             "form": 0,
             "level": 58,
-            "item": "ITEM_NONE",
+            "item": "ITEM_LUM_BERRY",
             "moves": [
                 "MOVE_DARK_PULSE",
                 "MOVE_PSYCHIC",
@@ -32,7 +32,7 @@
             "species": "SPECIES_ROSERADE",
             "form": 0,
             "level": 58,
-            "item": "ITEM_NONE",
+            "item": "ITEM_SCOPE_LENS",
             "moves": [
                 "MOVE_ENERGY_BALL",
                 "MOVE_SLUDGE_BOMB",
@@ -60,7 +60,7 @@
             "species": "SPECIES_LUCARIO",
             "form": 0,
             "level": 60,
-            "item": "ITEM_NONE",
+            "item": "ITEM_SITRUS_BERRY",
             "moves": [
                 "MOVE_AURA_SPHERE",
                 "MOVE_EXTREME_SPEED",
@@ -88,7 +88,7 @@
             "species": "SPECIES_GARCHOMP",
             "form": 0,
             "level": 62,
-            "item": "ITEM_SITRUS_BERRY",
+            "item": "ITEM_LIFE_ORB",
             "moves": [
                 "MOVE_DRAGON_RUSH",
                 "MOVE_EARTHQUAKE",

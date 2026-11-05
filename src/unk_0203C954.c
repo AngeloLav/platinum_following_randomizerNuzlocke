@@ -10,6 +10,10 @@
 
 #include "field/field_system.h"
 
+#include "constants/map_object.h"
+
+#include "follower_mon.h"
+
 #include "map_header_data.h"
 #include "map_object.h"
 #include "map_tile_behavior.h"
@@ -90,6 +94,12 @@ u8 sub_0203CA40(FieldSystem *fieldSystem, MapObject **param1)
     sub_0203C9D4(fieldSystem, param1);
 
     if (*param1 != NULL) {
+        // ENTRY P107: the follower still in its Poke Ball (after a door, a cutscene, the bicycle...) is hidden on a tile
+        // but must not be talked to - only the follower; other hidden objects keep the vanilla behaviour.
+        if (MapObject_CheckStatusFlag(*param1, MAP_OBJ_STATUS_HIDE) == TRUE && FollowerMon_IsFollowerMonObject(*param1)) {
+            return 0;
+        }
+
         if ((sub_02062D9C(*param1) == 1) && (sub_0203C9B0(fieldSystem->playerAvatar, *param1) == 1)) {
             return 1;
         }

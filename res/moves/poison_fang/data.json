@@ -8,7 +8,7 @@
     ],
     "class": "CLASS_PHYSICAL",
     "type": "TYPE_POISON",
-    "power": 50,
+    "power": 65,
     "accuracy": 100,
     "pp": 15,
     "effect": {

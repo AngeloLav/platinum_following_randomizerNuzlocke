@@ -9,8 +9,8 @@
     ],
     "class": "CLASS_SPECIAL",
     "type": "TYPE_WATER",
-    "power": 65,
-    "accuracy": 85,
+    "power": 95,
+    "accuracy": 90,
     "pp": 10,
     "effect": {
         "type": "BATTLE_EFFECT_LOWER_ACCURACY_HIT",

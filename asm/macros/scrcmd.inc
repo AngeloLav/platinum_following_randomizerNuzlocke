@@ -5027,6 +5027,31 @@
     .short SCRCMD_FOLLOWERMONHEALRESPAWN
     .endm
 
+    // ENTRY P96: Pokemon Center (HG ScrCmd_599): the follower hops onto the counter in front of the player and goes into
+    // its ball; it comes out again on the player's next step after the script. Waits until it is done.
+    .macro FollowerMonPokecenterHop
+    .short SCRCMD_FOLLOWERMONPOKECENTERHOP
+    .endm
+
+    // ENTRY P105: a door the script opened (Pokemon Center 2F Union Room / Colosseum): the follower goes into its ball
+    // behind the player like at a normal door. Waits until it is hidden.
+    .macro FollowerMonEnterDoor
+    .short SCRCMD_FOLLOWERMONENTERDOOR
+    .endm
+
+    // ENTRY P106: run before a form change: destVar = TRUE (and the follower keeps its look until FollowerMonHealRespawn)
+    // if the follower is out and is that species.
+    .macro FollowerMonFormChangeBegin species, destVar
+    .short SCRCMD_FOLLOWERMONFORMCHANGEBEGIN
+    .short \species
+    .short \destVar
+    .endm
+
+    // ENTRY P107: after the form change (screen black): the follower takes its new form where it stands. Waits until shown.
+    .macro FollowerMonFormChangeEnd
+    .short SCRCMD_FOLLOWERMONFORMCHANGEEND
+    .endm
+
 
 
     .macro GoToIfLt varID, valueOrVarID, offset

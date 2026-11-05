@@ -16,6 +16,7 @@
 #include "inlines.h"
 #include "item.h"
 #include "map_header.h"
+#include "math_util.h"
 #include "party.h"
 #include "pc_boxes.h"
 #include "pokemon.h"
@@ -112,6 +113,13 @@ BOOL ScrCmd_GiveEgg(ScriptContext *ctx)
         int specialMetLoc = SpecialMetLoc_GetId(1, eggGiver);
         species = RunGame_RandomSpecies(RUN_SOURCE_EGG, runEventKey, 0, species);
         Egg_CreateEgg(egg, species, 1, trainer, 3, specialMetLoc);
+
+        // HG SYNC (port of PokeHeartGold ENTRY DA): a gift Deoxys egg (Cynthia's, which was Togepi) gets a random forme -
+        // Normal / Attack / Defense / Speed, uniform - which the hatched Deoxys keeps.
+        if (species == SPECIES_DEOXYS) {
+            u8 form = LCRNG_Next() % DEOXYS_FORM_COUNT;
+            Pokemon_SetValue(egg, MON_DATA_FORM, &form);
+        }
 
         RunGame_SetGiftContext(RUN_SOURCE_EGG, runEventKey);
         if (RunGame_AcceptScriptGift(egg)) RunGame_SetGiftResult(Party_AddPokemon(party, egg));

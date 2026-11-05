@@ -10,7 +10,7 @@
     "type": "TYPE_NORMAL",
     "power": 1,
     "accuracy": 100,
-    "pp": 5,
+    "pp": 15,
     "effect": {
         "type": "BATTLE_EFFECT_SET_HP_EQUAL_TO_USER",
         "chance": 0

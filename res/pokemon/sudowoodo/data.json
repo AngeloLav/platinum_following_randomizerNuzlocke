@@ -1,11 +1,11 @@
 {
     "base_stats": {
-        "hp": 70,
-        "attack": 100,
-        "defense": 115,
+        "hp": 90,
+        "attack": 120,
+        "defense": 135,
         "speed": 30,
         "special_attack": 30,
-        "special_defense": 65
+        "special_defense": 95
     },
     "types": [ "TYPE_ROCK", "TYPE_ROCK" ],
     "catch_rate": 65,
@@ -39,18 +39,31 @@
             [ 1, "MOVE_FLAIL" ],
             [ 1, "MOVE_LOW_KICK" ],
             [ 1, "MOVE_ROCK_THROW" ],
+            [ 1, "MOVE_MIMIC" ],
             [ 6, "MOVE_FLAIL" ],
             [ 9, "MOVE_LOW_KICK" ],
+            [ 9, "MOVE_FLAIL" ],
+            [ 10, "MOVE_FLAIL" ],
             [ 14, "MOVE_ROCK_THROW" ],
             [ 17, "MOVE_MIMIC" ],
+            [ 17, "MOVE_LOW_KICK" ],
+            [ 19, "MOVE_LOW_KICK" ],
             [ 22, "MOVE_BLOCK" ],
             [ 25, "MOVE_FAINT_ATTACK" ],
+            [ 25, "MOVE_ROCK_SLIDE" ],
+            [ 28, "MOVE_ROCK_SLIDE" ],
             [ 30, "MOVE_ROCK_TOMB" ],
             [ 33, "MOVE_ROCK_SLIDE" ],
+            [ 33, "MOVE_BLOCK" ],
+            [ 37, "MOVE_FAINT_ATTACK" ],
             [ 38, "MOVE_SLAM" ],
             [ 41, "MOVE_SUCKER_PUNCH" ],
+            [ 41, "MOVE_FAINT_ATTACK" ],
             [ 46, "MOVE_DOUBLE_EDGE" ],
-            [ 49, "MOVE_HAMMER_ARM" ]
+            [ 46, "MOVE_SLAM" ],
+            [ 49, "MOVE_HAMMER_ARM" ],
+            [ 49, "MOVE_SLAM" ],
+            [ 57, "MOVE_DOUBLE_EDGE" ]
         ],
         "by_tm": [
             "TM01",

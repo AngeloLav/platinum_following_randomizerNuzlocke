@@ -19,7 +19,7 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_TWISTEDSPOON",
         "rare": "ITEM_TWISTEDSPOON"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_25",

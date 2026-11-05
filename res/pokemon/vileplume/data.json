@@ -1,10 +1,10 @@
 {
     "base_stats": {
-        "hp": 75,
+        "hp": 95,
         "attack": 80,
         "defense": 85,
         "speed": 50,
-        "special_attack": 100,
+        "special_attack": 120,
         "special_defense": 90
     },
     "types": [ "TYPE_GRASS", "TYPE_POISON" ],
@@ -38,6 +38,10 @@
             [ 1, "MOVE_AROMATHERAPY" ],
             [ 1, "MOVE_STUN_SPORE" ],
             [ 1, "MOVE_POISON_POWDER" ],
+            [ 1, "MOVE_ABSORB" ],
+            [ 1, "MOVE_SWEET_SCENT" ],
+            [ 1, "MOVE_PETAL_DANCE" ],
+            [ 44, "MOVE_PETAL_DANCE" ],
             [ 53, "MOVE_PETAL_DANCE" ],
             [ 65, "MOVE_SOLAR_BEAM" ]
         ],

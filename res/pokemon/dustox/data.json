@@ -1,15 +1,15 @@
 {
     "base_stats": {
-        "hp": 60,
-        "attack": 50,
-        "defense": 70,
-        "speed": 65,
-        "special_attack": 50,
-        "special_defense": 90
+        "hp": 95,
+        "attack": 90,
+        "defense": 110,
+        "speed": 85,
+        "special_attack": 90,
+        "special_defense": 120
     },
     "types": [ "TYPE_BUG", "TYPE_POISON" ],
     "catch_rate": 45,
-    "base_exp_reward": 161,
+    "base_exp_reward": 180,
     "ev_yields": {
         "hp": 0,
         "attack": 0,
@@ -38,12 +38,14 @@
             [ 10, "MOVE_CONFUSION" ],
             [ 13, "MOVE_GUST" ],
             [ 17, "MOVE_PROTECT" ],
+            [ 17, "MOVE_PSYWAVE" ],
             [ 20, "MOVE_MOONLIGHT" ],
             [ 24, "MOVE_PSYBEAM" ],
             [ 27, "MOVE_WHIRLWIND" ],
             [ 31, "MOVE_LIGHT_SCREEN" ],
             [ 34, "MOVE_SILVER_WIND" ],
             [ 38, "MOVE_TOXIC" ],
+            [ 39, "MOVE_SLUDGE_BOMB" ],
             [ 41, "MOVE_BUG_BUZZ" ]
         ],
         "by_tm": [

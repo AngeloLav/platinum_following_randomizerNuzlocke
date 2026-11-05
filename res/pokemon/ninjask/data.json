@@ -1,8 +1,8 @@
 {
     "base_stats": {
         "hp": 61,
-        "attack": 90,
-        "defense": 45,
+        "attack": 110,
+        "defense": 65,
         "speed": 160,
         "special_attack": 50,
         "special_defense": 50
@@ -34,11 +34,11 @@
     "icon_palette": 1,
     "learnset": {
         "by_level": [
-            [ 1, "MOVE_BUG_BITE" ],
             [ 1, "MOVE_SCRATCH" ],
             [ 1, "MOVE_HARDEN" ],
             [ 1, "MOVE_LEECH_LIFE" ],
             [ 1, "MOVE_SAND_ATTACK" ],
+            [ 1, "MOVE_BUG_BITE" ],
             [ 5, "MOVE_LEECH_LIFE" ],
             [ 9, "MOVE_SAND_ATTACK" ],
             [ 14, "MOVE_FURY_SWIPES" ],

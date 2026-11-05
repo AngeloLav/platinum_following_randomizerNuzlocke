@@ -1,10 +1,10 @@
 {
     "base_stats": {
-        "hp": 60,
+        "hp": 120,
         "attack": 95,
         "defense": 80,
         "speed": 30,
-        "special_attack": 60,
+        "special_attack": 80,
         "special_defense": 80
     },
     "types": [ "TYPE_BUG", "TYPE_GRASS" ],
@@ -41,13 +41,25 @@
             [ 1, "MOVE_LEECH_LIFE" ],
             [ 6, "MOVE_STUN_SPORE" ],
             [ 6, "MOVE_POISON_POWDER" ],
+            [ 7, "MOVE_STUN_SPORE" ],
             [ 11, "MOVE_LEECH_LIFE" ],
+            [ 13, "MOVE_POISON_POWDER" ],
             [ 17, "MOVE_SPORE" ],
+            [ 19, "MOVE_LEECH_LIFE" ],
             [ 22, "MOVE_SLASH" ],
+            [ 27, "MOVE_SPORE" ],
+            [ 28, "MOVE_SPORE" ],
             [ 30, "MOVE_GROWTH" ],
+            [ 35, "MOVE_SLASH" ],
+            [ 37, "MOVE_SLASH" ],
             [ 39, "MOVE_GIGA_DRAIN" ],
+            [ 43, "MOVE_GROWTH" ],
+            [ 46, "MOVE_GROWTH" ],
             [ 47, "MOVE_AROMATHERAPY" ],
-            [ 55, "MOVE_X_SCISSOR" ]
+            [ 51, "MOVE_GIGA_DRAIN" ],
+            [ 55, "MOVE_X_SCISSOR" ],
+            [ 55, "MOVE_GIGA_DRAIN" ],
+            [ 59, "MOVE_AROMATHERAPY" ]
         ],
         "by_tm": [
             "TM06",

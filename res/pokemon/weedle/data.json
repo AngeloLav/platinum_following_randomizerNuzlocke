@@ -9,7 +9,7 @@
     },
     "types": [ "TYPE_BUG", "TYPE_POISON" ],
     "catch_rate": 255,
-    "base_exp_reward": 52,
+    "base_exp_reward": 74,
     "ev_yields": {
         "hp": 0,
         "attack": 0,
@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "rare": "ITEM_POISON_BARB"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 15,
@@ -36,6 +36,8 @@
         "by_level": [
             [ 1, "MOVE_POISON_STING" ],
             [ 1, "MOVE_STRING_SHOT" ],
+            [ 1, "MOVE_LEECH_LIFE" ],
+            [ 1, "MOVE_TACKLE" ],
             [ 15, "MOVE_BUG_BITE" ]
         ],
         "by_tm": [  ],

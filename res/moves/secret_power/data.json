@@ -9,9 +9,9 @@
     ],
     "class": "CLASS_PHYSICAL",
     "type": "TYPE_NORMAL",
-    "power": 70,
+    "power": 80,
     "accuracy": 100,
-    "pp": 20,
+    "pp": 25,
     "effect": {
         "type": "BATTLE_EFFECT_SECRET_POWER",
         "chance": 30

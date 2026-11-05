@@ -1,9 +1,9 @@
 {
     "base_stats": {
-        "hp": 65,
-        "attack": 80,
+        "hp": 85,
+        "attack": 95,
         "defense": 140,
-        "speed": 70,
+        "speed": 90,
         "special_attack": 40,
         "special_defense": 70
     },
@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "rare": "ITEM_METAL_COAT"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 25,
@@ -38,16 +38,29 @@
             [ 1, "MOVE_PECK" ],
             [ 6, "MOVE_SAND_ATTACK" ],
             [ 9, "MOVE_SWIFT" ],
+            [ 10, "MOVE_SAND_ATTACK" ],
             [ 12, "MOVE_AGILITY" ],
+            [ 13, "MOVE_SWIFT" ],
+            [ 13, "MOVE_SAND_ATTACK" ],
+            [ 16, "MOVE_AGILITY" ],
             [ 17, "MOVE_FURY_ATTACK" ],
+            [ 19, "MOVE_SWIFT" ],
             [ 20, "MOVE_FEINT" ],
             [ 23, "MOVE_AIR_CUTTER" ],
+            [ 25, "MOVE_AGILITY" ],
+            [ 26, "MOVE_FURY_ATTACK" ],
             [ 28, "MOVE_SPIKES" ],
+            [ 29, "MOVE_AIR_CUTTER" ],
             [ 31, "MOVE_METAL_SOUND" ],
+            [ 32, "MOVE_STEEL_WING" ],
             [ 34, "MOVE_STEEL_WING" ],
+            [ 37, "MOVE_FURY_ATTACK" ],
             [ 39, "MOVE_AIR_SLASH" ],
             [ 42, "MOVE_SLASH" ],
-            [ 45, "MOVE_NIGHT_SLASH" ]
+            [ 42, "MOVE_SPIKES" ],
+            [ 45, "MOVE_NIGHT_SLASH" ],
+            [ 45, "MOVE_METAL_SOUND" ],
+            [ 49, "MOVE_STEEL_WING" ]
         ],
         "by_tm": [
             "TM05",

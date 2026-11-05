@@ -455,7 +455,7 @@
     },
     {
       "id": "pl_msg_pokedex_registered",
-      "en_US": "Pokédex registration completed."
+      "en_US": "Ability: {STRVAR_1 5, 0, 0}"
     },
     {
       "id": "pl_msg_pokedex_normalforme",

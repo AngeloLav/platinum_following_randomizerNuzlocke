@@ -34,8 +34,8 @@
     "icon_palette": 1,
     "learnset": {
         "by_level": [
-            [ 1, "MOVE_RAZOR_LEAF" ],
             [ 1, "MOVE_POUND" ],
+            [ 1, "MOVE_RAZOR_LEAF" ],
             [ 3, "MOVE_HARDEN" ],
             [ 7, "MOVE_GROWTH" ],
             [ 13, "MOVE_NATURE_POWER" ],

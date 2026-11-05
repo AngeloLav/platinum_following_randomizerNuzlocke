@@ -19,8 +19,8 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "common": "ITEM_ORAN_BERRY",
+        "rare": "ITEM_SITRUS_BERRY"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 20,
@@ -39,13 +39,25 @@
             [ 1, "MOVE_LEER" ],
             [ 1, "MOVE_LICK" ],
             [ 1, "MOVE_FAKE_TEARS" ],
+            [ 7, "MOVE_LICK" ],
             [ 8, "MOVE_FURY_SWIPES" ],
+            [ 8, "MOVE_LICK" ],
+            [ 13, "MOVE_FURY_SWIPES" ],
             [ 15, "MOVE_FAINT_ATTACK" ],
+            [ 15, "MOVE_FURY_SWIPES" ],
+            [ 19, "MOVE_FAKE_TEARS" ],
             [ 22, "MOVE_SWEET_SCENT" ],
+            [ 22, "MOVE_FAINT_ATTACK" ],
+            [ 25, "MOVE_FAINT_ATTACK" ],
             [ 29, "MOVE_SLASH" ],
+            [ 29, "MOVE_REST" ],
+            [ 31, "MOVE_REST" ],
             [ 36, "MOVE_CHARM" ],
+            [ 36, "MOVE_SLASH" ],
+            [ 37, "MOVE_SLASH" ],
             [ 43, "MOVE_REST" ],
             [ 43, "MOVE_SNORE" ],
+            [ 49, "MOVE_THRASH" ],
             [ 50, "MOVE_THRASH" ],
             [ 57, "MOVE_FLING" ]
         ],

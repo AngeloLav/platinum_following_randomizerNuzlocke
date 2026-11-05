@@ -1,10 +1,10 @@
 {
     "base_stats": {
-        "hp": 70,
-        "attack": 115,
+        "hp": 90,
+        "attack": 125,
         "defense": 60,
         "speed": 55,
-        "special_attack": 115,
+        "special_attack": 125,
         "special_defense": 60
     },
     "types": [ "TYPE_GRASS", "TYPE_DARK" ],
@@ -48,9 +48,13 @@
             [ 29, "MOVE_FAINT_ATTACK" ],
             [ 35, "MOVE_SPIKES" ],
             [ 41, "MOVE_SUCKER_PUNCH" ],
+            [ 41, "MOVE_NEEDLE_ARM" ],
             [ 47, "MOVE_PAYBACK" ],
+            [ 47, "MOVE_COTTON_SPORE" ],
             [ 53, "MOVE_NEEDLE_ARM" ],
+            [ 53, "MOVE_SANDSTORM" ],
             [ 59, "MOVE_COTTON_SPORE" ],
+            [ 59, "MOVE_DESTINY_BOND" ],
             [ 65, "MOVE_SANDSTORM" ],
             [ 71, "MOVE_DESTINY_BOND" ]
         ],

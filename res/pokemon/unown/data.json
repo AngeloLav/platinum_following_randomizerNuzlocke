@@ -1,15 +1,15 @@
 {
     "base_stats": {
-        "hp": 48,
-        "attack": 72,
+        "hp": 68,
+        "attack": 102,
         "defense": 48,
-        "speed": 48,
-        "special_attack": 72,
+        "speed": 68,
+        "special_attack": 102,
         "special_defense": 48
     },
     "types": [ "TYPE_PSYCHIC", "TYPE_PSYCHIC" ],
     "catch_rate": 225,
-    "base_exp_reward": 61,
+    "base_exp_reward": 111,
     "ev_yields": {
         "hp": 0,
         "attack": 1,

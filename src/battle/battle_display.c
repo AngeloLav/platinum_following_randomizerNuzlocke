@@ -297,7 +297,12 @@ void BattleDisplay_InitTaskSetEncounter(BattleSystem *battleSys, BattlerData *ba
     monEncounterData->cryMod = message->cryModulation;
     monEncounterData->battlerType = battlerData->battlerType;
     monEncounterData->nature = Pokemon_GetNatureOf(message->personality);
-    monEncounterData->isShiny = message->isShiny;
+    // COLOR MOD (port of PokeHeartGold ENTRY AD/AI/AJ): disable the wild-encounter shiny sparkle burst
+    // (Task_SetEncounter/Task_SetGiratinaEncounter check this field to decide whether to play the star
+    // MoveAnimation). The sprite's PALETTE is unaffected - it was already selected a few lines above via
+    // BuildPokemonSpriteTemplate using the local `isShiny` var (still `message->isShiny`, untouched), so
+    // shiny mons keep their correct rotated-shiny color; only the decorative star burst is skipped.
+    monEncounterData->isShiny = FALSE;
 
     if (monEncounterData->face == FACE_FRONT && (BattleSystem_GetBattleStatusMask(battleSys) & BATTLE_STATUS_GIRATINA)) {
         SysTask_Start(Task_SetGiratinaEncounter, monEncounterData, 0);
@@ -375,7 +380,10 @@ void BattleDisplay_InitTaskShowEncounter(BattleSystem *battleSys, BattlerData *b
     monShowData->selectedPartySlot = message->selectedPartySlot;
     monShowData->nature = Pokemon_GetNatureOf(message->personality);
     monShowData->capturedBall = message->capturedBall;
-    monShowData->isShiny = message->isShiny;
+    // COLOR MOD (port of PokeHeartGold ENTRY AD/AI/AJ): disable the send-out shiny sparkle burst, see the
+    // identical change/comment in BattleDisplay_InitTaskSetEncounter above. Palette selection (a few lines
+    // above, via the local `isShiny` var) is untouched.
+    monShowData->isShiny = FALSE;
     monShowData->isQuickSendOut = 0;
 
     Sound_Set2PokemonCriesAllowed(TRUE);
@@ -418,7 +426,11 @@ void BattleDisplay_InitTaskShowPokemon(BattleSystem *battleSys, BattlerData *bat
     monShowData->selectedPartySlot = message->selectedPartySlot;
     monShowData->nature = Pokemon_GetNatureOf(message->personality);
     monShowData->capturedBall = message->capturedBall;
-    monShowData->isShiny = message->isShiny;
+    // COLOR MOD (port of PokeHeartGold ENTRY AD/AI/AJ): disable the send-out shiny sparkle burst, see the
+    // identical change/comment in BattleDisplay_InitTaskSetEncounter above. Palette selection (a few lines
+    // above, via the local `isShiny` var) is untouched. This covers both the player's own and the
+    // opponent's mon (both go through Task_ShowPokemon), matching HG ENTRY AJ's full fix.
+    monShowData->isShiny = FALSE;
     monShowData->isQuickSendOut = message->isQuickSendOut;
     monShowData->delay = 0;
     monShowData->isSubstitute = message->isSubstitute;

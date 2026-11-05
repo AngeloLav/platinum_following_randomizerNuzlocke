@@ -40,7 +40,10 @@
             [ 1, "MOVE_AURORA_BEAM" ],
             [ 1, "MOVE_PROTECT" ],
             [ 28, "MOVE_SPIKES" ],
-            [ 40, "MOVE_SPIKE_CANNON" ]
+            [ 36, "MOVE_SPIKES" ],
+            [ 40, "MOVE_SPIKE_CANNON" ],
+            [ 41, "MOVE_SPIKE_CANNON" ],
+            [ 43, "MOVE_SPIKE_CANNON" ]
         ],
         "by_tm": [
             "TM03",

@@ -1,9 +1,9 @@
 {
     "base_stats": {
-        "hp": 50,
+        "hp": 70,
         "attack": 120,
         "defense": 53,
-        "speed": 87,
+        "speed": 97,
         "special_attack": 35,
         "special_defense": 110
     },
@@ -19,7 +19,7 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_BLACK_BELT",
         "rare": "ITEM_NONE"
     },
     "gender_ratio": "GENDER_RATIO_MALE_ONLY",
@@ -37,17 +37,27 @@
             [ 1, "MOVE_REVENGE" ],
             [ 1, "MOVE_DOUBLE_KICK" ],
             [ 5, "MOVE_MEDITATE" ],
+            [ 6, "MOVE_MEDITATE" ],
             [ 9, "MOVE_ROLLING_KICK" ],
+            [ 11, "MOVE_ROLLING_KICK" ],
             [ 13, "MOVE_JUMP_KICK" ],
+            [ 16, "MOVE_JUMP_KICK" ],
             [ 17, "MOVE_BRICK_BREAK" ],
+            [ 20, "MOVE_BRICK_BREAK" ],
             [ 21, "MOVE_FOCUS_ENERGY" ],
             [ 25, "MOVE_FEINT" ],
+            [ 26, "MOVE_HI_JUMP_KICK" ],
             [ 29, "MOVE_HI_JUMP_KICK" ],
+            [ 31, "MOVE_MIND_READER" ],
             [ 33, "MOVE_MIND_READER" ],
+            [ 36, "MOVE_FORESIGHT" ],
             [ 37, "MOVE_FORESIGHT" ],
             [ 41, "MOVE_BLAZE_KICK" ],
+            [ 41, "MOVE_ENDURE" ],
             [ 45, "MOVE_ENDURE" ],
+            [ 46, "MOVE_MEGA_KICK" ],
             [ 49, "MOVE_MEGA_KICK" ],
+            [ 51, "MOVE_REVERSAL" ],
             [ 53, "MOVE_CLOSE_COMBAT" ],
             [ 57, "MOVE_REVERSAL" ]
         ],

@@ -1,10 +1,10 @@
 {
     "base_stats": {
         "hp": 1,
-        "attack": 90,
+        "attack": 130,
         "defense": 45,
-        "speed": 40,
-        "special_attack": 30,
+        "speed": 60,
+        "special_attack": 110,
         "special_defense": 30
     },
     "types": [ "TYPE_BUG", "TYPE_GHOST" ],
@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "rare": "ITEM_SILVERPOWDER"
     },
     "gender_ratio": "GENDER_RATIO_NO_GENDER",
     "hatch_cycles": 15,
@@ -43,8 +43,12 @@
             [ 25, "MOVE_SPITE" ],
             [ 31, "MOVE_CONFUSE_RAY" ],
             [ 38, "MOVE_SHADOW_SNEAK" ],
+            [ 38, "MOVE_SHADOW_BALL" ],
             [ 45, "MOVE_GRUDGE" ],
+            [ 45, "MOVE_EXTREME_SPEED" ],
+            [ 50, "MOVE_DESTINY_BOND" ],
             [ 52, "MOVE_HEAL_BLOCK" ],
+            [ 55, "MOVE_ENDEAVOR" ],
             [ 59, "MOVE_SHADOW_BALL" ]
         ],
         "by_tm": [

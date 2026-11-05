@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_LAGGING_TAIL"
+        "rare": "ITEM_KINGS_ROCK"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 20,
@@ -39,13 +39,24 @@
             [ 1, "MOVE_TACKLE" ],
             [ 6, "MOVE_GROWL" ],
             [ 11, "MOVE_WATER_GUN" ],
+            [ 13, "MOVE_WATER_GUN" ],
             [ 15, "MOVE_CONFUSION" ],
+            [ 15, "MOVE_WATER_GUN" ],
+            [ 17, "MOVE_CONFUSION" ],
             [ 20, "MOVE_DISABLE" ],
+            [ 20, "MOVE_CONFUSION" ],
+            [ 24, "MOVE_DISABLE" ],
             [ 25, "MOVE_HEADBUTT" ],
             [ 29, "MOVE_WATER_PULSE" ],
+            [ 29, "MOVE_HEADBUTT" ],
+            [ 29, "MOVE_DISABLE" ],
             [ 34, "MOVE_ZEN_HEADBUTT" ],
+            [ 34, "MOVE_HEADBUTT" ],
+            [ 36, "MOVE_AMNESIA" ],
             [ 39, "MOVE_SLACK_OFF" ],
+            [ 40, "MOVE_PSYCHIC" ],
             [ 43, "MOVE_AMNESIA" ],
+            [ 47, "MOVE_PSYCH_UP" ],
             [ 48, "MOVE_PSYCHIC" ],
             [ 53, "MOVE_RAIN_DANCE" ],
             [ 57, "MOVE_PSYCH_UP" ]

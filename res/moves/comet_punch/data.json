@@ -7,9 +7,9 @@
         "five times in a row.\n"
     ],
     "class": "CLASS_PHYSICAL",
-    "type": "TYPE_NORMAL",
-    "power": 18,
-    "accuracy": 85,
+    "type": "TYPE_FIGHTING",
+    "power": 25,
+    "accuracy": 95,
     "pp": 15,
     "effect": {
         "type": "BATTLE_EFFECT_MULTI_HIT",

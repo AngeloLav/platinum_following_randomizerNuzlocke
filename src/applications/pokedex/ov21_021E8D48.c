@@ -27,6 +27,7 @@
 #include "sprite_transfer.h"
 #include "sprite_util.h"
 #include "string_gf.h"
+#include "string_template.h"
 #include "sys_task.h"
 #include "sys_task_manager.h"
 #include "text.h"
@@ -108,12 +109,12 @@ static void ov21_021E9560(UnkStruct_ov21_021E95B0 *param0, PokedexTextManager *t
 static void ov21_021E95B0(UnkStruct_ov21_021E95B0 *param0);
 static void ov21_021E95BC(UnkStruct_ov21_021E968C *param0, SpriteResourceCollection **param1, int param2, int param3, NARC *param4);
 static void ov21_021E95EC(UnkStruct_ov21_021E968C *param0, SpriteResourceCollection **param1);
-static void ov21_021E95F8(UnkStruct_ov21_021E968C *param0, SpriteList *param1, SpriteResourceCollection **param2, int param3, int param4);
+static void ov21_021E95F8(UnkStruct_ov21_021E968C *param0, SpriteList *param1, SpriteResourceCollection **param2, int param3, int param4, Pokemon *mon);
 static void ov21_021E968C(UnkStruct_ov21_021E968C *param0);
 static void ov21_021E96A8(BgConfig *param0, int param1, NARC *param2);
 static void ov21_021E97C4(BgConfig *param0, int param1, NARC *param2);
-static void ov21_021E9968(Window *param0, int param1, int param2);
-static void ov21_021E998C(Window *param0, enum HeapID heapID);
+static void ov21_021E9968(Window *param0, int param1, int param2, Pokemon *mon);
+static void ov21_021E998C(Window *param0, enum HeapID heapID, Pokemon *mon);
 static void ov21_021E9A0C(int param0);
 static void ov21_021E9A38(void);
 static void ov21_021E9A40(UnkStruct_ov21_021E9A9C *param0, enum HeapID heapID, int param2, NARC *param3);
@@ -229,12 +230,12 @@ static void ov21_021E8E0C(UnkStruct_ov21_021E8D48 *param0, const PokedexEntryScr
     }
 
     ov21_021E95BC(&param0->unk_200, param0->unk_1A0, param0->unk_220, dexEntryScreenParams->heapID, v1);
-    ov21_021E95F8(&param0->unk_200, param0->unk_19C, param0->unk_1A0, dexEntryScreenParams->heapID, param0->unk_220);
+    ov21_021E95F8(&param0->unk_200, param0->unk_19C, param0->unk_1A0, dexEntryScreenParams->heapID, param0->unk_220, dexEntryScreenParams->mon);
     ov21_021E9504(&param0->unk_1F8, param0->unk_19C, param0->unk_1A0, dexEntryScreenParams->heapID, param0->unk_200.unk_08);
     ov21_021E9560(&param0->unk_1F8, param0->unk_1B0, dexEntryScreenParams->heapID, param0->unk_220, param0->unk_1B4.spriteResource[1]);
     ov21_021E96A8(param0->unk_00, dexEntryScreenParams->heapID, v1);
     ov21_021E97C4(param0->unk_00, dexEntryScreenParams->heapID, v1);
-    ov21_021E9968(param0->unk_04, dexEntryScreenParams->heapID, param0->unk_220);
+    ov21_021E9968(param0->unk_04, dexEntryScreenParams->heapID, param0->unk_220, dexEntryScreenParams->mon);
     ov21_021E9A40(&param0->unk_228, dexEntryScreenParams->heapID, dexEntryScreenParams->hasNationalDex, v1);
 
     param0->unk_248 = 1;
@@ -569,12 +570,24 @@ static void ov21_021E95EC(UnkStruct_ov21_021E968C *param0, SpriteResourceCollect
     ov21_021E93C4(param0->unk_08, param1);
 }
 
-static void ov21_021E95F8(UnkStruct_ov21_021E968C *param0, SpriteList *param1, SpriteResourceCollection **param2, int param3, int param4)
+// ENTRY P88: on the catch registration screen (mon = the Pokemon just caught) the type icons show that Pokemon's own
+// types - MON_DATA_TYPE_1/2, i.e. the custom IV types (HP IV -> type 1, Speed IV -> type 2) and a donated Multitype
+// plate type - instead of the species' default types, matching the "Ability: <name>" banner (ENTRY P83).
+static void ov21_021E95F8(UnkStruct_ov21_021E968C *param0, SpriteList *param1, SpriteResourceCollection **param2, int param3, int param4, Pokemon *mon)
 {
     SpriteListTemplate v0;
     SpriteResourcesHeader v1;
-    int type1 = SpeciesData_GetSpeciesValue(param4, SPECIES_DATA_TYPE_1);
-    int type2 = SpeciesData_GetSpeciesValue(param4, SPECIES_DATA_TYPE_2);
+    int type1;
+    int type2;
+
+    if (mon != NULL) {
+        type1 = Pokemon_GetValue(mon, MON_DATA_TYPE_1, NULL);
+        type2 = Pokemon_GetValue(mon, MON_DATA_TYPE_2, NULL);
+    } else {
+        type1 = SpeciesData_GetSpeciesValue(param4, SPECIES_DATA_TYPE_1);
+        type2 = SpeciesData_GetSpeciesValue(param4, SPECIES_DATA_TYPE_2);
+    }
+
     type1 = PokedexGraphics_GetAnimIDfromType(type1);
     type2 = PokedexGraphics_GetAnimIDfromType(type2);
 
@@ -722,20 +735,30 @@ static BOOL ov21_021E9948(PaletteData *param0, PokemonSprite *param1)
     return 0;
 }
 
-static void ov21_021E9968(Window *param0, int param1, int param2)
+static void ov21_021E9968(Window *param0, int param1, int param2, Pokemon *mon)
 {
     InfoMain_RenderHeightWeightEntry(param0, param2, param1, 0, TEXT_COLOR(2, 1, 0));
-    ov21_021E998C(param0, param1);
+    ov21_021E998C(param0, param1, mon);
 }
 
-static void ov21_021E998C(Window *param0, enum HeapID heapID)
+// HG SYNC (port of PokeHeartGold ENTRY CH): the banner at the top of the catch-time Pokedex registration screen used to
+// read "Pokedex registration completed."; it now reads "Ability: <name>" for the Pokemon that was just caught (its
+// effective ability, ability donor included - MON_DATA_ABILITY). pl_msg_pokedex_registered is only used here, so its
+// text was changed to that template. Same position, font and colour as before.
+static void ov21_021E998C(Window *param0, enum HeapID heapID, Pokemon *mon)
 {
     String *v0 = String_Init(64, heapID);
+    String *format = String_Init(64, heapID);
+    StringTemplate *strTemplate = StringTemplate_Default(heapID);
     MessageLoader *pokedexMessageBank = MessageLoader_Init(MSG_LOADER_PRELOAD_ENTIRE_BANK, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_POKEDEX, heapID);
 
-    MessageLoader_GetString(pokedexMessageBank, pl_msg_pokedex_registered, v0);
+    MessageLoader_GetString(pokedexMessageBank, pl_msg_pokedex_registered, format);
+    StringTemplate_SetAbilityName(strTemplate, 0, mon != NULL ? Pokemon_GetValue(mon, MON_DATA_ABILITY, NULL) : ABILITY_NONE);
+    StringTemplate_Format(strTemplate, v0, format);
     Text_AddPrinterWithParamsAndColor(param0, FONT_SYSTEM, v0, 32, 0, TEXT_SPEED_INSTANT, TEXT_COLOR(3, 4, 0), NULL);
 
+    StringTemplate_Free(strTemplate);
+    String_Free(format);
     String_Free(v0);
     MessageLoader_Free(pokedexMessageBank);
 }

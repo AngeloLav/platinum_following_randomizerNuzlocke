@@ -1434,6 +1434,18 @@ static BOOL BtlCmd_PrintAttackMessage(BattleSystem *battleSys, BattleContext *ba
     battleCtx->battleStatusMask |= SYSCTL_SKIP_ATTACK_MESSAGE; // don't show on future hits
     battleCtx->battleStatusMask2 |= SYSCTL_ATTACK_MESSAGE_SHOWN;
 
+    // ENTRY P99: an Arceus that changed type for this move (BattleControllerPlayer_TryMove) transforms right after
+    // "<attacker> used <move>!", before the move animation or the "It doesn't affect..." message.
+    if (battleCtx->arceusTransformPending) {
+        int battler = battleCtx->arceusTransformPending - 1;
+
+        battleCtx->arceusTransformPending = 0;
+
+        if (battler == battleCtx->defender) {
+            BattleScript_Call(battleCtx, NARC_INDEX_BATTLE__SKILL__SUB_SEQ, subscript_arceus_transform);
+        }
+    }
+
     return FALSE;
 }
 
@@ -5612,6 +5624,7 @@ static BOOL BtlCmd_EndOfTurnWeatherEffect(BattleSystem *battleSys, BattleContext
             && type1 != TYPE_GROUND && type2 != TYPE_GROUND
             && battleCtx->battleMons[battler].curHP
             && Battler_Ability(battleCtx, battler) != ABILITY_SAND_VEIL
+            && Battler_Ability(battleCtx, battler) != ABILITY_SAND_STREAM // HG SYNC (ENTRY BA item 1): no damage from its own sandstorm
             && (battleCtx->battleMons[battler].moveEffectsMask & MOVE_EFFECT_NO_WEATHER_DAMAGE) == FALSE) {
             battleCtx->msgMoveTemp = MOVE_SANDSTORM;
             battleCtx->hpCalcTemp = BattleSystem_Divide(battleCtx->battleMons[battler].maxHP * -1, 16);
@@ -5639,7 +5652,8 @@ static BOOL BtlCmd_EndOfTurnWeatherEffect(BattleSystem *battleSys, BattleContext
                 }
             } else if (type1 != TYPE_ICE
                 && type2 != TYPE_ICE
-                && Battler_Ability(battleCtx, battler) != ABILITY_SNOW_CLOAK) {
+                && Battler_Ability(battleCtx, battler) != ABILITY_SNOW_CLOAK
+                && Battler_Ability(battleCtx, battler) != ABILITY_SNOW_WARNING) { // HG SYNC (ENTRY BA item 1): no damage from its own hail
                 battleCtx->msgMoveTemp = MOVE_HAIL;
                 battleCtx->hpCalcTemp = BattleSystem_Divide(battleCtx->battleMons[battler].maxHP * -1, 16);
             }
@@ -7833,7 +7847,7 @@ static BOOL BtlCmd_GenerateEndOfBattleItem(BattleSystem *battleSys, BattleContex
             && species != SPECIES_NONE
             && species != SPECIES_EGG
             && item == ITEM_NONE
-            && BattleSystem_RandNext(battleSys) % 10 == 0) {
+            && BattleSystem_RandNext(battleSys) % 3 == 0) { // QOL (2026-10-11): Pickup 1 in 3 per battle (vanilla 1 in 10)
             rnd = BattleSystem_RandNext(battleSys) % 100;
 
             // determine what offset of the sliding table to start from
@@ -10555,12 +10569,12 @@ static void BattleScript_CatchMonTask(SysTask *task, void *inData)
                     PaletteData_StartFade(paletteData, PLTTBUF_MAIN_BG_F | PLTTBUF_SUB_BG_F | PLTTBUF_MAIN_OBJ_F | PLTTBUF_SUB_OBJ_F, 0xFFFF, 1, 0, 16, 0);
                     PokemonSpriteManager_StartFadeAll(monSpriteMan, 0, 16, 0, 0);
                     data->seqNum = SEQ_CATCH_MON_DONE;
-                } else if (BattleSystem_HasCaughtSpecies(data->battleSys, Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL))) {
-                    sub_02015738(BattleSystem_GetPaletteAnimator(data->battleSys), 1);
-                    PaletteData_StartFade(paletteData, PLTTBUF_MAIN_BG_F | PLTTBUF_MAIN_OBJ_F, 0xFFFF, 1, 0, 16, 0);
-                    PokemonSpriteManager_StartFadeAll(monSpriteMan, 0, 16, 0, 0);
-                    data->seqNum = SEQ_CATCH_MON_SKIP_POKEDEX;
                 } else {
+                    // HG SYNC (port of PokeHeartGold ENTRY CD/CN): the Pokedex registration screen now plays on EVERY
+                    // catch - an already-caught species used to skip straight to the nickname prompt
+                    // (SEQ_CATCH_MON_SKIP_POKEDEX, now unused). The message still says "added to the Pokedex" for a repeat
+                    // catch (same accepted wording quirk as HG). The trainer-score bonus for a new species is still only
+                    // given for a species not caught before.
                     BattleMessage msg;
 
                     msg.id = BattleStrings_Text_PokemonsDataWasAddedToThePokedex;
@@ -10570,7 +10584,9 @@ static void BattleScript_CatchMonTask(SysTask *task, void *inData)
                     data->tmpData[CATCH_MON_DELAY] = 30;
                     data->seqNum = SEQ_CATCH_MON_FADE_FOR_POKEDEX;
 
-                    BattleSystem_TryIncrementTrainerScoreCaughtSpecies(data->battleSys);
+                    if (!BattleSystem_HasCaughtSpecies(data->battleSys, Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL))) {
+                        BattleSystem_TryIncrementTrainerScoreCaughtSpecies(data->battleSys);
+                    }
                 }
             }
         }
@@ -10904,11 +10920,13 @@ static void BattleScript_CatchMonTask(SysTask *task, void *inData)
     }
 }
 
+// HG SYNC (port of PokeHeartGold ENTRY AY item 2): every ball's catch bonus doubled (base-10 fixed point, 10 = x1).
+// Was 20/15/10/15 (Ultra x2, Great x1.5, Poke x1, Safari x1.5).
 static const u8 sBasicBallMod[] = {
-    20, // ITEM_ULTRA_BALL
-    15, // ITEM_GREAT_BALL
-    10, // ITEM_POKE_BALL
-    15, // ITEM_SAFARI_BALL
+    40, // ITEM_ULTRA_BALL
+    30, // ITEM_GREAT_BALL
+    20, // ITEM_POKE_BALL
+    30, // ITEM_SAFARI_BALL
 };
 
 static const struct Fraction sSafariCatchRate[] = {
@@ -10954,7 +10972,7 @@ static int BattleScript_CalcCatchShakes(BattleSystem *battleSys, BattleContext *
         speciesMod = SpeciesData_GetSpeciesValue(battleCtx->battleMons[battleCtx->defender].species, SPECIES_DATA_CATCH_RATE);
     }
 
-    u32 ballMod = 10;
+    u32 ballMod = 20; // HG SYNC (ENTRY AY): doubled from 10 (x1) - the "no bonus" rate of every special ball
     int type1 = BattleMon_Get(battleCtx, battleCtx->defender, BATTLEMON_TYPE_1, NULL);
     int type2 = BattleMon_Get(battleCtx, battleCtx->defender, BATTLEMON_TYPE_2, NULL);
 
@@ -10963,13 +10981,13 @@ static int BattleScript_CalcCatchShakes(BattleSystem *battleSys, BattleContext *
         case ITEM_NET_BALL:
             if (type1 == TYPE_WATER || type2 == TYPE_WATER
                 || type1 == TYPE_BUG || type2 == TYPE_BUG) {
-                ballMod = 30;
+                ballMod = 60; // HG SYNC (ENTRY AY): doubled from 30
             }
             break;
 
         case ITEM_DIVE_BALL:
             if (BattleSystem_GetTerrain(battleSys) == TERRAIN_WATER) {
-                ballMod = 35;
+                ballMod = 70; // HG SYNC (ENTRY AY): doubled from 35
             }
             break;
 
@@ -10980,12 +10998,14 @@ static int BattleScript_CalcCatchShakes(BattleSystem *battleSys, BattleContext *
                 if (ballMod < 10) {
                     ballMod = 10;
                 }
+
+                ballMod *= 2; // HG SYNC (ENTRY AY): the whole computed bonus doubled (x2..x8)
             }
             break;
 
         case ITEM_REPEAT_BALL:
             if (BattleSystem_HasCaughtSpecies(battleSys, battleCtx->battleMons[battleCtx->defender].species) == TRUE) {
-                ballMod = 30;
+                ballMod = 60; // HG SYNC (ENTRY AY): doubled from 30
             }
             break;
 
@@ -10994,20 +11014,28 @@ static int BattleScript_CalcCatchShakes(BattleSystem *battleSys, BattleContext *
             if (ballMod > 40) {
                 ballMod = 40;
             }
+
+            ballMod *= 2; // HG SYNC (ENTRY AY): the whole computed bonus doubled (x2..x8)
             break;
 
         case ITEM_DUSK_BALL:
             if (BattleSystem_GetTime(battleSys) == TIMEOFDAY_NIGHT
                 || BattleSystem_GetTime(battleSys) == TIMEOFDAY_LATE_NIGHT
                 || BattleSystem_GetTerrain(battleSys) == TERRAIN_CAVE) {
-                ballMod = 35;
+                ballMod = 70; // HG SYNC (ENTRY AY): doubled from 35
             }
             break;
 
         case ITEM_QUICK_BALL:
             if (battleCtx->totalTurns < 1) {
-                ballMod = 40;
+                ballMod = 80; // HG SYNC (ENTRY AY): doubled from 40
             }
+            break;
+
+        case ITEM_PREMIER_BALL:
+            // HG SYNC (port of PokeHeartGold ENTRY BA item 3): Premier Ball gets its own bonus, 1.5x a (doubled)
+            // Poke Ball = 3x the species' base catch rate, to go with the reworked bulk-purchase bonus.
+            ballMod = 30;
             break;
         }
     } else {
@@ -11843,6 +11871,7 @@ static int BattleMessage_AbilityTag(BattleSystem *battleSys, BattleContext *batt
         battler = BattleScript_Battler(battleSys, battleCtx, battlerIn);
         ability = battleCtx->battleMons[battler].ability;
         BattleAI_SetAbility(battleCtx, battler, ability);
+        BattleAI_ObserveAbility(battleSys, battleCtx, battler, ability); // ENTRY P109: remembered through switching
     }
 
     return ability;

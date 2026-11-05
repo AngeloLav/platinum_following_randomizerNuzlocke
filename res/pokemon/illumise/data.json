@@ -44,6 +44,7 @@
             [ 29, "MOVE_FLATTER" ],
             [ 33, "MOVE_HELPING_HAND" ],
             [ 37, "MOVE_ZEN_HEADBUTT" ],
+            [ 37, "MOVE_COVET" ],
             [ 41, "MOVE_BUG_BUZZ" ],
             [ 45, "MOVE_COVET" ]
         ],

@@ -11,7 +11,7 @@
     "type": "TYPE_FIRE",
     "power": 150,
     "accuracy": 100,
-    "pp": 5,
+    "pp": 10,
     "effect": {
         "type": "BATTLE_EFFECT_DECREASE_POWER_WITH_LESS_USER_HP",
         "chance": 0

@@ -850,6 +850,10 @@ ScriptCommand(SCRCMD_FOLLOWERMONFIELDMOVE,                                 ScrCm
 ScriptCommand(SCRCMD_FOLLOWERMONHEALBEGIN,                                 ScrCmd_FollowerMonHealBegin) // ENTRY P87
 ScriptCommand(SCRCMD_FOLLOWERMONHEALCHECK,                                 ScrCmd_FollowerMonHealCheck) // ENTRY P87
 ScriptCommand(SCRCMD_FOLLOWERMONHEALRESPAWN,                               ScrCmd_FollowerMonHealRespawn) // ENTRY P87
+ScriptCommand(SCRCMD_FOLLOWERMONPOKECENTERHOP,                             ScrCmd_FollowerMonPokecenterHop) // ENTRY P96
+ScriptCommand(SCRCMD_FOLLOWERMONENTERDOOR,                                 ScrCmd_FollowerMonEnterDoor) // ENTRY P105
+ScriptCommand(SCRCMD_FOLLOWERMONFORMCHANGEBEGIN,                           ScrCmd_FollowerMonFormChangeBegin) // ENTRY P106
+ScriptCommand(SCRCMD_FOLLOWERMONFORMCHANGEEND,                             ScrCmd_FollowerMonFormChangeEnd) // ENTRY P107
 
 ScriptCommand(SCRCMD_GETRUNRULE, ScrCmd_GetRunRule)
 

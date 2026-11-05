@@ -15,6 +15,11 @@
 #define MAX_EVS_SINGLE_STAT 255
 #define MAX_EVS_ALL_STATS   510
 
+// COLOR MOD (port of PokeHeartGold ENTRY AD item 1): vanilla shiny odds are SHINY_ODDS/65536 = 8/65536
+// (1/8192). 32768 is exactly half of 65536, i.e. 50% of Pokemon are shiny. See
+// Pokemon_InlineIsPersonalityShiny in src/pokemon.c, the single place this is checked.
+#define SHINY_ODDS 32768 // Actual probability is SHINY_ODDS/65536
+
 #define MAX_CONTEST_STAT 255
 
 #define MAX_POKEMON_SHEEN    255

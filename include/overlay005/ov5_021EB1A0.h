@@ -12,6 +12,9 @@ void *FollowerBallRenderer_New(FieldEffectManager *fieldEffMan);
 void FollowerBallRenderer_Free(void *context);
 // Plays the release on the follower's tile and un-hides the follower when the ball opens (as HG does). Overlay 5 only.
 void FollowerMon_StartBallEffect(MapObject *mapObj);
+// ENTRY P96: HG's "back into the ball" effect: the follower shrinks for 4 frames, is hidden, the small ball stays 16
+// frames. If no effect can start the follower is hidden at once. Overlay 5 only.
+void FollowerMon_StartBallReturnEffect(MapObject *mapObj);
 
 Billboard *ov5_021EB1A0(MapObject *param0);
 void ov5_021EB2EC(MapObject *param0);

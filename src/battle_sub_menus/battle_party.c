@@ -1730,9 +1730,15 @@ BOOL BattlePartyTask_CheckIfSwitchingWithPartnersPokemon(BattleParty *battlePart
     return FALSE;
 }
 
+// HG SYNC (port of PokeHeartGold ENTRY BB item 2): HM moves can be forgotten like any other move when learning a new
+// one in battle too, so this check now always says "not an HM" (the old test is kept below, unreachable).
 static BOOL CheckSelectedMoveIsHM(BattleParty *battleParty)
 {
     u16 move;
+
+    if (TRUE) {
+        return FALSE;
+    }
 
     if (battleParty->context->selectedMoveSlot == MOVE_TO_LEARN_SLOT) {
         move = battleParty->context->moveToLearn;

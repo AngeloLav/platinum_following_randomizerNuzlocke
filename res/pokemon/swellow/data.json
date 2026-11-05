@@ -34,11 +34,11 @@
     "icon_palette": 2,
     "learnset": {
         "by_level": [
-            [ 1, "MOVE_PLUCK" ],
             [ 1, "MOVE_PECK" ],
             [ 1, "MOVE_GROWL" ],
             [ 1, "MOVE_FOCUS_ENERGY" ],
             [ 1, "MOVE_QUICK_ATTACK" ],
+            [ 1, "MOVE_PLUCK" ],
             [ 4, "MOVE_FOCUS_ENERGY" ],
             [ 8, "MOVE_QUICK_ATTACK" ],
             [ 13, "MOVE_WING_ATTACK" ],

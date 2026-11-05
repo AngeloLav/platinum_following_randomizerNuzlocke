@@ -1,11 +1,11 @@
 {
     "base_stats": {
-        "hp": 70,
-        "attack": 60,
-        "defense": 62,
-        "speed": 60,
-        "special_attack": 80,
-        "special_defense": 82
+        "hp": 90,
+        "attack": 100,
+        "defense": 102,
+        "speed": 90,
+        "special_attack": 120,
+        "special_defense": 102
     },
     "types": [ "TYPE_BUG", "TYPE_FLYING" ],
     "catch_rate": 75,
@@ -44,9 +44,15 @@
             [ 19, "MOVE_WATER_SPORT" ],
             [ 22, "MOVE_GUST" ],
             [ 26, "MOVE_SCARY_FACE" ],
+            [ 26, "MOVE_GUST" ],
+            [ 30, "MOVE_LEECH_LIFE" ],
             [ 33, "MOVE_STUN_SPORE" ],
+            [ 33, "MOVE_SCARY_FACE" ],
             [ 40, "MOVE_SILVER_WIND" ],
+            [ 40, "MOVE_STUN_SPORE" ],
             [ 47, "MOVE_AIR_SLASH" ],
+            [ 47, "MOVE_SILVER_WIND" ],
+            [ 53, "MOVE_WHIRLWIND" ],
             [ 54, "MOVE_WHIRLWIND" ],
             [ 61, "MOVE_BUG_BUZZ" ]
         ],

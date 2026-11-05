@@ -44,6 +44,7 @@
             [ 16, "MOVE_MUD_SHOT" ],
             [ 20, "MOVE_FORESIGHT" ],
             [ 25, "MOVE_MUD_BOMB" ],
+            [ 25, "MOVE_MUD_SPORT" ],
             [ 31, "MOVE_TAKE_DOWN" ],
             [ 37, "MOVE_MUDDY_WATER" ],
             [ 42, "MOVE_PROTECT" ],

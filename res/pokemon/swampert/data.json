@@ -1,10 +1,10 @@
 {
     "base_stats": {
-        "hp": 100,
+        "hp": 145,
         "attack": 110,
         "defense": 90,
         "speed": 60,
-        "special_attack": 85,
+        "special_attack": 105,
         "special_defense": 90
     },
     "types": [ "TYPE_WATER", "TYPE_GROUND" ],
@@ -44,6 +44,7 @@
             [ 16, "MOVE_MUD_SHOT" ],
             [ 20, "MOVE_FORESIGHT" ],
             [ 25, "MOVE_MUD_BOMB" ],
+            [ 25, "MOVE_MUD_SPORT" ],
             [ 31, "MOVE_TAKE_DOWN" ],
             [ 39, "MOVE_MUDDY_WATER" ],
             [ 46, "MOVE_PROTECT" ],

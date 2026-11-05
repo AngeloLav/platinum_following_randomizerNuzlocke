@@ -9,9 +9,9 @@
     ],
     "class": "CLASS_PHYSICAL",
     "type": "TYPE_BUG",
-    "power": 10,
-    "accuracy": 95,
-    "pp": 20,
+    "power": 15,
+    "accuracy": 98,
+    "pp": 35,
     "effect": {
         "type": "BATTLE_EFFECT_DOUBLE_POWER_EACH_TURN",
         "chance": 0

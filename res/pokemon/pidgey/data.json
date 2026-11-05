@@ -20,7 +20,7 @@
     },
     "held_items": {
         "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "rare": "ITEM_SHARP_BEAK"
     },
     "gender_ratio": "GENDER_RATIO_FEMALE_50",
     "hatch_cycles": 15,
@@ -38,14 +38,23 @@
             [ 5, "MOVE_SAND_ATTACK" ],
             [ 9, "MOVE_GUST" ],
             [ 13, "MOVE_QUICK_ATTACK" ],
+            [ 15, "MOVE_QUICK_ATTACK" ],
             [ 17, "MOVE_WHIRLWIND" ],
+            [ 19, "MOVE_WHIRLWIND" ],
             [ 21, "MOVE_TWISTER" ],
+            [ 21, "MOVE_WHIRLWIND" ],
             [ 25, "MOVE_FEATHER_DANCE" ],
+            [ 25, "MOVE_WING_ATTACK" ],
             [ 29, "MOVE_AGILITY" ],
+            [ 29, "MOVE_WING_ATTACK" ],
+            [ 31, "MOVE_FEATHER_DANCE" ],
             [ 33, "MOVE_WING_ATTACK" ],
             [ 37, "MOVE_ROOST" ],
+            [ 37, "MOVE_AGILITY" ],
+            [ 39, "MOVE_AGILITY" ],
             [ 41, "MOVE_TAILWIND" ],
             [ 45, "MOVE_MIRROR_MOVE" ],
+            [ 47, "MOVE_MIRROR_MOVE" ],
             [ 49, "MOVE_AIR_SLASH" ]
         ],
         "by_tm": [

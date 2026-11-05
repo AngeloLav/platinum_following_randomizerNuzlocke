@@ -1,10 +1,10 @@
 {
     "base_stats": {
-        "hp": 80,
+        "hp": 180,
         "attack": 135,
         "defense": 130,
         "speed": 70,
-        "special_attack": 95,
+        "special_attack": 125,
         "special_defense": 90
     },
     "types": [ "TYPE_STEEL", "TYPE_PSYCHIC" ],
@@ -38,18 +38,26 @@
             [ 1, "MOVE_TAKE_DOWN" ],
             [ 1, "MOVE_METAL_CLAW" ],
             [ 1, "MOVE_CONFUSION" ],
+            [ 1, "MOVE_SCARY_FACE" ],
             [ 20, "MOVE_METAL_CLAW" ],
             [ 20, "MOVE_CONFUSION" ],
             [ 24, "MOVE_SCARY_FACE" ],
+            [ 26, "MOVE_SCARY_FACE" ],
             [ 28, "MOVE_PURSUIT" ],
             [ 32, "MOVE_BULLET_PUNCH" ],
+            [ 32, "MOVE_PURSUIT" ],
             [ 36, "MOVE_PSYCHIC" ],
+            [ 38, "MOVE_PSYCHIC" ],
             [ 40, "MOVE_IRON_DEFENSE" ],
             [ 44, "MOVE_AGILITY" ],
+            [ 44, "MOVE_IRON_DEFENSE" ],
             [ 45, "MOVE_HAMMER_ARM" ],
             [ 53, "MOVE_METEOR_MASH" ],
+            [ 55, "MOVE_METEOR_MASH" ],
             [ 62, "MOVE_ZEN_HEADBUTT" ],
-            [ 71, "MOVE_HYPER_BEAM" ]
+            [ 66, "MOVE_AGILITY" ],
+            [ 71, "MOVE_HYPER_BEAM" ],
+            [ 77, "MOVE_HYPER_BEAM" ]
         ],
         "by_tm": [
             "TM06",

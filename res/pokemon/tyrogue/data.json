@@ -19,8 +19,8 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
-        "rare": "ITEM_NONE"
+        "common": "ITEM_BLACK_BELT",
+        "rare": "ITEM_BLACK_BELT"
     },
     "gender_ratio": "GENDER_RATIO_MALE_ONLY",
     "hatch_cycles": 25,

@@ -38,9 +38,12 @@
             [ 1, "MOVE_CHARM" ],
             [ 4, "MOVE_ENCORE" ],
             [ 7, "MOVE_SING" ],
+            [ 8, "MOVE_SING" ],
             [ 10, "MOVE_SWEET_KISS" ],
             [ 13, "MOVE_COPYCAT" ],
-            [ 16, "MOVE_MAGICAL_LEAF" ]
+            [ 13, "MOVE_SWEET_KISS" ],
+            [ 16, "MOVE_MAGICAL_LEAF" ],
+            [ 17, "MOVE_MAGICAL_LEAF" ]
         ],
         "by_tm": [
             "TM03",

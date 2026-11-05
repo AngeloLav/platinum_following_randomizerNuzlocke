@@ -41,14 +41,21 @@
             [ 20, "MOVE_METAL_CLAW" ],
             [ 20, "MOVE_CONFUSION" ],
             [ 24, "MOVE_SCARY_FACE" ],
+            [ 26, "MOVE_SCARY_FACE" ],
             [ 28, "MOVE_PURSUIT" ],
             [ 32, "MOVE_BULLET_PUNCH" ],
+            [ 32, "MOVE_PURSUIT" ],
             [ 36, "MOVE_PSYCHIC" ],
+            [ 38, "MOVE_PSYCHIC" ],
             [ 40, "MOVE_IRON_DEFENSE" ],
             [ 44, "MOVE_AGILITY" ],
+            [ 44, "MOVE_IRON_DEFENSE" ],
             [ 48, "MOVE_METEOR_MASH" ],
+            [ 50, "MOVE_METEOR_MASH" ],
             [ 52, "MOVE_ZEN_HEADBUTT" ],
-            [ 56, "MOVE_HYPER_BEAM" ]
+            [ 56, "MOVE_HYPER_BEAM" ],
+            [ 56, "MOVE_AGILITY" ],
+            [ 62, "MOVE_HYPER_BEAM" ]
         ],
         "by_tm": [
             "TM06",

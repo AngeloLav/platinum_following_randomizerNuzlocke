@@ -2662,14 +2662,28 @@ typedef struct FollowerBallRenderer {
     BOOL busy;
 } FollowerBallRenderer;
 
+// ENTRY P96: two kinds of effect share the renderer. RELEASE = out of the ball (HG variant 0, above). RETURN = back into
+// the ball, HG variant 3 (template ov01_022094C8: init ov01_02203820, tick ov01_02203890, draw ov01_022037E8): the
+// follower shrinks for 4 frames (scale 1/1, 1/2, 1/3, 1/4 on x and y), then it is hidden and the small ball stays on its
+// spot for 16 frames.
+enum FollowerBallMode {
+    FOLLOWER_BALL_MODE_RELEASE = 0,
+    FOLLOWER_BALL_MODE_RETURN,
+};
+
+#define FOLLOWER_BALL_RETURN_SHRINK_FRAMES 4
+#define FOLLOWER_BALL_RETURN_BALL_FRAMES   16
+
 typedef struct FollowerBallEffectParams {
     FollowerBallRenderer *renderer;
     MapObject *mapObj;
+    int mode;
 } FollowerBallEffectParams;
 
 typedef struct FollowerBallEffect {
     FollowerBallRenderer *renderer;
     MapObject *mapObj;
+    int mode;
     int state;
     int timer;
     int localID;
@@ -2708,6 +2722,16 @@ void FollowerBallRenderer_Free(void *context)
     FieldEffectManager_HeapFree(renderer);
 }
 
+static void FollowerBall_SetFollowerScale(MapObject *mapObj, fx32 scale)
+{
+    Billboard *billboard = ov5_021EB1A0(mapObj);
+
+    if (billboard != NULL) {
+        VecFx32 vec = { scale, scale, FX32_ONE };
+        Billboard_SetScale(billboard, &vec);
+    }
+}
+
 static BOOL FollowerBallEffect_Init(OverworldAnimManager *animMan, void *context)
 {
     FollowerBallEffect *effect = context;
@@ -2715,6 +2739,7 @@ static BOOL FollowerBallEffect_Init(OverworldAnimManager *animMan, void *context
 
     effect->renderer = params->renderer;
     effect->mapObj = params->mapObj;
+    effect->mode = params->mode;
     effect->state = 0;
     effect->timer = 0;
     effect->localID = MapObject_GetLocalID(params->mapObj);
@@ -2732,30 +2757,77 @@ static void FollowerBallEffect_Exit(OverworldAnimManager *animMan, void *context
     FollowerBallEffect *effect = context;
 
     effect->renderer->busy = FALSE;
-}
 
-static void FollowerBallEffect_Tick(OverworldAnimManager *animMan, void *context)
-{
-    FollowerBallEffect *effect = context;
-    MapObject *mapObj = effect->mapObj;
-
-    // The follower was deleted (map change, lead change to a species without a sprite, ...): just stop.
-    if (sub_02062764(mapObj, effect->localID, effect->mapHeaderID) == FALSE) {
-        FieldEffectManager_FinishAnimManager(animMan);
-        return;
+    // ENTRY P102: the return effect gives the follower its normal size back only now, while it is hidden (see
+    // FollowerBallEffect_TickReturn) - if the follower still exists.
+    if (effect->mode == FOLLOWER_BALL_MODE_RETURN && sub_02062764(effect->mapObj, effect->localID, effect->mapHeaderID) == TRUE) {
+        FollowerBall_SetFollowerScale(effect->mapObj, FX32_ONE);
     }
 
+    FollowerMon_SetWhiteFlash(FALSE); // ENTRY P101: never left white
+}
+
+static void FollowerBallEffect_TickRelease(OverworldAnimManager *animMan, FollowerBallEffect *effect)
+{
     if (effect->state == 0) {
         if (++effect->timer < FOLLOWER_BALL_FRAMES) {
             return;
         }
 
-        MapObject_SetHidden(mapObj, FALSE);
+        MapObject_SetHidden(effect->mapObj, FALSE);
         effect->state = 1;
     }
 
     if (Simple3D_UpdateAnim(&effect->renderer->burstAnim, FX32_ONE, FALSE) == TRUE) {
         FieldEffectManager_FinishAnimManager(animMan);
+    }
+}
+
+static void FollowerBallEffect_TickReturn(OverworldAnimManager *animMan, FollowerBallEffect *effect)
+{
+    if (effect->state == 0) {
+        effect->timer++;
+        FollowerBall_SetFollowerScale(effect->mapObj, FX_Div(FX32_ONE, effect->timer << FX32_SHIFT));
+
+        if (effect->timer >= FOLLOWER_BALL_RETURN_SHRINK_FRAMES) {
+            // ENTRY P102 (user, Rayquaza: "an additional flash of the full size rayquaza sprite in regular colors toward
+            // the end of the anim"): the hidden flag only reaches the billboard on the follower's next render update, so
+            // resetting the scale and the white palette here showed one full-size, normal-coloured frame. The billboard
+            // is switched off right now instead, and the scale / colours are restored in FollowerBallEffect_Exit.
+            Billboard *billboard = ov5_021EB1A0(effect->mapObj);
+
+            MapObject_SetHidden(effect->mapObj, TRUE);
+
+            if (billboard != NULL) {
+                Billboard_SetDrawFlag(billboard, FALSE);
+            }
+
+            effect->state = 1;
+            effect->timer = 0;
+        }
+
+        return;
+    }
+
+    if (++effect->timer >= FOLLOWER_BALL_RETURN_BALL_FRAMES) {
+        FieldEffectManager_FinishAnimManager(animMan);
+    }
+}
+
+static void FollowerBallEffect_Tick(OverworldAnimManager *animMan, void *context)
+{
+    FollowerBallEffect *effect = context;
+
+    // The follower was deleted (map change, lead change to a species without a sprite, ...): just stop.
+    if (sub_02062764(effect->mapObj, effect->localID, effect->mapHeaderID) == FALSE) {
+        FieldEffectManager_FinishAnimManager(animMan);
+        return;
+    }
+
+    if (effect->mode == FOLLOWER_BALL_MODE_RETURN) {
+        FollowerBallEffect_TickReturn(animMan, effect);
+    } else {
+        FollowerBallEffect_TickRelease(animMan, effect);
     }
 }
 
@@ -2766,7 +2838,11 @@ static void FollowerBallEffect_Render(OverworldAnimManager *animMan, void *conte
 
     OverworldAnimManager_GetPosition(animMan, &pos);
 
-    if (effect->state == 0) {
+    if (effect->mode == FOLLOWER_BALL_MODE_RETURN) {
+        if (effect->state == 1) {
+            Simple3D_DrawRenderObjWithPos(&effect->renderer->ballRenderObj, &pos);
+        }
+    } else if (effect->state == 0) {
         Simple3D_DrawRenderObjWithPos(&effect->renderer->ballRenderObj, &pos);
     } else {
         Simple3D_DrawRenderObjWithPos(&effect->renderer->burstRenderObj, &pos);
@@ -2781,14 +2857,14 @@ static const OverworldAnimManagerFuncs sFollowerBallEffectFuncs = {
     FollowerBallEffect_Render
 };
 
-void FollowerMon_StartBallEffect(MapObject *mapObj)
+// Returns FALSE if the effect could not start (no renderer on this map type, e.g. the Underground, or one already
+// running); the caller then shows/hides the follower directly.
+static BOOL FollowerBall_Start(MapObject *mapObj, int mode)
 {
     FieldEffectManager *fieldEffMan = MapObject_GetFieldEffectManager(mapObj);
 
-    // No renderer on this map type (Underground): just show the follower.
     if (fieldEffMan == NULL || FieldEffectManager_HasRenderer(fieldEffMan, FIELD_EFFECT_RENDERER_FOLLOWER_BALL) == FALSE) {
-        MapObject_SetHidden(mapObj, FALSE);
-        return;
+        return FALSE;
     }
 
     FollowerBallEffectParams params;
@@ -2796,16 +2872,35 @@ void FollowerMon_StartBallEffect(MapObject *mapObj)
 
     params.renderer = FieldEffectManager_GetRendererContext(fieldEffMan, FIELD_EFFECT_RENDERER_FOLLOWER_BALL);
     params.mapObj = mapObj;
+    params.mode = mode;
 
     if (params.renderer == NULL || params.renderer->busy) {
-        MapObject_SetHidden(mapObj, FALSE);
-        return;
+        return FALSE;
     }
 
     MapObject_GetPosPtr(mapObj, &pos);
     pos.z += FX32_ONE * 6;
 
-    if (FieldEffectManager_InitAnimManager(fieldEffMan, &sFollowerBallEffectFuncs, &pos, 0, &params, MapObject_CalculateTaskPriority(mapObj, 2)) == NULL) {
+    return FieldEffectManager_InitAnimManager(fieldEffMan, &sFollowerBallEffectFuncs, &pos, 0, &params, MapObject_CalculateTaskPriority(mapObj, 2)) != NULL;
+}
+
+void FollowerMon_StartBallEffect(MapObject *mapObj)
+{
+    FollowerMon_SetWhiteFlash(FALSE); // ENTRY P101
+    FollowerBall_SetFollowerScale(mapObj, FX32_ONE); // ENTRY P102: full size even if a return effect was cut short
+
+    if (FollowerBall_Start(mapObj, FOLLOWER_BALL_MODE_RELEASE) == FALSE) {
         MapObject_SetHidden(mapObj, FALSE);
     }
+}
+
+void FollowerMon_StartBallReturnEffect(MapObject *mapObj)
+{
+    if (FollowerBall_Start(mapObj, FOLLOWER_BALL_MODE_RETURN) == FALSE) {
+        MapObject_SetHidden(mapObj, TRUE);
+        return;
+    }
+
+    // ENTRY P101: HG - the Pokemon turns pure white the moment it starts going back into its ball (FollowerMon_RefreshPalette).
+    FollowerMon_SetWhiteFlash(TRUE);
 }

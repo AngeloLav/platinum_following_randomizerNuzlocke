@@ -39,13 +39,16 @@
             [ 9, "MOVE_ASTONISH" ],
             [ 14, "MOVE_CONFUSION" ],
             [ 17, "MOVE_UPROAR" ],
+            [ 17, "MOVE_TAKE_DOWN" ],
             [ 22, "MOVE_TAKE_DOWN" ],
+            [ 22, "MOVE_UPROAR" ],
             [ 25, "MOVE_YAWN" ],
             [ 30, "MOVE_PSYWAVE" ],
             [ 33, "MOVE_DOUBLE_EDGE" ],
             [ 38, "MOVE_HEAL_BELL" ],
             [ 41, "MOVE_SAFEGUARD" ],
             [ 46, "MOVE_EXTRASENSORY" ],
+            [ 46, "MOVE_PSYCHIC" ],
             [ 49, "MOVE_HEALING_WISH" ]
         ],
         "by_tm": [

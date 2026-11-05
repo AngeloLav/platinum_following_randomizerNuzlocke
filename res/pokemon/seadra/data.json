@@ -4,7 +4,7 @@
         "attack": 65,
         "defense": 95,
         "speed": 85,
-        "special_attack": 95,
+        "special_attack": 115,
         "special_defense": 45
     },
     "types": [ "TYPE_WATER", "TYPE_WATER" ],
@@ -40,15 +40,22 @@
             [ 1, "MOVE_WATER_GUN" ],
             [ 4, "MOVE_SMOKE_SCREEN" ],
             [ 8, "MOVE_LEER" ],
+            [ 8, "MOVE_SMOKE_SCREEN" ],
             [ 11, "MOVE_WATER_GUN" ],
             [ 14, "MOVE_FOCUS_ENERGY" ],
+            [ 15, "MOVE_LEER" ],
             [ 18, "MOVE_BUBBLE_BEAM" ],
+            [ 22, "MOVE_WATER_GUN" ],
             [ 23, "MOVE_AGILITY" ],
             [ 26, "MOVE_TWISTER" ],
+            [ 29, "MOVE_TWISTER" ],
             [ 30, "MOVE_BRINE" ],
             [ 40, "MOVE_HYDRO_PUMP" ],
+            [ 40, "MOVE_AGILITY" ],
             [ 48, "MOVE_DRAGON_DANCE" ],
-            [ 57, "MOVE_DRAGON_PULSE" ]
+            [ 51, "MOVE_HYDRO_PUMP" ],
+            [ 57, "MOVE_DRAGON_PULSE" ],
+            [ 62, "MOVE_DRAGON_DANCE" ]
         ],
         "by_tm": [
             "TM03",

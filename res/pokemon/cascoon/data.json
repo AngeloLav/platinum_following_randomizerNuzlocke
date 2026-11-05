@@ -1,15 +1,15 @@
 {
     "base_stats": {
-        "hp": 50,
+        "hp": 60,
         "attack": 35,
-        "defense": 55,
+        "defense": 85,
         "speed": 15,
         "special_attack": 25,
         "special_defense": 25
     },
     "types": [ "TYPE_BUG", "TYPE_BUG" ],
     "catch_rate": 120,
-    "base_exp_reward": 72,
+    "base_exp_reward": 102,
     "ev_yields": {
         "hp": 0,
         "attack": 0,
@@ -35,6 +35,7 @@
     "learnset": {
         "by_level": [
             [ 1, "MOVE_HARDEN" ],
+            [ 1, "MOVE_LEECH_LIFE" ],
             [ 7, "MOVE_HARDEN" ]
         ],
         "by_tm": [  ],

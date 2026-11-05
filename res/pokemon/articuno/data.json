@@ -1,10 +1,10 @@
 {
     "base_stats": {
-        "hp": 90,
+        "hp": 110,
         "attack": 85,
         "defense": 100,
-        "speed": 85,
-        "special_attack": 95,
+        "speed": 95,
+        "special_attack": 125,
         "special_defense": 125
     },
     "types": [ "TYPE_ICE", "TYPE_FLYING" ],
@@ -37,17 +37,24 @@
             [ 1, "MOVE_GUST" ],
             [ 1, "MOVE_POWDER_SNOW" ],
             [ 8, "MOVE_MIST" ],
+            [ 13, "MOVE_MIST" ],
             [ 15, "MOVE_ICE_SHARD" ],
             [ 22, "MOVE_MIND_READER" ],
+            [ 25, "MOVE_AGILITY" ],
             [ 29, "MOVE_ANCIENT_POWER" ],
             [ 36, "MOVE_AGILITY" ],
+            [ 37, "MOVE_MIND_READER" ],
             [ 43, "MOVE_ICE_BEAM" ],
+            [ 49, "MOVE_ICE_BEAM" ],
             [ 50, "MOVE_REFLECT" ],
             [ 57, "MOVE_ROOST" ],
+            [ 61, "MOVE_REFLECT" ],
             [ 64, "MOVE_TAILWIND" ],
             [ 71, "MOVE_BLIZZARD" ],
+            [ 73, "MOVE_BLIZZARD" ],
             [ 78, "MOVE_SHEER_COLD" ],
-            [ 85, "MOVE_HAIL" ]
+            [ 85, "MOVE_HAIL" ],
+            [ 85, "MOVE_SHEER_COLD" ]
         ],
         "by_tm": [
             "TM03",

@@ -62,6 +62,7 @@
 #include "party.h"
 #include "pokedex.h"
 #include "pokemon.h"
+#include "run_game.h"
 #include "pokemon_anim.h"
 #include "pokemon_sprite.h"
 #include "render_text.h"
@@ -1108,7 +1109,7 @@ static void BattleSys_New(BattleSystem *battleSys, FieldBattleDTO *dto)
 
                     if (Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL)
                         && Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) == FALSE
-                        && Pokemon_GetValue(mon, MON_DATA_HP, NULL)) {
+                        && RunGame_BattleEntryHP(mon)) {
                         break;
                     }
                 }
@@ -1137,7 +1138,7 @@ static void BattleSys_New(BattleSystem *battleSys, FieldBattleDTO *dto)
 
                     if (Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL)
                         && Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) == FALSE
-                        && Pokemon_GetValue(mon, MON_DATA_HP, NULL)) {
+                        && RunGame_BattleEntryHP(mon)) {
                         break;
                     }
                 }
@@ -1168,13 +1169,13 @@ static void BattleSys_New(BattleSystem *battleSys, FieldBattleDTO *dto)
                         if ((BattleContext_Get(battleSys, battleSys->battleCtx, BATTLECTX_SELECTED_PARTY_SLOT, i & 1) != slot)
                             && Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL)
                             && Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) == FALSE
-                            && Pokemon_GetValue(mon, MON_DATA_HP, NULL)) {
+                            && RunGame_BattleEntryHP(mon)) {
                             break;
                         }
                     } else {
                         if (Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL)
                             && Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) == FALSE
-                            && Pokemon_GetValue(mon, MON_DATA_HP, NULL)) {
+                            && RunGame_BattleEntryHP(mon)) {
                             break;
                         }
                     }
@@ -1200,7 +1201,7 @@ static void BattleSys_New(BattleSystem *battleSys, FieldBattleDTO *dto)
 
                     if (Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL)
                         && Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) == FALSE
-                        && Pokemon_GetValue(mon, MON_DATA_HP, NULL)) {
+                        && RunGame_BattleEntryHP(mon)) {
                         break;
                     }
                 }
@@ -1232,14 +1233,14 @@ static void BattleSys_New(BattleSystem *battleSys, FieldBattleDTO *dto)
                 if (i == BATTLER_PLAYER_2) {
                     if (Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL)
                         && Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) == FALSE
-                        && Pokemon_GetValue(mon, MON_DATA_HP, NULL)
+                        && RunGame_BattleEntryHP(mon)
                         && playerSlot != slot) {
                         break;
                     }
                 } else {
                     if (Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL)
                         && Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) == FALSE
-                        && Pokemon_GetValue(mon, MON_DATA_HP, NULL)) {
+                        && RunGame_BattleEntryHP(mon)) {
                         break;
                     }
                 }
@@ -1273,7 +1274,7 @@ static void BattleSys_New(BattleSystem *battleSys, FieldBattleDTO *dto)
 
                 if (Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL)
                     && Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) == FALSE
-                    && Pokemon_GetValue(mon, MON_DATA_HP, NULL)) {
+                    && RunGame_BattleEntryHP(mon)) {
                     break;
                 }
             }
@@ -1305,13 +1306,13 @@ static void BattleSys_New(BattleSystem *battleSys, FieldBattleDTO *dto)
                     if (BattleContext_Get(battleSys, battleSys->battleCtx, BATTLECTX_SELECTED_PARTY_SLOT, i & 1) != slot
                         && Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL)
                         && Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) == FALSE
-                        && Pokemon_GetValue(mon, MON_DATA_HP, NULL)) {
+                        && RunGame_BattleEntryHP(mon)) {
                         break;
                     }
                 } else {
                     if (Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL)
                         && Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) == FALSE
-                        && Pokemon_GetValue(mon, MON_DATA_HP, NULL)) {
+                        && RunGame_BattleEntryHP(mon)) {
                         break;
                     }
                 }
@@ -1340,7 +1341,7 @@ static void BattleSys_New(BattleSystem *battleSys, FieldBattleDTO *dto)
 
                 if (Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL)
                     && Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) == FALSE
-                    && Pokemon_GetValue(mon, MON_DATA_HP, NULL)) {
+                    && RunGame_BattleEntryHP(mon)) {
                     break;
                 }
             }

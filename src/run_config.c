@@ -4,7 +4,7 @@
 
 #include "run_species_data.h"
 
-#define RUN_KNOWN_FLAGS ((1u << 17) - 1)
+#define RUN_KNOWN_FLAGS ((1u << 18) - 1)
 #define RUN_CONFIG_MAGIC 0x434E5552u // "RUNC", little endian
 
 static u16 Read16(const u8 *p)
@@ -56,6 +56,7 @@ BOOL RunConfig_Init(RunConfig *config, enum RunPreset preset, u32 seed)
 
     memset(config, 0, sizeof(*config));
     config->seed = seed;
+    config->rulesVersion = RUN_RULES_VERSION;
     config->speciesDataVersion = RUN_SPECIES_DATA_VERSION;
     config->bstTolerance = 25;
     config->bstWeight = 75;
@@ -89,6 +90,10 @@ BOOL RunConfig_IsValid(const RunConfig *config)
     return config != NULL
         && config->speciesDataVersion == RUN_SPECIES_DATA_VERSION
         && (config->flags & ~RUN_KNOWN_FLAGS) == 0
+        && (config->rulesVersion == 2 || config->rulesVersion == RUN_RULES_VERSION)
+        && config->shinyRate <= 3
+        && config->levelCapMode <= RUN_CAP_OBEDIENCE
+        && (config->rulesVersion != 2 || (config->shinyRate == 0 && config->levelCapMode == RUN_CAP_EXP_LOCK && !(config->flags & RUN_RANDOMIZE_FIELD_ITEMS)))
         && config->bstTolerance >= 10 && config->bstTolerance <= 75
         && config->bstTolerance % 5 == 0
         && config->bstWeight <= 100 && config->bstWeight % 5 == 0
@@ -113,7 +118,8 @@ enum RunPreset RunConfig_EffectivePreset(const RunConfig *config)
         || config->bstWeight != reference.bstWeight
         || config->captureAttempts != reference.captureAttempts
         || config->levelCapAllowance != reference.levelCapAllowance
-        || config->trainerLevelsPerBadge != reference.trainerLevelsPerBadge) {
+        || config->trainerLevelsPerBadge != reference.trainerLevelsPerBadge
+        || config->shinyRate != reference.shinyRate || config->levelCapMode != reference.levelCapMode) {
         return RUN_PRESET_CUSTOM;
     }
 
@@ -146,6 +152,16 @@ BOOL RunConfig_DayCareEggsEnabled(const RunConfig *config)
     return RunConfig_IsValid(config) && (config->flags & RUN_DAY_CARE_EGGS) != 0;
 }
 
+BOOL RunConfig_ExpLockEnabled(const RunConfig *config)
+{
+    return RunConfig_IsValid(config) && (config->flags & RUN_LEVEL_CAPS) && config->levelCapMode == RUN_CAP_EXP_LOCK;
+}
+
+BOOL RunConfig_ObedienceCapEnabled(const RunConfig *config)
+{
+    return RunConfig_IsValid(config) && (config->flags & RUN_LEVEL_CAPS) && config->levelCapMode == RUN_CAP_OBEDIENCE;
+}
+
 BOOL RunConfig_Encode(const RunConfig *config, u8 *bytes, u32 size)
 {
     if (!RunConfig_IsValid(config) || bytes == NULL || size != RUN_CONFIG_WIRE_SIZE) {
@@ -154,9 +170,9 @@ BOOL RunConfig_Encode(const RunConfig *config, u8 *bytes, u32 size)
 
     memset(bytes, 0, size);
     Write32(bytes, RUN_CONFIG_MAGIC);
-    Write16(bytes + 4, RUN_CONFIG_SCHEMA_VERSION);
+    Write16(bytes + 4, config->rulesVersion == 2 ? 2 : RUN_CONFIG_SCHEMA_VERSION);
     Write16(bytes + 6, RUN_CONFIG_WIRE_SIZE);
-    Write16(bytes + 8, RUN_RULES_VERSION);
+    Write16(bytes + 8, config->rulesVersion);
     bytes[10] = config->seedMode;
     Write32(bytes + 12, config->speciesDataVersion);
     Write32(bytes + 16, config->seed);
@@ -167,6 +183,8 @@ BOOL RunConfig_Encode(const RunConfig *config, u8 *bytes, u32 size)
     bytes[27] = config->preset;
     bytes[28] = config->levelCapAllowance;
     bytes[29] = config->trainerLevelsPerBadge;
+    bytes[30] = config->shinyRate;
+    bytes[31] = config->levelCapMode;
     Write32(bytes + 32, Checksum(bytes, 32));
     return TRUE;
 }
@@ -179,12 +197,13 @@ enum RunConfigReadResult RunConfig_Decode(RunConfig *config, const u8 *bytes, u3
         return RUN_CONFIG_READ_INVALID;
     }
 
-    if (Read16(bytes + 4) != RUN_CONFIG_SCHEMA_VERSION || Read16(bytes + 8) != RUN_RULES_VERSION
+    BOOL legacy = Read16(bytes + 4) == 2 && Read16(bytes + 8) == 2;
+    if ((!legacy && (Read16(bytes + 4) != RUN_CONFIG_SCHEMA_VERSION || Read16(bytes + 8) != RUN_RULES_VERSION))
         || Read32(bytes + 12) != RUN_SPECIES_DATA_VERSION) {
         return RUN_CONFIG_READ_INCOMPATIBLE;
     }
 
-    if (bytes[11] != 0 || Read16(bytes + 30) != 0) {
+    if (bytes[11] != 0 || (legacy && (bytes[30] != 0 || bytes[31] != 0))) {
         return RUN_CONFIG_READ_INVALID;
     }
 
@@ -200,6 +219,9 @@ enum RunConfigReadResult RunConfig_Decode(RunConfig *config, const u8 *bytes, u3
     decoded.seedMode = bytes[10];
     decoded.levelCapAllowance = bytes[28];
     decoded.trainerLevelsPerBadge = bytes[29];
+    decoded.shinyRate = bytes[30];
+    decoded.rulesVersion = Read16(bytes + 8);
+    decoded.levelCapMode = bytes[31];
 
     if (!RunConfig_IsValid(&decoded)) {
         return RUN_CONFIG_READ_INVALID;

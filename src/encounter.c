@@ -117,6 +117,10 @@ static BOOL FieldTask_RunBattle(FieldTask *task)
 static void CallBattleTask(FieldTask *task, FieldBattleDTO *dto)
 {
     RunGame_BeginBattle(dto);
+    if (RunGame_Over()) {
+        dto->resultMask = BATTLE_RESULT_LOSE;
+        return; // Existing encounter cleanup unwinds without initializing invalid battlers.
+    }
     FieldTask_InitCall(task, FieldTask_RunBattle, dto);
 }
 

@@ -29,12 +29,18 @@ enum RunFlag {
     RUN_AREA_NOTIFICATIONS = 1 << 13,
     RUN_DAY_CARE_EGGS = 1 << 14,
     RUN_SCALE_BOSSES = 1 << 15,
-    RUN_END_ON_PARTY_WIPE = 1 << 16
+    RUN_END_ON_PARTY_WIPE = 1 << 16,
+    RUN_RANDOMIZE_FIELD_ITEMS = 1 << 17
 };
 
 enum RunSeedMode {
     RUN_SEED_AUTO = 0,
     RUN_SEED_MANUAL
+};
+
+enum RunLevelCapMode {
+    RUN_CAP_EXP_LOCK = 0,
+    RUN_CAP_OBEDIENCE = 1
 };
 
 enum RunConfigReadResult {
@@ -43,8 +49,8 @@ enum RunConfigReadResult {
     RUN_CONFIG_READ_INCOMPATIBLE
 };
 
-#define RUN_CONFIG_SCHEMA_VERSION 2
-#define RUN_RULES_VERSION         2
+#define RUN_CONFIG_SCHEMA_VERSION 3
+#define RUN_RULES_VERSION         3
 #define RUN_CONFIG_WIRE_SIZE      36
 
 // This is a runtime value, NOT a native-layout save structure. Use the codec.
@@ -59,6 +65,9 @@ typedef struct RunConfig {
     u8 seedMode;
     u8 levelCapAllowance;
     u8 trainerLevelsPerBadge;
+    u8 shinyRate; // 0..3: 1/8192, 1/4096, 1/2048, 1/1024; new Pokemon only.
+    u8 rulesVersion; // 2 retains published mappings; 3 uses the Gaussian mixture.
+    u8 levelCapMode; // Zero is EXP Lock for all existing runs.
 } RunConfig;
 
 BOOL RunConfig_Init(RunConfig *config, enum RunPreset preset, u32 seed);
@@ -69,6 +78,8 @@ BOOL RunConfig_DupesEnabled(const RunConfig *config);
 BOOL RunConfig_ShinyClauseEnabled(const RunConfig *config);
 BOOL RunConfig_EndOnPartyWipe(const RunConfig *config);
 BOOL RunConfig_DayCareEggsEnabled(const RunConfig *config);
+BOOL RunConfig_ExpLockEnabled(const RunConfig *config);
+BOOL RunConfig_ObedienceCapEnabled(const RunConfig *config);
 BOOL RunConfig_Encode(const RunConfig *config, u8 *bytes, u32 size);
 enum RunConfigReadResult RunConfig_Decode(RunConfig *config, const u8 *bytes, u32 size);
 u32 RunConfig_SpeciesDataVersion(void);

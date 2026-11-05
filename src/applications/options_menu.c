@@ -34,6 +34,7 @@
 #include "main.h"
 #include "math_util.h"
 #include "run_menu.h"
+#include "run_game.h"
 #include "run_session.h"
 #include "run_randomizer.h"
 #include "generated/trainers.h"
@@ -987,7 +988,10 @@ static void PrintEntryDescription(OptionsMenuData *menuData, u16 entry, BOOL sch
 }
 
 // Run menus deliberately share the retail Options screen's graphics, windows,
-// palettes and teardown. No new tiles, sprites or persistent graphics heap.
+// palettes and teardown. The lower-screen help uses one native text window;
+// there are no new graphics assets, sprites or persistent graphics heaps.
+#define RUN_VISIBLE_ROWS 6
+#define RUN_ROW_HEIGHT 18
 typedef struct RunMenuOption {
     u16 label;
     u8 page;
@@ -1009,21 +1013,24 @@ static const RunMenuOption sRunOptions[] = {
     RUN_BOOL(Run_Text_Static, 1, RUN_RANDOMIZE_STATICS),
     RUN_BOOL(Run_Text_Gifts, 1, RUN_RANDOMIZE_GIFTS),
     RUN_BOOL(Run_Text_Eggs, 1, RUN_RANDOMIZE_EGGS),
+    RUN_BOOL(Run_Text_FieldItems, 1, RUN_RANDOMIZE_FIELD_ITEMS),
+    RUN_NUMBER(Run_Text_SeedMode, 1, seedMode, 0, 1, 1),
     RUN_NUMBER(Run_Text_Attempts, 2, captureAttempts, 0, 3, 1),
     RUN_BOOL(Run_Text_Dupes, 2, RUN_DUPES_CLAUSE),
     RUN_BOOL(Run_Text_Shiny, 2, RUN_SHINY_CLAUSE),
+    RUN_NUMBER(Run_Text_ShinyRate, 2, shinyRate, 0, 3, 1),
     RUN_BOOL(Run_Text_SeparateGifts, 2, RUN_SEPARATE_GIFTS),
     RUN_BOOL(Run_Text_SeparateEggs, 2, RUN_SEPARATE_EGGS),
     RUN_BOOL(Run_Text_Permadeath, 3, RUN_PERMADEATH),
     RUN_BOOL(Run_Text_Wipe, 3, RUN_END_ON_PARTY_WIPE),
     RUN_BOOL(Run_Text_DayCare, 3, RUN_DAY_CARE_EGGS),
-    RUN_BOOL(Run_Text_Notifications, 3, RUN_AREA_NOTIFICATIONS),
     RUN_BOOL(Run_Text_Cap, 4, RUN_LEVEL_CAPS),
+    RUN_NUMBER(Run_Text_CapMode, 4, levelCapMode, 0, 1, 1),
     RUN_NUMBER(Run_Text_Allowance, 4, levelCapAllowance, 0, 5, 1),
     RUN_BOOL(Run_Text_Scaling, 4, RUN_TRAINER_SCALING),
     RUN_NUMBER(Run_Text_Bonus, 4, trainerLevelsPerBadge, 1, 3, 1),
     RUN_BOOL(Run_Text_Bosses, 4, RUN_SCALE_BOSSES),
-    RUN_NUMBER(Run_Text_SeedMode, 5, seedMode, 0, 1, 1),
+    RUN_BOOL(Run_Text_Notifications, 5, RUN_AREA_NOTIFICATIONS),
 };
 #undef RUN_BOOL
 #undef RUN_NUMBER
@@ -1054,6 +1061,16 @@ typedef struct RunMenuData {
     BOOL confirmFailed;
     BOOL specialList;
     u8 specialCategory;
+    BOOL reviewing;
+    BOOL settingsView;
+    BOOL helpReady;
+    Window helpWindow;
+    u16 pageCursor[5];
+    u16 pageScroll[5];
+    u16 zoneOrder[RUN_ZONE_COUNT];
+    u16 zoneCount;
+    u32 summary[7];
+    BOOL currentAreaDetails;
 } RunMenuData;
 
 static u8 RunSpecialCategory(const RunSpecialRecord *event)
@@ -1066,8 +1083,29 @@ static u8 RunSpecialCategory(const RunSpecialRecord *event)
     return RunSpecies_Class(original) == RUN_SPECIES_ORDINARY ? 0 : 1;
 }
 
+static BOOL RunMythicalRecord(const RunSpecialRecord *event)
+{
+    return event->source == RUN_SOURCE_STATIC
+        && (event->eventKey == RunGame_EventKey(0) || event->eventKey == RunGame_EventKey(1));
+}
+
+static u16 RunSpecialCount(u8 category)
+{
+    // Two virtual entries expose native event availability before the first
+    // battle; their actual persistent records replace them, never add copies.
+    u16 count = category == 1 ? 2 : 0;
+    for (u16 id = 1; id <= RunState_SpecialCount(RunSession_State()); id++) {
+        RunSpecialRecord event;
+        RunState_GetSpecial(RunSession_State(), id, &event);
+        if (!RunMythicalRecord(&event) && RunSpecialCategory(&event) == category) count++;
+    }
+    return count;
+}
+
 static BOOL RunOptionEnabled(const RunMenuData *menu, const RunMenuOption *option)
 {
+    if ((option->label == Run_Text_Tolerance || option->label == Run_Text_Weight || option->flag == RUN_LEGENDARY_POOLS)
+        && !(menu->draft.flags & (RUN_RANDOMIZE_WILD | RUN_RANDOMIZE_TRAINERS | RUN_RANDOMIZE_STATICS | RUN_RANDOMIZE_GIFTS | RUN_RANDOMIZE_EGGS))) return FALSE;
     if ((option->flag & (RUN_DUPES_CLAUSE | RUN_SHINY_CLAUSE | RUN_SEPARATE_GIFTS | RUN_SEPARATE_EGGS))
         && menu->draft.captureAttempts == 0) {
         return FALSE;
@@ -1077,7 +1115,7 @@ static BOOL RunOptionEnabled(const RunMenuData *menu, const RunMenuOption *optio
     if (option->flag == RUN_END_ON_PARTY_WIPE) {
         return FALSE;
     }
-    if ((option->label == Run_Text_Allowance) && !(menu->draft.flags & RUN_LEVEL_CAPS)) {
+    if ((option->label == Run_Text_Allowance || option->label == Run_Text_CapMode) && !(menu->draft.flags & RUN_LEVEL_CAPS)) {
         return FALSE;
     }
     if ((option->label == Run_Text_Bonus || option->flag == RUN_SCALE_BOSSES)
@@ -1085,16 +1123,6 @@ static BOOL RunOptionEnabled(const RunMenuData *menu, const RunMenuOption *optio
         return FALSE;
     }
     return TRUE;
-}
-
-static int RunOptionIndex(u8 page, int row)
-{
-    for (int i = 0; i < SNELEMS(sRunOptions); i++) {
-        if (sRunOptions[i].page == page && row-- == 0) {
-            return i;
-        }
-    }
-    return -1;
 }
 
 static void RunPrint(Window *window, String *text, int x, int y, BOOL inactive)
@@ -1133,13 +1161,13 @@ static void RunRow(RunMenuData *menu, int row, BOOL inactive)
     while (menu->line->size && Font_CalcStringWidth(FONT_SYSTEM, menu->line, 0) > 218 - width) {
         menu->line->data[--menu->line->size] = CHAR_EOS;
     }
-    RunPrint(&menu->native.windows.entries, menu->line, 12, visible * 16, inactive);
+    RunPrint(&menu->native.windows.entries, menu->line, 12, visible * RUN_ROW_HEIGHT, inactive);
     if (width < 230) {
-        RunPrint(&menu->native.windows.entries, menu->value, 234 - width, visible * 16, inactive);
+        RunPrint(&menu->native.windows.entries, menu->value, 234 - width, visible * RUN_ROW_HEIGHT, inactive);
     }
     if (row == menu->cursor) {
         RunMessage(menu, Run_Text_Cursor, menu->line);
-        RunPrint(&menu->native.windows.entries, menu->line, 0, visible * 16, FALSE);
+        RunPrint(&menu->native.windows.entries, menu->line, 0, visible * RUN_ROW_HEIGHT, FALSE);
     }
 }
 
@@ -1151,6 +1179,10 @@ static void RunOptionValue(RunMenuData *menu, const RunMenuOption *option)
         u8 value = *((u8 *)&menu->draft + option->offset);
         if (option->label == Run_Text_SeedMode) {
             RunMessage(menu, value ? Run_Text_Manual : Run_Text_Auto, menu->value);
+        } else if (option->label == Run_Text_ShinyRate) {
+            RunMessage(menu, Run_Text_RateOriginal + value, menu->value);
+        } else if (option->label == Run_Text_CapMode) {
+            RunMessage(menu, value == RUN_CAP_OBEDIENCE ? Run_Text_ObedienceCap : Run_Text_ExpLock, menu->value);
         } else if (option->label == Run_Text_Attempts && value == 0) {
             RunMessage(menu, Run_Text_Off, menu->value);
         } else {
@@ -1164,16 +1196,16 @@ static int RunRecordID(RunMenuData *menu, int index)
     if (!RunSession_Configured()) return -1;
     RunState *run = RunSession_State();
     if (menu->page == 1) {
-        for (u16 zone = 0; zone < RUN_ZONE_COUNT; zone++) {
-            if (RunWorld_ZoneKnown(zone) && index-- == 0) {
-                return zone;
-            }
-        }
+        return index < menu->zoneCount ? menu->zoneOrder[index] : -1;
     } else if (menu->page == 4) {
+        if (menu->specialCategory == 1) {
+            if (index < 2) return 0xFFFE - index;
+            index -= 2;
+        }
         for (u16 id = 1; id <= RunState_SpecialCount(run); id++) {
             RunSpecialRecord event;
             RunState_GetSpecial(run, id, &event);
-            if (RunSpecialCategory(&event) == menu->specialCategory && index-- == 0) return id;
+            if (!RunMythicalRecord(&event) && RunSpecialCategory(&event) == menu->specialCategory && index-- == 0) return id;
         }
     } else {
         for (u16 id = 1; id <= RunState_MonCount(run); id++) {
@@ -1190,38 +1222,20 @@ static int RunRecordID(RunMenuData *menu, int index)
 static int RunRowCount(RunMenuData *menu)
 {
     if (menu->newRun) {
-        if (menu->page == 0) {
-            return RUN_PRESET_COUNT;
-        }
-        if (menu->page == 6) {
-            return SNELEMS(sRunOptions) + 3;
-        }
-        int count = 0;
-        while (RunOptionIndex(menu->page, count) >= 0) {
-            count++;
-        }
-        return count + (menu->page == 5 ? 1 : 0);
+        return SNELEMS(sRunOptions) + 3;
     }
+    if (menu->settingsView) return SNELEMS(sRunOptions) + 2;
+    if (menu->details) return menu->page == 1 ? 8 : 7;
     if (menu->page == 0) {
-        return RunState_Status(RunSession_State()) == RUN_STATUS_GAME_OVER ? 11 : 10;
+        return RunState_Status(RunSession_State()) == RUN_STATUS_GAME_OVER ? 33 : 32;
     }
     if (!RunSession_Configured() && menu->page < 5) return 1;
-    if (menu->page == 5) {
-        return SNELEMS(sRunOptions) + 2;
-    }
-    if (menu->details) {
-        return menu->page == 1 ? 8 : 7;
-    }
     if (menu->page == 4 && !menu->specialList) return 5;
     int count = 0;
     if (menu->page == 1) {
-        for (u16 zone = 0; zone < RUN_ZONE_COUNT; zone++) count += RunWorld_ZoneKnown(zone);
+        count = menu->zoneCount;
     } else if (menu->page == 4) {
-        for (u16 id = 1; id <= RunState_SpecialCount(RunSession_State()); id++) {
-            RunSpecialRecord event;
-            RunState_GetSpecial(RunSession_State(), id, &event);
-            count += RunSpecialCategory(&event) == menu->specialCategory;
-        }
+        count = RunSpecialCount(menu->specialCategory);
     } else if (menu->page == 3) {
         for (u16 id = 1; id <= RunState_MonCount(RunSession_State()); id++) {
             RunMonRecord mon;
@@ -1239,6 +1253,182 @@ static u16 RunOutcomeText(u8 outcome)
     return outcome < NELEMS(outcomes) ? outcomes[outcome] : Run_Text_Failed;
 }
 
+static u16 RunAreaStatus(const RunMenuData *menu, u16 zone)
+{
+    if (RunState_Status(RunSession_State()) == RUN_STATUS_GAME_OVER) return Run_Text_GameOver;
+    if (!menu->draft.captureAttempts) return Run_Text_Off;
+    if (!RunState_CaptureActivated(RunSession_State())) return Run_Text_InactiveShort;
+    if (!RunState_Remaining(RunSession_State(), zone)) return Run_Text_ExhaustedArea;
+    return RunState_Remaining(RunSession_State(), zone) == menu->draft.captureAttempts ? Run_Text_Available : Run_Text_Partial;
+}
+
+static void RunOverview(RunMenuData *menu, int row)
+{
+    static const u16 labels[33] = {
+        Run_Text_Area, Run_Text_AreaStatus, Run_Text_Remaining, Run_Text_FirstEncounter,
+        Run_Text_Result, Run_Text_AttemptDetails, Run_Text_ProgressSection,
+        Run_Text_Badges, Run_Text_Cap, Run_Text_NextCap, Run_Text_CurrentBonus,
+        Run_Text_Result, Run_Text_RandomSection, Run_Text_Preset, Run_Text_Seed,
+        Run_Text_Wild, Run_Text_Trainers, Run_Text_Tolerance, Run_Text_Weight,
+        Run_Text_ShinyRate, Run_Text_FieldItems, Run_Text_CaptureSection,
+        Run_Text_TotalAreas, Run_Text_AvailableAreas, Run_Text_ExhaustedAreas,
+        Run_Text_Caught, Run_Text_Failures, Run_Text_StaticCaught, Run_Text_ShinyCaught,
+        Run_Text_EligibleParty, Run_Text_RefusingParty, Run_Text_Settings, Run_Text_Reset
+    };
+    RunMessage(menu, labels[row], menu->line);
+    RunState *run = RunSession_State();
+    u16 zone = RunSession_Zone();
+    int badges = TrainerInfo_BadgeCount(SaveData_GetTrainerInfo(menu->save));
+    if (row == 0) MessageLoader_GetString(menu->locations, zone, menu->value);
+    if (row == 1) RunMessage(menu, RunAreaStatus(menu, zone), menu->value);
+    if (row == 2) {
+        if (!menu->draft.captureAttempts) RunMessage(menu, Run_Text_Off, menu->value);
+        else {
+            charcode_t ratio[] = { CHAR_0 + RunState_Remaining(run, zone), CHAR_SLASH,
+                CHAR_0 + menu->draft.captureAttempts, CHAR_EOS };
+            String_CopyChars(menu->value, ratio);
+        }
+    }
+    if (row == 3 || row == 4) {
+        RunOpportunity first;
+        RunState_GetOpportunity(run, zone, 0, &first);
+        if (row == 3 && first.species) MessageLoader_GetString(menu->species, first.species, menu->value);
+        else RunMessage(menu, first.species ? RunOutcomeText(first.outcome) : Run_Text_NotEncountered, menu->value);
+    }
+    if (row == 7) RunNumber(menu, badges);
+    if (row == 6) RunMessage(menu, !(menu->draft.flags & RUN_LEVEL_CAPS) ? Run_Text_Off
+        : menu->draft.levelCapMode == RUN_CAP_OBEDIENCE ? Run_Text_ObedienceCap : Run_Text_ExpLock, menu->value);
+    if (row == 8) RunNumber(menu, RunWorld_LevelCap(&menu->draft, badges));
+    if (row == 9) {
+        static const u16 targets[] = { TRAINER_LEADER_ROARK, TRAINER_LEADER_GARDENIA,
+            TRAINER_LEADER_FANTINA, TRAINER_LEADER_MAYLENE, TRAINER_LEADER_WAKE,
+            TRAINER_LEADER_BYRON, TRAINER_LEADER_CANDICE, TRAINER_LEADER_VOLKNER, TRAINER_CHAMPION_CYNTHIA };
+        MessageBank_GetStringFromNARC(NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_NPC_TRAINER_NAMES,
+            targets[badges < 8 ? badges : 8], HEAP_ID_OPTIONS_MENU, menu->value);
+    }
+    if (row == 10) RunNumber(menu, (menu->draft.flags & RUN_TRAINER_SCALING) ? badges * menu->draft.trainerLevelsPerBadge : 0);
+    if (row == 11) RunMessage(menu, RunState_Status(run) == RUN_STATUS_GAME_OVER ? Run_Text_GameOver : Run_Text_Active, menu->value);
+    if (row == 13) RunMessage(menu, Run_Text_Classic + RunConfig_EffectivePreset(&menu->draft), menu->value);
+    if (row == 14) RunSeedString(menu);
+    if (row == 15 || row == 16 || row == 20) RunMessage(menu,
+        (menu->draft.flags & (row == 15 ? RUN_RANDOMIZE_WILD : row == 16 ? RUN_RANDOMIZE_TRAINERS : RUN_RANDOMIZE_FIELD_ITEMS)) ? Run_Text_On : Run_Text_Off, menu->value);
+    if (row == 17) RunNumber(menu, menu->draft.bstTolerance);
+    if (row == 18) RunNumber(menu, menu->draft.bstWeight);
+    if (row == 19) RunMessage(menu, Run_Text_RateOriginal + menu->draft.shinyRate, menu->value);
+    if (row == 12 && menu->draft.rulesVersion == 2) RunMessage(menu, Run_Text_Legacy, menu->value);
+    if (row >= 22 && row <= 28) RunNumber(menu, menu->summary[row - 22]);
+    if (row == 29) RunNumber(menu, RunGame_EligibleCount(SaveData_GetParty(menu->save)));
+    if (row == 30) RunNumber(menu, RunGame_RefusingCount(SaveData_GetParty(menu->save)));
+}
+
+static u16 RunOptionHelp(u16 label)
+{
+    switch (label) {
+    case Run_Text_Wild: return Run_Text_HelpWild;
+    case Run_Text_Trainers: return Run_Text_HelpTrainers;
+    case Run_Text_Tolerance: return Run_Text_HelpRange;
+    case Run_Text_Weight: return Run_Text_HelpSimilarity;
+    case Run_Text_Legendaries: return Run_Text_HelpLegendary;
+    case Run_Text_Static: return Run_Text_HelpStatic;
+    case Run_Text_Gifts: return Run_Text_HelpGifts;
+    case Run_Text_Eggs: return Run_Text_HelpEggs;
+    case Run_Text_FieldItems: return Run_Text_HelpFieldItems;
+    case Run_Text_SeedMode: return Run_Text_HelpSeedMode;
+    case Run_Text_Attempts: return Run_Text_HelpAttempts;
+    case Run_Text_Dupes: return Run_Text_HelpDupes;
+    case Run_Text_Shiny: return Run_Text_HelpShinyClause;
+    case Run_Text_ShinyRate: return Run_Text_HelpShinyRate;
+    case Run_Text_SeparateGifts: return Run_Text_HelpSeparateGifts;
+    case Run_Text_SeparateEggs: return Run_Text_HelpSeparateEggs;
+    case Run_Text_Permadeath: return Run_Text_HelpPermadeath;
+    case Run_Text_Wipe: return Run_Text_HelpWipe;
+    case Run_Text_DayCare: return Run_Text_HelpDayCare;
+    case Run_Text_Cap: return Run_Text_HelpCap;
+    case Run_Text_CapMode: return Run_Text_HelpCapMode;
+    case Run_Text_Allowance: return Run_Text_HelpAllowance;
+    case Run_Text_Scaling: return Run_Text_HelpScaling;
+    case Run_Text_Bonus: return Run_Text_HelpBonus;
+    case Run_Text_Bosses: return Run_Text_HelpBosses;
+    case Run_Text_Notifications: return Run_Text_HelpNotifications;
+    }
+    return Run_Text_HelpSettings;
+}
+
+static u16 RunContextHelp(RunMenuData *menu)
+{
+    if (menu->page == 4 && menu->specialList && menu->specialCategory == 1
+        && (menu->details ? menu->detailID >= 0xFFFD : menu->cursor < 2)) return Run_Text_HelpMythicalEvent;
+    if (menu->newRun || menu->settingsView) {
+        if (!menu->cursor) return Run_Text_HelpPreset;
+        if (menu->cursor <= SNELEMS(sRunOptions)) {
+            u16 label = sRunOptions[menu->cursor - 1].label;
+            if (label == Run_Text_CapMode) return menu->draft.levelCapMode == RUN_CAP_OBEDIENCE ? Run_Text_HelpObedience : Run_Text_HelpExpLock;
+            if (label == Run_Text_Weight && menu->draft.rulesVersion == 2) return Run_Text_HelpLegacySimilarity;
+            return RunOptionHelp(label);
+        }
+        return menu->cursor == SNELEMS(sRunOptions) + 1 ? Run_Text_HelpSeed : Run_Text_HelpReview;
+    }
+    if (menu->page == 0) {
+        int row = menu->cursor;
+        if (row <= 5) return !menu->draft.captureAttempts ? Run_Text_HelpTrackingOff
+            : !RunState_CaptureActivated(RunSession_State()) ? Run_Text_HelpActivation : Run_Text_HelpCurrentArea;
+        if (row == 8 || row == 9) return Run_Text_HelpCap;
+        if (row == 10) return Run_Text_HelpBonus;
+        if (row == 14) return Run_Text_HelpSeed;
+        if (row == 15) return Run_Text_HelpWild;
+        if (row == 16) return Run_Text_HelpTrainers;
+        if (row == 17) return Run_Text_HelpRange;
+        if (row == 18) return menu->draft.rulesVersion == 2 ? Run_Text_HelpLegacySimilarity : Run_Text_HelpSimilarity;
+        if (row == 19) return Run_Text_HelpShinyRate;
+        if (row == 20) return Run_Text_HelpFieldItems;
+        if (row >= 21 && row <= 28) return Run_Text_HelpCaptureSummary;
+        if (row == 29 || row == 30) return RunConfig_ObedienceCapEnabled(&menu->draft)
+            && RunGame_EligibleCount(SaveData_GetParty(menu->save)) == 1 ? Run_Text_HelpOneEligible : Run_Text_HelpEligibility;
+        if (row == 31) return Run_Text_HelpSettings;
+        if (row == 32) return Run_Text_ResetWarning;
+        if (row == 6) return menu->draft.levelCapMode == RUN_CAP_OBEDIENCE ? Run_Text_HelpObedience : Run_Text_HelpExpLock;
+        if (row == 11 && RunState_LossReason(RunSession_State()) == 2) return Run_Text_HelpNoEligibleLoss;
+        return Run_Text_HelpProgress;
+    }
+    static const u16 help[] = { Run_Text_HelpProgress, Run_Text_HelpAreas,
+        Run_Text_HelpHistory, Run_Text_HelpMemorial, Run_Text_HelpSpecial };
+    return help[menu->page];
+}
+
+static void RunPrepareRegistry(RunMenuData *menu)
+{
+    RunState *run = RunSession_State();
+    for (int group = 0; group < 4; group++) {
+        for (u16 zone = 0; zone < RUN_ZONE_COUNT; zone++) {
+            if (!RunWorld_ZoneKnown(zone)) continue;
+            int priority = zone == RunSession_Zone() ? 0 : !RunState_Visited(run, zone) ? 3
+                : menu->draft.captureAttempts && !RunState_Remaining(run, zone) ? 2 : 1;
+            if (priority == group) menu->zoneOrder[menu->zoneCount++] = zone;
+        }
+    }
+    if (!RunSession_Configured()) return;
+    for (u16 zone = 0; zone < RUN_ZONE_COUNT; zone++) {
+        BOOL eligible = RunWorld_ZoneHasWild(zone);
+        for (u8 slot = 0; slot < 3; slot++) {
+            RunOpportunity attempt;
+            RunState_GetOpportunity(run, zone, slot, &attempt);
+            if (attempt.species) eligible = TRUE; // Also include a shared gift-only zone.
+            if (attempt.outcome == RUN_OUTCOME_CAUGHT) menu->summary[3]++;
+            else if (attempt.outcome >= RUN_OUTCOME_DEFEATED) menu->summary[4]++;
+        }
+        if (eligible) {
+            menu->summary[0]++;
+            if (menu->draft.captureAttempts) menu->summary[RunState_Remaining(run, zone) ? 1 : 2]++;
+        }
+    }
+    for (u16 id = 1; id <= RunState_SpecialCount(run); id++) {
+        RunSpecialRecord event;
+        RunState_GetSpecial(run, id, &event);
+        if (event.source == RUN_SOURCE_STATIC) menu->summary[5] += event.caught;
+        if (event.source == RUN_SOURCE_SHINY) menu->summary[6] += event.caught;
+    }
+}
+
 static void RunDraw(RunMenuData *menu)
 {
     Window *entries = &menu->native.windows.entries;
@@ -1246,11 +1436,10 @@ static void RunDraw(RunMenuData *menu)
     Window_FillTilemap(entries, PIXEL_FILL(15));
     Window_FillTilemap(description, PIXEL_FILL(15));
     Window_FillTilemap(&menu->native.windows.title, 0);
-    static const u16 configTitles[] = { Run_Text_Preset, Run_Text_Randomizer, Run_Text_Attempts,
-        Run_Text_RulesTitle, Run_Text_Cap, Run_Text_Seed, Run_Text_Title };
     static const u16 registryTitles[] = { Run_Text_Overview, Run_Text_Areas, Run_Text_History,
-        Run_Text_Memorial, Run_Text_Specials, Run_Text_Settings };
-    u16 title = menu->newRun ? configTitles[menu->page] : registryTitles[menu->page];
+        Run_Text_Memorial, Run_Text_Specials };
+    u16 title = menu->newRun ? (menu->reviewing ? Run_Text_Review : Run_Text_Title)
+        : menu->settingsView ? Run_Text_Settings : registryTitles[menu->page];
     RunMessage(menu, title, menu->line);
     while (menu->line->size && Font_CalcStringWidth(FONT_SYSTEM, menu->line, 0) > MENU_TITLE_WIDTH * 8 - 4) {
         u16 end = menu->line->size;
@@ -1264,20 +1453,19 @@ static void RunDraw(RunMenuData *menu)
     if (menu->cursor >= count) {
         menu->cursor = 0;
     }
-    menu->scroll = menu->cursor >= 7 ? menu->cursor - 6 : 0;
+    if (menu->cursor < menu->scroll) menu->scroll = menu->cursor;
+    if (menu->cursor >= menu->scroll + RUN_VISIBLE_ROWS) menu->scroll = menu->cursor - RUN_VISIBLE_ROWS + 1;
     if (menu->damaged || menu->resetPrompt) {
         RunMessage(menu, menu->damaged ? Run_Text_Damaged : Run_Text_ResetWarning, menu->line);
         RunPrint(entries, menu->line, 0, 0, FALSE);
     } else if (!menu->newRun && !RunSession_Configured() && menu->page > 0 && menu->page < 5) {
         RunMessage(menu, Run_Text_Empty, menu->line);
         RunPrint(entries, menu->line, 0, 0, FALSE);
-    } else for (int row = menu->scroll; row < count && row < menu->scroll + 7; row++) {
+    } else for (int row = menu->scroll; row < count && row < menu->scroll + RUN_VISIBLE_ROWS; row++) {
         String_Clear(menu->line);
         String_Clear(menu->value);
         BOOL inactive = FALSE;
-        if (menu->newRun && menu->page == 0) {
-            RunMessage(menu, Run_Text_Classic + row, menu->line);
-        } else if ((menu->newRun && menu->page == 6) || (!menu->newRun && menu->page == 5)) {
+        if (menu->newRun || menu->settingsView) {
             if (row == 0) {
                 RunMessage(menu, Run_Text_Preset, menu->line);
                 RunMessage(menu, Run_Text_Classic + RunConfig_EffectivePreset(&menu->draft), menu->value);
@@ -1290,52 +1478,14 @@ static void RunDraw(RunMenuData *menu)
                 RunMessage(menu, Run_Text_Seed, menu->line);
                 RunSeedString(menu);
             } else {
-                RunMessage(menu, Run_Text_Confirm, menu->line);
-            }
-        } else if (menu->newRun) {
-            int index = RunOptionIndex(menu->page, row);
-            if (index >= 0) {
-                RunMessage(menu, sRunOptions[index].label, menu->line);
-                RunOptionValue(menu, &sRunOptions[index]);
-                inactive = !RunOptionEnabled(menu, &sRunOptions[index]);
-            } else {
-                RunMessage(menu, Run_Text_Seed, menu->line);
-                RunSeedString(menu);
+                RunMessage(menu, menu->reviewing ? Run_Text_Confirm : Run_Text_Review, menu->line);
             }
         } else if (menu->page == 0) {
-            int badges = TrainerInfo_BadgeCount(SaveData_GetTrainerInfo(menu->save));
-            static const u16 labels[] = { Run_Text_Preset, Run_Text_Seed, Run_Text_Badges, Run_Text_Cap,
-                Run_Text_NextCap, Run_Text_CurrentBonus, Run_Text_Area, Run_Text_Remaining, Run_Text_Result,
-                Run_Text_Settings, Run_Text_Reset };
-            RunMessage(menu, labels[row], menu->line);
-            if (row == 0) RunMessage(menu, Run_Text_Classic + RunConfig_EffectivePreset(&menu->draft), menu->value);
-            if (row == 1) RunSeedString(menu);
-            if (row == 2) RunNumber(menu, badges);
-            if (row == 3) RunNumber(menu, RunWorld_LevelCap(&menu->draft, badges));
-            if (row == 4) {
-                static const u16 targets[] = { TRAINER_LEADER_ROARK, TRAINER_LEADER_GARDENIA,
-                    TRAINER_LEADER_FANTINA, TRAINER_LEADER_MAYLENE, TRAINER_LEADER_WAKE,
-                    TRAINER_LEADER_BYRON, TRAINER_LEADER_CANDICE, TRAINER_LEADER_VOLKNER, TRAINER_CHAMPION_CYNTHIA };
-                MessageBank_GetStringFromNARC(NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_NPC_TRAINER_NAMES,
-                    targets[badges < 8 ? badges : 8], HEAP_ID_OPTIONS_MENU, menu->value);
-            }
-            if (row == 5) RunNumber(menu, (menu->draft.flags & RUN_TRAINER_SCALING) ? badges * menu->draft.trainerLevelsPerBadge : 0);
-            if (row == 6) MessageLoader_GetString(menu->locations, RunSession_Zone(), menu->value);
-            if (row == 7) {
-                if (!menu->draft.captureAttempts) RunMessage(menu, Run_Text_Off, menu->value);
-                else if (!RunState_CaptureActivated(RunSession_State())) RunMessage(menu, Run_Text_NotActive, menu->value);
-                else RunNumber(menu, RunState_Remaining(RunSession_State(), RunSession_Zone()));
-            }
-            if (row == 8) RunMessage(menu, RunState_Status(RunSession_State()) == RUN_STATUS_GAME_OVER ? Run_Text_GameOver : Run_Text_Active, menu->value);
+            RunOverview(menu, row);
+            inactive = row == 6 || row == 12 || row == 21;
         } else if (menu->page == 4 && !menu->specialList) {
             RunMessage(menu, Run_Text_StaticCategory + row, menu->line);
-            u16 total = 0;
-            for (u16 id = 1; id <= RunState_SpecialCount(RunSession_State()); id++) {
-                RunSpecialRecord event;
-                RunState_GetSpecial(RunSession_State(), id, &event);
-                if (RunSpecialCategory(&event) == row) total++;
-            }
-            RunNumber(menu, total);
+            RunNumber(menu, RunSpecialCount(row));
         } else {
             int id = menu->details ? menu->detailID : RunRecordID(menu, row);
             if (id < 0) {
@@ -1343,9 +1493,8 @@ static void RunDraw(RunMenuData *menu)
             } else if (menu->page == 1) {
                 MessageLoader_GetString(menu->locations, id, menu->line);
                 if (!menu->details) {
-                    u8 left = RunState_Remaining(RunSession_State(), id);
                     RunMessage(menu, !RunState_Visited(RunSession_State(), id) ? Run_Text_NotVisited
-                        : left == menu->draft.captureAttempts ? Run_Text_NotEncountered : left ? Run_Text_Partial : Run_Text_ExhaustedArea, menu->value);
+                        : RunAreaStatus(menu, id), menu->value);
                 } else if (row == 0) {
                     RunNumber(menu, RunState_Remaining(RunSession_State(), id));
                 } else if (row <= 6) {
@@ -1375,10 +1524,15 @@ static void RunDraw(RunMenuData *menu)
                 }
             } else if (menu->page == 4) {
                 RunSpecialRecord special;
-                RunState_GetSpecial(RunSession_State(), id, &special);
+                u16 status = 0;
+                if (id >= 0xFFFD) {
+                    static const u16 statuses[] = { Run_Text_EventNotAvailable, Run_Text_EventAvailable,
+                        Run_Text_EventEncountered, Run_Text_EventCaught, Run_Text_EventFailed };
+                    status = statuses[RunGame_EventStatus(menu->save, 0xFFFE - id, &special)];
+                } else RunState_GetSpecial(RunSession_State(), id, &special);
                 if (!menu->details) {
                     MessageLoader_GetString(menu->species, special.species, menu->line);
-                    RunMessage(menu, RunOutcomeText(special.outcome), menu->value);
+                    RunMessage(menu, status ? status : RunOutcomeText(special.outcome), menu->value);
                 } else {
                     static const u16 labels[] = { Run_Text_Original, Run_Text_Origin, Run_Text_Attempts,
                         Run_Text_Caught, Run_Text_Failures, Run_Text_Result, Run_Text_History };
@@ -1388,7 +1542,7 @@ static void RunDraw(RunMenuData *menu)
                     if (row == 2) RunNumber(menu, special.attempts);
                     if (row == 3) RunNumber(menu, special.caught);
                     if (row == 4) RunNumber(menu, special.failed);
-                    if (row == 5) RunMessage(menu, RunOutcomeText(special.outcome), menu->value);
+                    if (row == 5) RunMessage(menu, status ? status : RunOutcomeText(special.outcome), menu->value);
                     if (row == 6) {
                         RunMonRecord mon;
                         if (RunState_GetMon(RunSession_State(), special.lastMonID, &mon))
@@ -1419,21 +1573,26 @@ static void RunDraw(RunMenuData *menu)
         }
         RunRow(menu, row, inactive);
     }
-    u16 help = menu->newRun ? Run_Text_Controls : Run_Text_ReadOnly;
-    if (menu->newRun && menu->page == 1) {
-        int index = RunOptionIndex(menu->page, menu->cursor);
-        if (index >= 0 && (sRunOptions[index].label == Run_Text_Tolerance || sRunOptions[index].label == Run_Text_Weight)) help = Run_Text_BSTHelp;
-        else help = Run_Text_HMHelp;
-    }
-    if (menu->newRun && menu->page == 2) help = Run_Text_CaptureHelp;
+    u16 help = menu->newRun ? (menu->reviewing ? Run_Text_ReviewControls : Run_Text_Controls) : Run_Text_ReadOnly;
+    if (menu->newRun && menu->cursor > 0 && menu->cursor <= SNELEMS(sRunOptions)
+        && sRunOptions[menu->cursor - 1].flag != RUN_END_ON_PARTY_WIPE
+        && !RunOptionEnabled(menu, &sRunOptions[menu->cursor - 1])) help = Run_Text_OffHelp;
     if (menu->seedEditing) help = Run_Text_SeedHelp;
-    if (menu->newRun && menu->page == 6) help = Run_Text_ConfirmHelp;
     if (menu->damaged) help = Run_Text_DamagedHelp;
     if (menu->confirmFailed) help = Run_Text_ConfirmFailed;
     RunMessage(menu, help, menu->line);
     RunPrint(description, menu->line, 0, 0, FALSE);
+    if (menu->helpReady) {
+        Window_FillTilemap(&menu->helpWindow, PIXEL_FILL(15));
+        RunMessage(menu, menu->newRun ? Run_Text_ConfigNav : Run_Text_NavRun + menu->page, menu->line);
+        RunPrint(&menu->helpWindow, menu->line, 0, 0, FALSE);
+        u16 context = menu->damaged ? Run_Text_DamagedHelp : menu->resetPrompt ? Run_Text_ResetWarning : RunContextHelp(menu);
+        RunMessage(menu, context, menu->line);
+        RunPrint(&menu->helpWindow, menu->line, 0, 32, FALSE);
+        Window_CopyToVRAM(&menu->helpWindow);
+    }
     Bg_SetOffset(menu->native.bgConfig, BG_LAYER_MAIN_0, BG_OFFSET_UPDATE_SET_Y,
-        -(FIRST_ENTRY_OFFSET + (menu->cursor - menu->scroll) * 16));
+        -(FIRST_ENTRY_OFFSET + (menu->cursor - menu->scroll) * RUN_ROW_HEIGHT));
     for (u32 i = 0; i < NUM_WINDOWS; i++) Window_CopyToVRAM(&menu->native.windows.asArray[i]);
 }
 
@@ -1451,10 +1610,10 @@ static BOOL RunMenu_InitCommon(ApplicationManager *appMan, BOOL newRun)
     menu->newRun = newRun && !menu->damaged;
     if (menu->newRun) RunConfig_Init(&menu->draft, RUN_PRESET_CLASSIC, MTRNG_Next());
     else menu->draft = *RunSession_Config();
-    menu->messages = MessageLoader_Init(MSG_LOADER_PRELOAD_ENTIRE_BANK, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_RUN_ENGINE, HEAP_ID_OPTIONS_MENU);
+    menu->messages = MessageLoader_Init(MSG_LOADER_LOAD_ON_DEMAND, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_RUN_ENGINE, HEAP_ID_OPTIONS_MENU);
     menu->locations = MessageLoader_Init(MSG_LOADER_LOAD_ON_DEMAND, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_LOCATION_NAMES, HEAP_ID_OPTIONS_MENU);
     menu->species = MessageLoader_Init(MSG_LOADER_LOAD_ON_DEMAND, NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_SPECIES_NAME, HEAP_ID_OPTIONS_MENU);
-    menu->line = String_Init(256, HEAP_ID_OPTIONS_MENU);
+    menu->line = String_Init(512, HEAP_ID_OPTIONS_MENU);
     menu->value = String_Init(128, HEAP_ID_OPTIONS_MENU);
     if (!menu->messages || !menu->locations || !menu->species || !menu->line || !menu->value) {
         OS_ResetSystem(RESET_CLEAN);
@@ -1462,6 +1621,7 @@ static BOOL RunMenu_InitCommon(ApplicationManager *appMan, BOOL newRun)
     }
     menu->digits = MessageLoader_GetNewString(menu->messages, Run_Text_Digits);
     if (!menu->digits) { OS_ResetSystem(RESET_CLEAN); return FALSE; }
+    if (!menu->newRun) RunPrepareRegistry(menu);
     return TRUE;
 }
 
@@ -1480,6 +1640,18 @@ BOOL RunMenu_Main(ApplicationManager *appMan, int *state)
     RunMenuData *menu = ApplicationManager_Data(appMan);
     if (*state == 0) {
         if (!SetupMenuVisuals(&menu->native)) return FALSE;
+        // The shared setup printed retail Options choices. Run screens do not
+        // use them; release their strings before allocating the help window.
+        for (u32 entry = 0; entry < MAX_ENTRIES; entry++) {
+            for (u32 choice = 0; choice < menu->native.entries.asArray[entry].numChoices; choice++)
+                String_Free(menu->native.entries.asArray[entry].choices[choice]);
+            menu->native.entries.asArray[entry].numChoices = 0;
+        }
+        Window_Add(menu->native.bgConfig, &menu->helpWindow, BG_LAYER_SUB_0, 2, 2, 28, 20, 13, 64);
+        LoadStandardWindowGraphics(menu->native.bgConfig, BG_LAYER_SUB_0, 650, 14,
+            STANDARD_WINDOW_SYSTEM, HEAP_ID_OPTIONS_MENU);
+        Window_DrawStandardFrame(&menu->helpWindow, TRUE, 650, 14);
+        menu->helpReady = TRUE;
         GXLayers_TurnBothDispOn();
         RunDraw(menu);
         StartScreenFade(FADE_MAIN_ONLY, FADE_TYPE_BRIGHTNESS_IN, FADE_TYPE_BRIGHTNESS_IN, COLOR_BLACK, 6, 1, HEAP_ID_OPTIONS_MENU);
@@ -1507,69 +1679,91 @@ BOOL RunMenu_Main(ApplicationManager *appMan, int *state)
             int count = RunRowCount(menu);
             if (JOY_REPEAT(PAD_KEY_UP)) menu->cursor = (menu->cursor + count - 1) % count;
             if (JOY_REPEAT(PAD_KEY_DOWN)) menu->cursor = (menu->cursor + 1) % count;
-            if (JOY_NEW(PAD_BUTTON_L | PAD_BUTTON_R)) {
-                int pages = menu->newRun ? 7 : 6;
-                menu->page = (menu->page + (JOY_NEW(PAD_BUTTON_R) ? 1 : pages - 1)) % pages;
-                menu->cursor = menu->scroll = 0;
-                menu->details = FALSE;
-                menu->specialList = FALSE;
+            if (!menu->newRun && JOY_NEW(PAD_BUTTON_L | PAD_BUTTON_R)) {
+                if (!menu->settingsView) {
+                    menu->pageCursor[menu->page] = menu->details ? menu->listCursor
+                        : menu->specialList ? menu->specialCategory : menu->cursor;
+                    menu->pageScroll[menu->page] = menu->scroll;
+                }
+                menu->page = (menu->page + (JOY_NEW(PAD_BUTTON_R) ? 1 : 4)) % 5;
+                menu->cursor = menu->pageCursor[menu->page];
+                menu->scroll = menu->pageScroll[menu->page];
+                menu->details = menu->specialList = menu->settingsView = menu->currentAreaDetails = FALSE;
             }
             if (JOY_NEW(PAD_BUTTON_B)) {
-                if (menu->details) { menu->details = FALSE; menu->cursor = menu->listCursor; }
-                else if (!menu->newRun && menu->page == 4 && menu->specialList) { menu->specialList = FALSE; menu->cursor = menu->specialCategory; }
-                else if (menu->newRun && menu->page) { menu->page--; menu->cursor = 0; }
-                else if (!menu->newRun) close = TRUE;
+                if (menu->newRun) {
+                    if (menu->reviewing) { menu->reviewing = FALSE; menu->cursor = SNELEMS(sRunOptions) + 2; }
+                    else menu->cursor = menu->scroll = 0;
+                } else if (menu->settingsView) { menu->settingsView = FALSE; menu->cursor = 31; menu->scroll = menu->pageScroll[0]; }
+                else if (menu->details) {
+                    menu->details = FALSE;
+                    menu->cursor = menu->listCursor;
+                    menu->scroll = menu->pageScroll[menu->page];
+                    if (menu->currentAreaDetails) { menu->page = 0; menu->cursor = 5; menu->currentAreaDetails = FALSE; }
+                } else if (menu->page == 4 && menu->specialList) { menu->specialList = FALSE; menu->cursor = menu->specialCategory; }
+                else close = TRUE;
             }
-            if (menu->newRun && menu->page > 0 && menu->page < 6) {
-                int index = RunOptionIndex(menu->page, menu->cursor);
-                if (index >= 0 && (JOY_NEW(PAD_BUTTON_A) || JOY_REPEAT(PAD_KEY_LEFT | PAD_KEY_RIGHT)) && RunOptionEnabled(menu, &sRunOptions[index])) {
-                    const RunMenuOption *option = &sRunOptions[index];
-                    if (option->flag) {
-                        menu->draft.flags ^= option->flag;
-                        if (option->flag == RUN_PERMADEATH) {
-                            if (menu->draft.flags & RUN_PERMADEATH) menu->draft.flags |= RUN_END_ON_PARTY_WIPE;
-                            else menu->draft.flags &= ~RUN_END_ON_PARTY_WIPE;
+            BOOL action = JOY_NEW(PAD_BUTTON_A);
+            BOOL change = action || JOY_REPEAT(PAD_KEY_LEFT | PAD_KEY_RIGHT);
+            if (menu->newRun && !menu->reviewing && change) {
+                if (menu->cursor == 0) {
+                    u8 mode = menu->draft.seedMode;
+                    int preset = (RunConfig_EffectivePreset(&menu->draft) + (JOY_REPEAT(PAD_KEY_LEFT) ? RUN_PRESET_COUNT - 1 : 1)) % RUN_PRESET_COUNT;
+                    RunConfig_Init(&menu->draft, preset, menu->draft.seed);
+                    menu->draft.seedMode = mode;
+                } else if (menu->cursor <= SNELEMS(sRunOptions)) {
+                    const RunMenuOption *option = &sRunOptions[menu->cursor - 1];
+                    if (RunOptionEnabled(menu, option)) {
+                        if (option->flag) {
+                            menu->draft.flags ^= option->flag;
+                            if (option->flag == RUN_PERMADEATH) {
+                                if (menu->draft.flags & RUN_PERMADEATH) menu->draft.flags |= RUN_END_ON_PARTY_WIPE;
+                                else menu->draft.flags &= ~RUN_END_ON_PARTY_WIPE;
+                            }
+                        } else {
+                            u8 *value = (u8 *)&menu->draft + option->offset;
+                            int next = *value + (JOY_REPEAT(PAD_KEY_LEFT) ? -option->step : option->step);
+                            *value = next < option->low ? option->high : next > option->high ? option->low : next;
+                            if (option->label == Run_Text_SeedMode && *value == RUN_SEED_AUTO) menu->draft.seed = MTRNG_Next();
                         }
                     }
-                    else {
-                        u8 *value = (u8 *)&menu->draft + option->offset;
-                        int next = *value + (JOY_REPEAT(PAD_KEY_LEFT) ? -option->step : option->step);
-                        *value = next < option->low ? option->high : next > option->high ? option->low : next;
-                        if (option->label == Run_Text_SeedMode && *value == RUN_SEED_AUTO) menu->draft.seed = MTRNG_Next();
-                    }
-                } else if (index < 0 && menu->page == 5 && JOY_NEW(PAD_BUTTON_A)) {
+                } else if (menu->cursor == SNELEMS(sRunOptions) + 1 && action) {
                     menu->draft.seedMode = RUN_SEED_MANUAL;
                     menu->oldSeed = menu->draft.seed;
                     menu->seedEditing = TRUE;
+                } else if (action) {
+                    menu->reviewing = TRUE;
+                    menu->cursor = menu->scroll = 0;
                 }
-            } else if (JOY_NEW(PAD_BUTTON_A)) {
-                if (menu->newRun && menu->page == 0) {
-                    RunConfig_Init(&menu->draft, menu->cursor, menu->draft.seed);
-                    menu->page = 1; menu->cursor = 0;
-                } else if (menu->newRun && menu->page == 6 && menu->cursor == SNELEMS(sRunOptions) + 2) {
-                    u32 nonce = MTRNG_Next();
-                    if (RunSession_Confirm(menu->save, &menu->draft, nonce ? nonce : 1)) { menu->confirmed = TRUE; close = TRUE; }
-                    else menu->confirmFailed = TRUE;
-                } else if (!menu->newRun && menu->page == 0 && menu->cursor == 10) {
-                    menu->resetPrompt = TRUE;
-                } else if (!menu->newRun && menu->page == 0 && menu->cursor == 9) {
-                    menu->page = 5; menu->cursor = 0;
-                } else if (!menu->newRun && RunSession_Configured() && menu->page > 0 && menu->page < 5) {
+            } else if (menu->newRun && menu->reviewing && action && menu->cursor == SNELEMS(sRunOptions) + 2) {
+                u32 nonce = MTRNG_Next();
+                if (RunSession_Confirm(menu->save, &menu->draft, nonce ? nonce : 1)) { menu->confirmed = TRUE; close = TRUE; }
+                else menu->confirmFailed = TRUE;
+            } else if (!menu->newRun && !menu->settingsView && action) {
+                if (menu->page == 0 && menu->cursor == 32) menu->resetPrompt = TRUE;
+                else if (menu->page == 0 && menu->cursor == 31) {
+                    menu->pageCursor[0] = menu->cursor; menu->pageScroll[0] = menu->scroll;
+                    menu->settingsView = TRUE; menu->cursor = menu->scroll = 0;
+                }
+                else if (menu->page == 0 && menu->cursor == 5 && RunSession_Configured()) {
+                    menu->pageCursor[0] = menu->cursor;
+                    menu->pageScroll[0] = menu->scroll;
+                    menu->page = 1; menu->detailID = RunSession_Zone();
+                    menu->details = menu->currentAreaDetails = TRUE; menu->cursor = menu->scroll = 0;
+                } else if (RunSession_Configured() && menu->page > 0) {
                     if (menu->page == 4 && !menu->specialList) {
-                        menu->specialCategory = menu->cursor;
-                        menu->specialList = TRUE;
-                        menu->cursor = 0;
+                        menu->specialCategory = menu->cursor; menu->specialList = TRUE;
+                        menu->cursor = menu->scroll = 0;
                     } else if (!menu->details) {
                         int id = RunRecordID(menu, menu->cursor);
                         if (id >= 0) {
-                            menu->detailID = id;
-                            menu->listCursor = menu->cursor;
-                            menu->details = TRUE;
-                            menu->cursor = 0;
+                            menu->detailID = id; menu->listCursor = menu->cursor;
+                            menu->pageScroll[menu->page] = menu->scroll;
+                            menu->details = TRUE; menu->cursor = menu->scroll = 0;
                         }
                     } else {
-                        menu->details = FALSE;
-                        menu->cursor = menu->listCursor;
+                        menu->details = FALSE; menu->cursor = menu->listCursor;
+                        menu->scroll = menu->pageScroll[menu->page];
                     }
                 }
             }
@@ -1587,6 +1781,11 @@ BOOL RunMenu_Main(ApplicationManager *appMan, int *state)
     } else if (*state == 4) {
         SetVBlankCallback(NULL, NULL);
         DisableHBlank();
+        if (menu->helpReady) {
+            Window_EraseStandardFrame(&menu->helpWindow, FALSE);
+            Window_Remove(&menu->helpWindow);
+            menu->helpReady = FALSE;
+        }
         return TeardownMenuData(&menu->native);
     }
     return FALSE;

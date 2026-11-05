@@ -6,6 +6,7 @@ pokeplatinum_c = files(
     'game_overlay.c',
     'game_version.c',
     'run_config.c',
+    'run_extras.c',
     'run_randomizer.c',
     'run_state.c',
     'run_store.c',

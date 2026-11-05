@@ -1,374 +1,341 @@
-﻿# Configurable Randomizer and Nuzlocke engine
+# Integrated run engine
 
-## Current status and acceptance gate
+## Current revision and verification
 
-Branch: `nuzlocke-base`. No branch switch, commit, merge, cherry-pick or push was
-performed. The isolated Following/field-heap/battle-introduction fixes remain.
-The requirements in `Prompt.TXT` and `Prompt2 (2).TXT` were read in full.
+Work is confined to `nuzlocke-base`; no commit, history rewrite, branch switch,
+merge, cherry-pick or push was performed. Following and its isolated field-heap
+and battle-introduction fixes are preserved. No Delta gameplay/balance import.
 
-The engine and its interfaces are implemented in source. **Incremental `make rom`
-completed successfully (exit 0) in WSL Ubuntu on 2026-11-05 at 01:34 local time.**
-The new `build/pokeplatinum.us.nds` is 134217728 bytes. Native portable C tests,
-resource checks, final ARM layout and NDS binary checks passed. No emulator
-gameplay, visual, hardware or real-flash test has been performed. This ROM is
-ready for user acceptance testing; it is not yet a validated stable gameplay base.
+Prompt3, Prompt4, the first-Ball advice, first-encounter rule and battle capture
+indicator are implemented in source. Portable C tests and localized resource /
+native-font bounds checks passed on 2026-11-05. The current ARM build has not yet
+completed; the build record below will be updated after incremental `make rom`.
+Do not delete `build/` or clean. No emulator, graphics, real-flash or hardware
+test has been executed. User acceptance testing is still required.
 
-If work resumes after an interruption:
+## Configuration and native interfaces
 
-1. The build process has finished; there is no build session left to poll.
-2. Preserve the current ROM and compare its SHA-256 with the build record below.
-3. User acceptance testing is the next step. Follow the DeSmuME checklist below;
-   the user explicitly reserved emulator tests for the completed ROM.
-4. If fixing a discovered issue, rerun relevant lightweight checks and use
-   incremental `make rom`. Do not clean or remove `build/`.
-5. Record the exact preset, seed, map/event and save lineage for any regression.
+New Game opens the native Options-based configuration before Rowan. It is one
+continuous vertical list, including preset, every option, seed and final review.
+Six visible rows scroll; UP/DOWN selects, LEFT/RIGHT changes values, A edits or
+confirms, B returns to the top / previous review. On the final Review row, press
+A, inspect the read-only summary, scroll to Confirm, then A starts Rowan.
+The lower screen shows persistent controls and contextual descriptions.
+Disabled options are gray; their dependencies remain visible. Settings become
+immutable once confirmed. Continue reads the saved configuration.
 
-## Implemented systems
+Classic Platinum, Randomizer, Classic Nuzlocke, Hardcore Randomizer and Custom
+presets initialize consistent defaults. An override changes the effective
+profile to Custom. Level Cap Mode defaults to EXP Lock in all presets. Shiny
+Rate defaults to Original (1/8192); Field Item Randomizer defaults OFF.
+Shiny Rate and Shiny Clause are independent. Shiny Rate offers 1/8192, 1/4096,
+1/2048 and 1/1024 and affects newly generated wild/gift/Egg Pokemon only.
+Forced shinies remain shiny; gender byte, nature, ability parity and Wurmple's
+evolution branch are preserved. Already generated Pokemon and native stored
+roamers are unchanged. Manaphy's special Egg anti-shiny behavior is preserved.
 
-- Five presets, individual overrides, effective Custom profile, all rule options,
-  automatic/manual 32-bit hexadecimal seed and a scrolling full confirmation.
-  Configuration appears after New Game initialization and before Rowan.
-  Rules are immutable after confirmation; Continue loads the saved run.
-- Native Options-screen graphics, windows, fonts, palettes, sounds, input and
-  fades. Six configuration categories plus summary. A confirms; B returns;
-  L/R changes pages; directions select/change; the seed edits eight hex digits.
-  New English strings are centralized in `res/text/run_engine.json`; native
-  script/battle/PC strings extend their respective existing banks.
-- Permanent Start-menu NUZLOCKE entry before receiving the Poketch. Eight-row
-  menus use 20-pixel spacing; smaller menus preserve 24 pixels. Existing Options
-  icon is reused. Union Room retains its communication menu.
-- Registry: overview, seed, settings, badges, cap, next cap, trainer bonus,
-  current area, remaining opportunities, ACTIVE/GAME OVER; all zones and their
-  three individual opportunity slots; nicknames/alive/dead links; ownership and
-  evolution history; memorial; five separate special-encounter categories and
-  per-event details/counters. B returns through details/categories.
-- A compact Poketch Run Tracker reuses the already linked unused-app-4 overlay.
-  It registers only when the normal Poketch acquisition enables the device.
-  App ID 25 occupies an existing unused registry byte; native save size is
-  unchanged. The display refreshes every 30 frames and has no sprites.
-- Route capture reservation at battle establishment, before any Ball use. An
-  eligible KO/flee/failure uses an opportunity. Finalization is idempotent.
-  Two wild enemy parties are addressed independently by battler and party slot.
-  Each distinct eligible wild opponent reserves an opportunity; a repeated
-  callback for the same battle does not reserve again.
-- Evolution-family Dupes Clause uses persistent ownership bits, including
-  branches, dead/released Pokemon and the Nidoran/Volbeat/Manaphy families.
-  Shiny bonuses override dupes/exhaustion without spending ordinary slots.
-- Genuine scripted statics and roamers are identified by encounter source,
-  never by legendary species. Statics always bypass route limits/dupes; native
-  story restrictions on otherwise uncatchable battles remain. Event attempts,
-  successes and failures are tracked separately. Shiny statics retain their
-  static category, avoiding double counting.
-- Script gifts/Eggs have map/script-offset event identities, optional separate
-  allowances and repeat-event checks. Hatching updates identity/history without
-  reserving the hatch location. Day Care Eggs, when enabled, are tracked as
-  breeding bonuses; gift-Egg randomization does not alter breeding species.
-- Pokeball permission is checked in player command selection before Bag removal
-  and turn submission; the command execution path has a second guard. Native
-  battle alerts explain dupes, exhausted areas and history capacity. Safari and
-  Pal Park selections have the same pre-consumption guard. Native capture
-  mechanics still apply, including the restriction while two wild foes remain.
-- Story activation latches `VAR_ROUTE_202_STATE >= 1`, after the catching lesson
-  and first Ball gift. Possessing a Ball or entering a route is not activation.
-  Starter selection, the first Starly battle and the tutorial spend no slots.
-- Area notifications append a short count popup after the native map-name popup,
-  using its existing window/task/frame. They suppress repeated logical zones,
-  pre-activation, scripts and fades, and remain independent of tracking. They
-  require the native location-name request on a map with wild encounters.
-- Permadeath tags tracked owned Pokemon as soon as party HP reaches zero or the
-  battle faint handler runs. HP recovery, item/revive use, Rare Candy, EXP gains
-  and PC PP restoration cannot revive exhausted Pokemon. Native conversion from
-  a boxed Pokemon also passes through the HP guard. Exhausted Pokemon do not
-  appear as field-move helpers or followers (the original follower rejects 0 HP).
-  Field return, storage and battle entry also reassert zero HP on tagged members,
-  including after native temporary facility/link restoration paths.
-- Exhausted party Pokemon move to box 18, named Memorial if it was empty, or any
-  free box. A full PC never deletes them: they stay locked in the party. One
-  exhausted member is retained on a wipe to preserve native nonempty-party
-  assumptions. Withdrawal and party placement/swap are blocked; viewing and
-  moving between boxes remain possible. Release of exhausted Pokemon is blocked.
-- A total active-party wipe ends the run even with living boxed Pokemon.
-  The wipe rule is derived from permadeath and cannot be toggled off in the UI.
-  Parent story script contexts stop through their normal cleanup; field tasks unwind
-  before a deferred blackout. All subsequent map loads are confined to Sandgem
-  Pokemon Center 1F, at a valid tile. Nurse/common dialogue explains the ending.
-  A checkpoint is attempted after loading the Center, before the explanation.
-  A different prior adventure is never automatically overwritten. Save failure
-  is shown explicitly. A failed checkpoint means persistence is not guaranteed
-  until a successful native save. The registry offers an explicit destructive
-  restart confirmation, warning that the adventure and memorial will be erased.
-- Hardcore disables native Day Care Egg generation/claiming and the man explains
-  the quarantine. Deposits and experience remain; exhausted Pokemon cannot be
-  deposited. Day Care preview and withdrawal experience obey caps.
-- Caps are generated from the actual unscaled vanilla leader aces in story order,
-  then Cynthia with eight badges, plus configurable allowance 0..5. EXP is
-  clamped to the exact threshold without banking surplus. Battle messages and
-  gauges receive the bounded amount. Rare Candies cannot bypass the cap.
-- Trainer scaling runs centrally after all four native party formats are built:
-  min(100, base level + badge count * configured bonus). Boss classification and
-  the boss switch are centralized. Player partners, link and Frontier parties
-  are excluded. No source trainer JSON is modified.
-- Deterministic species-only randomization hooks cover ordinary wild generation,
-  radar/honey-tree paths, trainers, scripted statics and script gifts/Eggs. Wild
-  levels remain native. Replaced trainers get native level-up moves, correct
-  recalculated stats/ability and form zero, retaining held items, PID, IVs and
-  Ball Capsules. Unreplaced trainers keep their authored movesets.
-- For random/capture-restricted runs, field HM interactions can use a living
-  helper when no party member knows the move. The actual HM disc and correct
-  badge remain mandatory. Learnsets, TM/HM compatibility and battle moves are
-  unchanged. This prevents restricted encounter pools from blocking mandatory
-  field interactions; it does not add extra moves to the party menu.
+The Start menu Registry is available before the Poketch. L/R moves between RUN,
+AREAS, POKEMON, MEMORIAL and SPECIAL; each remembers its scroll position.
+RUN begins with the current zone, capture status, remaining attempts, first
+encounter/result and A for details, followed by progression, randomizer and
+capture summaries. Full settings are read-only. Areas show current first, then
+visited available, visited exhausted and unvisited; all mapped zones remain
+inspectable. Aggregate area totals exclude unused gift-only/town zones.
+History links survive PC moves, nicknames, evolution and death. The optional
+Poketch tracker uses the preexisting unused-4 app after obtaining the device.
+Map-name notifications reuse the native popup, without an extra window/task.
+
+All strings are centralized in native message banks; language is the ROM's
+English. Native graphics, fonts, palettes, sounds, fades and cursors are reused.
+The lower help window shares the existing 64KB Options heap; unused retail
+choice strings are freed before allocating it. Font-measured help fits 224px
+and eight lines; the six-row main list fits its existing 112px window.
+
+## Capture activation, enforcement and battle flag
+
+The first successful addition of a usable ordinary Ball to the player's own
+Bag activates capture rules permanently. Shops, gifts and field pickups all
+reach this hook. Loading a Bag that already has Balls also activates them;
+the defensive field scan reads 15 Bag slots directly without item-NARC loads.
+Tutorial/script progression alone does not activate restrictions. Before that
+point, encounters do not spend attempts. Running out of Balls later does not
+disable the rules or restore opportunities.
+
+A persistent pending-advice bit queues native overworld dialogue at the next
+safe field frame, after shops/scripts/fades finish. Dismissing it acknowledges
+it once; interruption before dismissal keeps it pending. The message explains
+the configured quota. With quota 1, the FIRST eligible encounter is the only
+ordinary capture opportunity, regardless of catch, KO, flee, failure or an
+empty Bag. Later encounters cannot replace that spent opportunity. With quota
+2/3, the first two/three distinct eligible species each reserve an attempt;
+a repeated attempted species remains blocked even with Dupes Clause OFF.
+
+Reservation occurs once at battle establishment, result finalization later.
+The cached permission prevents duplicate callbacks and permits a reserved
+first encounter even when the remaining counter has already reached zero.
+Historical evolution-family dupes (including dead/released Pokemon) skip the
+ordinary quota and are blocked before Ball consumption. Shiny Clause grants
+bonus opportunities without spending the quota. Genuine scripted statics and
+native roamers always bypass quota and dupes. A randomized wild legendary is
+still an ordinary wild encounter. Native story catching restrictions remain.
+Gifts/Eggs use stable script identities and configurable shared/separate quotas;
+hatching does not spend a new area's opportunity. Failed/interrupted ordinary
+encounters remain spent after saving and reloading.
+
+The battle lower screen now shows a small native-font flag above BAG:
+`CATCH OK`, `NO CATCH`, or `ONE FOE` while two opponents remain. It queries the
+same cached permission as Ball enforcement, rather than guessing from the
+remaining counter. It indicates rule eligibility, not guaranteed capture or
+Ball ownership. Trainer/tutorial/facility/link/Pal Park menus omit it. Safari
+positions it above BALL instead. The flag shares the relevant panel palette
+and press animation, uses the action menu's otherwise-unused FontOAM slot 4,
+and is freed by the existing menu teardown. The FontOAM manager already has
+13 slots for move selection, so no manager/struct/overlay heap increase is
+needed. Actual rendering and repeated menu transitions require emulator QA.
+
+## Level Cap modes
+
+Both modes use the next vanilla boss ace plus allowance 0..5, clamped at 100.
+Badge trainer scaling is separate and does not increase this cap. The current
+ladder stays at Cynthia after eight badges; no postgame ladder is invented.
+
+EXP Lock clips each recipient's FINAL normal EXP award after native participant,
+EXP Share, trainer, traded, Lucky Egg and other modifiers. The participant/share
+denominators are unchanged. At/above cap, award is zero; excess is discarded,
+never reassigned. Existing above-cap Pokemon keep their level. Rare Candy and
+Day Care obey the same cap. There is no hidden accumulation.
+
+Obedience Cap allows normal EXP, Rare Candy and Day Care. Exactly at cap remains
+eligible; strictly above cap refuses initial selection, voluntary switches,
+replacement, AI/automatic replacement and forced entry. All candidate paths
+use virtual eligibility HP without changing real HP. The party interface marks
+refusers `NO BTL` and uses the existing unavailable palette; refusal messages
+are native battle/party messages. Actual statuses retain native icon priority.
+An already-active Pokemon that overlevels may finish that battle, but cannot
+reenter after switching out. Whirlwind chooses only eligible bench Pokemon and
+fails normally when none exist; it cannot reroll forever. Existing optional
+double-trainer field gates now require two eligible combatants. Native partner
+battles retain their separate parties. Any future forced own-party double must
+use the same two-combatant gate; arbitrary new battle formats are not supported.
+
+After battle, zero eligible ACTIVE-PARTY members ends the run in Obedience mode,
+even without permadeath and even with living boxed reserves. Overlevel refusal
+never sets a death marker. The loss reason is separate from fainting wipe and
+appears in the safe Game Over dialogue/Registry. Zero eligible members before
+a battle prevents invalid battler initialization and reuses encounter cleanup.
+A newly won Gym badge is considered for post-battle eligibility before its
+native script awards the badge, avoiding a false loss on the cap-raising win;
+no story flag is set early. Ordinary badge updates restore eligibility without
+editing Pokemon. Registry shows the mode, cap, eligible/refusing counts and a
+warning when just one eligible party member remains.
+
+Permadeath, exhausted-PC handling, living boxed reserves not preventing a wipe,
+safe end-run Center confinement, automatic checkpoint and explicit restart are
+preserved. A checkpoint does not overwrite another adventure; failed I/O or
+overwrite protection produces a warning and keeps Game Over enforced in memory.
+
+## Original mythical events
+
+Professor Oak in Eterna City's south house offers Oak's Letter after game
+completion and the National Dex. The Member Card additionally requires the
+original Sailor Eldritch boy-awakened flag, reached through Cresselia/Lunar Wing.
+Rewards use normal Bag-fit/give-item scripts. Distribution magic is set only
+after the item is present; existing legitimate items are recognized. Native
+distribution magic prevents duplicate rewards. Full Bag leaves the event
+available. No dates, external gifts, artificial warps or Pokemon awards.
+
+Canalave/Harbor Inn/Newmoon Island and Route 224/Seabreak Path/Flower Paradise
+scripts remain original, including National Dex, story requirements, nightmare,
+gratitude, travel, return, caught flags and retry behavior. Oak's existing
+Upgrade/roaming-bird dialogue continues after the optional key-item subroutines.
+Both key items are excluded from field-item randomization.
+
+SPECIAL's legendary list always includes Darkrai and Shaymin, with virtual
+availability derived from native flags/items and real persistent static records:
+NOT AVAILABLE, AVAILABLE, ENCOUNTERED, CAUGHT or FAILED. No fake persistent
+encounters are allocated. A real attempt replaces the virtual view, preventing
+double-counting. Event identity is original map/species, even if static
+randomization replaces the battle species. Both remain exempt from route limits
+and dupes. Native intentionally non-catchable battles keep their restrictions.
+
+## Deterministic randomization and safeguards
+
+493 species, 246 evolution edges, 26 legendaries and 9 mythicals derive from
+local vanilla data. Legendary/mythical share a centralized restricted class.
+Stats, types, abilities, moves, TMs and ordinary battle RNG are not randomized.
+Native trainer party sizes and regenerated usable moves are retained. Wild
+levels are unchanged. Native roamers keep stored species to protect story/HP
+bookkeeping; facilities retain native parties. Field HM assistance requires the
+actual HM and badge and supports contextual native interactions with a living
+party member, preserving battle learnsets; Fly/Flash remain optional menu moves.
+
+Mappings are lazy, cache-free and keyed to resolved seed, species fingerprint,
+domain, stable encounter/trainer/event ID, slot, reference species and settings.
+Schema/rules 2 retains the published linear law and starter gift key unchanged.
+Rules 3 uses the distinct BST Range (T) and Similarity Strength (S):
+
+```
+eligible: 100 * abs(candidateBST - B) <= B * T, with required legendary class
+sigma = B * T / 200
+G(i) = exp(-distance(i)^2 / (2 * sigma^2))
+P(i) = (1 - S/100) / N + (S/100) * G(i) / sum(G)
+```
+
+Runtime approximates G with a 65-entry u16 exp(-2*x*x) LUT and Q8 interpolation;
+all weights remain positive. A local integer two-stage sampler chooses the
+uniform/Gaussian branch. At S=0 the eligible pool is uniform; S=100 strongly
+favors the reference BST while leaving every eligible candidate possible.
+Empty pools fall back to nearest BST within the required class; vanilla's
+original species always qualifies. No heap pool, floating point or normal RNG.
+Old rules 2 retains `100 + floor(9*S*(B*T - 100*d)/(B*T))` and its old stream.
+
+Rowan's presentation Pokemon is seeded and cosmetic. Gift randomization uses
+stable starter slots for names, cries, sprites, award and first rival battle;
+native story slot variables retain their canonical starter identity. Field-item
+randomization is separately seeded by visible/hidden location before Bag-fit,
+messages and awarding. Its explicit ordinary-item whitelist excludes Key Items,
+TMs/HMs, fossils, mail, progression orbs and special event tools; shops/NPC gifts
+are excluded. Existing quantity and one-time item flags remain native.
 
 ## Persistent format and compatibility
 
-Native SaveData table sizes, offsets, Pokemon/BoxPokemon sizes and Poketch size
-are unchanged. New native IDs are appended, never inserted into existing lists.
-`MiscSaveBlock.unused` stores a nonzero run nonce. A retail/Following save whose
-anchor is zero remains Classic; no run extension is written for it. A nonzero
-anchor requires matching valid run data. Corruption, missing extension, future
-schema or changed data fingerprint fails closed with a title-return message;
-there is no silent Classic reset or save replacement.
+Native SaveData/BoxPokemon/Poketch sizes and offsets are unchanged. New message,
+script and app IDs are appended. `MiscSaveBlock.unused` holds a nonzero run nonce.
+Anchor-zero retail/Following saves remain Classic without extension writes.
+Configured saves require matching valid extension; missing/corrupt/future data
+fails closed, without replacing a save. Backups and savestates are not anti-cheat
+protected. Older ROMs do not understand configured runs or the new Poketch ID.
 
-Compatibility is forward: old unconfigured saves can be read by this ROM.
-New configured-run saves require this engine and its matching schema/data.
-Older ROMs do not understand the run rules or the new Poketch app ID; reverse
-compatibility is not promised despite unchanged native structure sizes.
+RunState is a 65536-byte explicit little-endian root-BSS wire buffer:
 
-`RunState` is a 65536-byte explicit little-endian wire buffer in root BSS, not a
-field-heap allocation. The flash format is independent of C struct padding:
-
-| Offset | Bytes | Contents |
+| Offset | Bytes | Meaning |
 | --- | --- | --- |
-| 0 | 32 | RNS1 magic, schema 1, length/4, status, activation, nonce, native normal-block counter, record counts, world fingerprint, CRC32 |
-| 32 | 36 | RUNC configuration schema 2 |
+| 0 | 32 | RNS1 schema 1 header, status, activation, nonce/counter, counts, world fingerprint, CRC32 |
+| 32 | 36 | RUNC configuration |
 | 68 | 64 | Persistent evolutionary-family ownership bitmap |
-| 132 | 7168 | 256 zones * 28 bytes: visited, used count, skipped duplicates, three 8-byte opportunities |
-| 7300 | 5120 | 256 special events * 20 bytes: stable key, zone/species, last Pokemon ID, attempts/caught/failed, source/result |
-| 12420 | 49152 | 1024 Pokemon * 48 bytes: PID, OTID, original/current species, origin/death zone, special-event ID, three evolutions, 11 native 16-bit name codes, flags |
-| 61572 | 3964 | Reserved for future schema revisions |
+| 132 | 7168 | 256 zones x 28 bytes, three opportunities per zone |
+| 7300 | 5120 | 256 aggregated special events x 20 bytes |
+| 12420 | 49152 | 1024 Pokemon history records x 48 bytes |
+| 61572 | 3964 | Reserved |
 
-RUNC layout: magic at 0, schema at 4, length at 6, rules version at 8, seed mode
-at 10, reserved at 11, species fingerprint at 12, seed at 16, flags at 20,
-tolerance/weight/attempts/preset at 24..27, cap allowance/bonus at 28..29,
-reserved 30..31, CRC32 of bytes 0..31 at 32. All integers are little endian.
-CRC32 uses reflected IEEE polynomial 0xEDB88320, initial/final XOR 0xFFFFFFFF.
-Old prototype configuration schema 1 is rejected, not migrated.
+RNS1 header byte 9 is capture activation, byte 10 pending activation advice,
+byte 11 loss reason (0 legacy/unknown, 1 fainting wipe, 2 no eligible combatant).
+Legacy zero reserved bytes remain valid. Loss reason is written only on the
+first transition to Game Over. Refusal does not mark a Pokemon exhausted.
 
-Two snapshots occupy flash sectors 44..59 and 108..123 of the native 512KB
-backup. Native main data (0..31 and 64..95) and extras (32..43 and 96..107)
-are preserved. Runtime size checks reject any future overlapping native table.
-Before committing a new native normal-block footer, the opposite run slot is
-invalidated, its payload written, and its CRC-bearing header written LAST.
-Loading requires both matching nonce and exact native normal counter. A torn
-extension write leaves the previous native-paired copy usable. A pending
-opportunity on a recovered snapshot becomes INTERRUPTED and remains spent.
-The first-save path validates the run before native old-footer invalidation.
-The loader uses a temporary 64KB application-heap buffer only during loading.
-Real cartridge power-loss behavior has not been tested.
+RUNC is still 36 bytes: magic0, schema4, size6, rules8, seedMode10, reserved11,
+species fingerprint12, seed16, flags20, tolerance/weight/attempts/preset24..27,
+allowance/bonus28..29, Shiny Rate30, Cap Mode31, CRC32 of0..31 at32.
+Flags bit17 is field-item randomization. Schema/rules 3 uses the new bytes;
+exact legacy 2/2 decodes with original shiny rate, items OFF and EXP Lock,
+preserving old mappings. New options must be zero in legacy data. Unsupported
+schema/rules pairs, fingerprints, flags and ranges are rejected, not guessed.
+CRC32 is reflected IEEE 0xEDB88320, initial/final XOR 0xFFFFFFFF.
 
-History links use an ID in native encrypted unused field 114, verified against
-PID and OTID. Unused byte 113 has TRACKED 0x40 and EXHAUSTED 0x80. No party-slot
-identity is persisted. Rename setters, hatching and evolution synchronize the
-record. Shedinja receives an independent ID before any copied-ID setters run,
-because vanilla deliberately shares PID/OTID with Ninjask; its derived record
-retains the original capture origin. Removing/releasing a living Pokemon never
-clears historical ownership.
+Two extension snapshots occupy sectors44..59 and108..123 of the 512KB backup;
+native main0..31/64..95 and extras32..43/96..107 are preserved. Opposite slot is
+invalidated then payload written, CRC header LAST, before committing the native
+normal-block footer. Loading requires nonce AND exact normal counter. Torn
+writes retain the previous native-paired copy. Interrupted pending opportunities
+remain spent. Loading briefly uses a 64KB application-heap scratch buffer.
+Real flash/power-loss has not been tested; host simulated torn-write tests have.
 
-## Area policy, randomizer and memory
+History ID is encrypted unused field114, verified against PID/OTID. Byte113 uses
+TRACKED0x40/EXHAUSTED0x80. Three evolution slots, origin/death zone, native nickname
+and source/event link are stored. Rename/hatch/evolution synchronize records;
+Shedinja gets an independent identity before copied-ID setters can mutate its
+parent's record. Releasing never clears ownership. At history capacity ordinary
+captures fail closed, but statics/shinies/exempt gifts remain obtainable and can
+use aggregate counters with no detailed record. Special retries aggregate.
 
-`tools/datagen/run_zones.json` explicitly assigns every native map header to a
-logical zone. Grass/surf/fishing and internal route sections share an allowance;
-all floors of each named cave, lake, forest or facility share a zone. Town
-interiors use that town's zone; unknown maps use Mystery Zone. New maps require
-manifest review. Runtime uses map IDs and the committed table, not translated
-names. Zone IDs are native location-bank indices; changing their order requires
-review/versioning. The registry includes all mapped logical zones, including
-towns and special locations without ordinary wild tables.
+`tools/datagen/run_zones.json` centrally groups logical routes, named caves,
+forests/lakes/facilities and town interiors. Grass/surf/fishing share a zone;
+all floors of each named location share one allowance. Native map IDs select
+committed location-index zones, not translated strings. New maps require review.
+Species fingerprint covers BST/families/classification; world fingerprint covers
+zones/caps/bosses. New tables, stable key/offset changes or balance imports need
+explicit version/migration review. No Renegade data has been imported.
 
-Species tables derive from local data: 493 BSTs, unioned evolution families,
-26 legendary and 9 mythical species. Legendary and mythical species share the
-restricted legendary pool; ordinary species remain outside it. Identity
-replacements are allowed. The SHA-256-derived species fingerprint covers BSTs,
-families and classes; the world fingerprint covers map grouping, caps and boss
-classification. No Renegade or unrelated Delta gameplay data is imported.
+## Validation and emulator acceptance
 
-Mappings are generated lazily without caches or persistent randomizer RNG.
-A local 32-bit stream is keyed by resolved seed, species fingerprint, domain,
-event key, slot, reference species and randomizer settings. Wild keys use map
-ID and destination battler plus reference species; trainer keys use trainer ID
-and team slot; gifts use map/script offset; static keys use map/original species.
-Normal battle RNG is never used to select a replacement. Native generation
-still uses normal RNG for IVs, nature, gender and other ordinary properties.
-Future changes to mapping keys or gift-script instruction offsets must bump
-the rules version, even if BST/world-table fingerprints have not changed.
-The same explicit version review is required for encounter/trainer/gift tables,
-growth rules and any future balance import: those inputs are not all covered
-by the compact BST/world fingerprints. Do not reuse a version after such edits.
+Executed host checks: `python tools/tests/run_engine_tests.py` (actual portable
+C99 kernels built with GCC, pedantic/Wall/Wextra/Werror),
+`python tools/tests/check_run_integration.py`, and `git diff --check`.
+Tests cover presets/codecs, legacy byte-exact roundtrips, invalid payloads,
+all species/families, deterministic mappings, Gaussian law vs exp reference and
+100000 draws per mixture, all shiny XORs/rates and protected PID properties,
+safe field items, first Ball/advice persistence, quotas1..3, repeated species,
+all clause/rate pairs, statics/shiny/gift exemptions, history/exhaustion,
+both cap modes/exact boundaries/badge recovery/no false death, per-recipient
+EXP clipping, persistent loss reason and 18 simulated torn-write boundaries.
+Source/resource checks verify glyphs, message references, help/flag widths,
+native script/app IDs and the pinned legacy starter instruction offset.
+These checks do not execute native ARM battle callbacks or render graphics.
 
-For reference BST B, tolerance T, strength S and distance d:
+Use disposable ROM/save copies and preserve backups. All DeSmuME items below
+are NOT YET EXECUTED:
 
-```
-eligible = (100*d <= B*T) && poolAllows
-weight = 100 + floor(9*S*(B*T - 100*d)/(B*T))
-P(candidate) = weight / sum(eligible weights)
-```
+1. New Game, every preset/override, continuous scrolling, lower-screen help,
+   disabled parents, manual seed including zero, final Review -> Confirm -> Rowan.
+   Continue must never reopen configuration. Compare Classic with Following base.
+2. Seeded Rowan and randomized starters: correct names/cry/sprite/palette, reopen
+   selection, correct awarded species and first rival choice; first battle,
+   return to overworld, follower, doors/maps and strong-trainer introductions.
+3. Before first Balls: no quota used. First gift/shop/pickup triggers advice once
+   only after other dialogue ends. Reload with Balls, empty Bag later and repeat
+   acquisitions. With quota1, KO/flee the first eligible encounter and verify NO
+   CATCH and no Ball/turn consumption on every later ordinary encounter.
+4. Quotas2/3, same species with dupes OFF, branching-family dupes after release/
+   death, shiny exceptions, statics in exhausted areas, partner wilds/two foes,
+   Safari, tutorial and trainer menus. Flag remains CATCH OK for the reserved
+   first encounter and ONE FOE with two live opponents. Repeated Bag/Fight/Party/
+   Cancel transitions, touch/D-pad and menu animation must leave no stale flag.
+5. Registry before Poketch, all Start entries, all five L/R pages, current area
+   status, counts, detail/back and settings help. Quotas/results/identity persist
+   through PC/nickname/evolution/hatch/Nincada/Shedinja/save/reload. Test popup
+   across same-zone floors, rapid doors, scripts/fades and notification OFF.
+6. EXP Lock: exact cap, surplus, existing above-cap Pokemon, candy/Day Care,
+   participants plus EXP Share. Verify another recipient gets only its normal
+   share when a capped recipient gets zero. Check all badges/allowances/scaling.
+7. Obedience: at cap eligible; one above marked NO BTL, refused at initial entry,
+   voluntary/forced switch, replacement and doubles. Active mid-battle overlevel
+   may finish but cannot reenter. Whirlwind with no eligible bench fails safely.
+   Badge restores eligibility; Gym win raising the cap must not cause false loss.
+8. Obedience zero-eligible loss with living overleveled party and living PC reserve,
+   including permadeath OFF, and before a mandatory encounter. Refusers retain
+   HP/alive history. Check safe Center/Game Over reason/save/reload/restart. One
+   eligible member shows warning but does not end the run. Test ordinary death
+   wipe separately, healing/revival/storage protection and Following/HMs.
+9. Oak before/after National Dex, game completion and boy/Cresselia quest; no
+   duplicate items after reload/repeated dialogue, full Bag preserves reward.
+   Original Darkrai Harbor Inn/nightmare/return and Shaymin gratitude/Seabreak/
+   return. KO/flee/retry/catch, registry statuses/counters, static randomizer
+   OFF/ON and exhausted routes/dupes. Key items stay unrandomized.
+10. Field items OFF/ON: visible/hidden, message/pocket/quantity/Bag full, reload,
+    same/different seeds; protected items/TMs/HMs/fossils, shops/NPC gifts.
+    Shiny rates/Clause combinations, forced shinies and unchanged existing mons.
+11. Original unconfigured and schema2 saves load safely; new modes persist;
+    corrupt/missing extension fails closed on copies. Record preset, seed, save
+    lineage, exact event and frame for regressions; test tracker and overlay/map
+    transitions. No automatic stability claim until these gameplay tests pass.
 
-At strength 0, candidates are uniform. At 100, preference ranges from 1000 to
-100, keeping every eligible candidate possible. If future exclusions empty a
-pool, the documented fallback uniformly selects nearest BST within the required
-legendary class; with current rules the original species always qualifies.
-No candidate heap, species NARC scan or normal-RNG state is used.
+## Memory and build record
 
-Run state uses 64KB root BSS; species tables use about 2.5KB of read-only data.
-World tables are compact byte arrays. Registry graphics share the 64KB Options
-heap. Tracker uses the existing 48KB Poketch app heap, one 160x128 text window,
-existing background graphics and palette. Popup adds no second window/task.
-The completed ARM map gives the following measured static layout, compared with
-the preexisting Following/prototype build. Sizes below are text plus data:
+Run state stays 64KB root BSS. Gaussian LUT is130 bytes; no candidate heap/cache.
+Registry uses the existing64KB Options heap, Poketch the existing48KB app heap.
+The battle flag adds a short transient font object/tiles below the existing
+13-label move-menu manager capacity; allocation/VRAM high-water needs emulator
+verification. Native base heaps and Following heap fixes are unchanged.
+Current final ARM layout/ROM hash will be recorded when this build completes.
 
-| Region | New bytes | Growth |
-| --- | ---: | ---: |
-| Main static text/data | 1121792 | 16224 |
-| Main through BSS, measured from 0x02000000 | 2035456 | 81824 |
-| Field overlay 5 | 228384 | 448 |
-| Encounter overlay 6 | 47168 | 64 |
-| Battle overlay | 220320 | 480 |
-| PC boxes overlay | 63808 | 224 |
-| Options/configuration/registry overlay | 10176 | 6176 |
-| Reused Poketch unused-4/tracker overlay | 1472 | 672 |
+Current build attempts: session92207 regenerated Meson/Ninja and reached249/282,
+then stopped on an undefined `fieldSystem` in the new hidden-item hook. The
+static helper now receives that context explicitly from its caller. Native
+resource checks passed again; incremental retry session12335 compiled all ARM
+sources through1088/1090 and is linking the final image. No emulator was run.
+The failed attempt is not a successful ROM build and did not replace the ROM.
 
-Main BSS ends at `0x021F0F00`; the arena starts at `0x02290F60`, 82304 bytes
-above the baseline `0x0227CDE0`. The four unchanged native base heaps total
-1292304 bytes. Against the SDK's `0x023E0000` main-memory boundary, that leaves
-80016 bytes before arena metadata, randomized initialization offset and other
-OS allocations. This is a static budget, not measured runtime free memory.
-All 122 linked overlay ranges fit their assigned RAM/TCM region. The 121
-main-memory `After` relationships follow their parent's BSS end; the remaining
-dummy overlay uses ITCM. NDS overlay table/FAT bounds were checked independently.
-Actual heap high-water marks, VRAM behavior, timing and simultaneous runtime
-overlay transitions require emulator testing.
-
-## Known limits and unavailable work
-
-- No emulator, visual, real-flash or hardware test has been executed. Allocation
-  pressure, transitions and all native callbacks still require acceptance tests.
-- Roamers keep their native stored species even with static randomization on,
-  preserving native roamer species/HP/story bookkeeping. They are tracked and
-  exempt as statics. Special facilities retain native parties rather than
-  participating in run randomization/permadeath.
-- Capture history is bounded to 1024 Pokemon and 256 aggregated special events.
-  Ordinary captures fail closed at history capacity. Mandatory statics remain
-  eligible; exhausted tagging still works if a new detailed record cannot fit.
-  Exempt shinies/gifts also remain obtainable with aggregate event counters and
-  a zero detailed-record link; acceptance never depends on a nonzero record ID.
-  Repeated special events aggregate counters rather than keeping an unlimited
-  per-attempt log. Additional death details such as fatal move/attacker are not
-  stored; origin, final species, nickname and defeat location are stored.
-- The registry has text/species pages; it does not add new Pokemon icon/sprite
-  assets. Disabled rules display inactive values; notification toggles are set
-  before the run and remain immutable with the other configuration.
-- Common script gifts and Eggs are guarded and show native rejection dialogue.
-  Rejected Eevee/Porygon/Riolu gifts and fossils preserve their pending native
-  gift state and skip nickname prompts. Fossil revival is deliberately repeatable
-  and aggregates event counters. Cynthia's restricted Togepi gift is recorded as
-  failed and her story event advances so she cannot block the Bicycle shop.
-  Some native pre-transfer dialogue/fanfares still precede the rejection message;
-  they do not add a Pokemon or launch a nickname prompt for a denied transfer.
-  Acquisitions outside these paths are observed into history;
-  they do not acquire invented script identities or randomized trade tables.
-- The HM safety helper supports contextual native field interactions, not a
-  new all-HM submenu or changed learnsets. Fly/Flash remain optional menu moves.
-- Caps use vanilla aces and remain at Cynthia's cap after eight badges; no
-  separately designed postgame cap ladder or Renegade dataset exists here.
-- A checkpoint cannot overwrite a different adventure. On I/O failure or when
-  that overwrite protection applies, Game Over remains enforced in memory and
-  displays a save warning; a successful native save is required for persistence.
-- No defense against external save editors, restored backups or savestates is
-  claimed. Schema/data-version changes require an explicit migration design.
-- Verified Renegade Platinum balance data is absent. Species stats/types,
-  abilities, items, TMs, evolution requirements, trainer and encounter balance
-  files remain vanilla. Do not invent such data or import full Delta commits.
-
-## Files and validation
-
-Portable modules: `run_config`, `run_randomizer`, `run_state`, `run_store`,
-`run_world`. Native bridge: `run_session`, `run_game`, `run_menu`. UI lives in
-Options, Start menu, map-name popup and the reused unused Poketch app. Gameplay
-hooks touch encounter/DTO, trainer generation, Pokemon setters, battle scripts
-and item selection, party/PC menus, Day Care, gifts, evolution, script manager,
-map transitions/blackout, save and game start. Meson/main.lsf register new root
-objects and generated tables. No original species/trainer gameplay JSON changed.
-
-Executed successfully; native/resource/whitespace checks were repeated after
-the final PC-menu correction:
-
-- `python tools/tests/run_engine_tests.py`: actual C99 sources under GCC
-  -pedantic -Wall -Wextra -Werror, preset/codec checks, 493 species,
-  exhaustive candidate weights, deterministic mappings, all 246 evolution
-  edges, independent CRC32 plus 16 valid-checksum rejection cases, capture
-  opportunities/exemptions/history/exhaustion, caps/scaling and mock flash with
-  18 torn-write boundaries and native-sector preservation.
-- `python tools/tests/check_run_integration.py`: JSON/message references,
-  appended script/command/Poketch/subscript IDs and generator syntax.
-- `git diff --check`.
-- Final incremental WSL `make rom`: exit 0, ARM link and ROM generation completed.
-- Final ARM map: 122 overlay bounds and 121 main-memory `After` relationships.
-- Read-only NDS binary validation: header CRC16 `54C0`, game code `CPUE`, ARM9
-  load/file bounds (1123544 bytes), all 122 overlay IDs, FAT references and
-  RAM/TCM bounds. SHA-256 was computed with Windows `Get-FileHash`.
-
-These tests exercise portable policy/storage and source/resource consistency.
-They do not execute native UI, battle hooks, DS overlay transitions or flash.
-
-## DeSmuME acceptance checklist (USER: all not yet executed)
-
-Use a separate ROM/save copy; keep original saves and external backups intact.
-
-1. New Game: each preset, every override/disabled option, eight-digit seed
-   including zero, all summary rows, B navigation, confirmation; Rowan begins
-   only after confirmation. Continue never reopens configuration.
-2. Classic: normal intro, starter selection, first Starly, Following, maps,
-   battle intros, bag, PC and saves; compare gameplay with Following-only base.
-3. Before first Balls: visit 201/202, tutorial and starter battles; no consumed
-   opportunities or capture notifications. Obtain first Balls normally; route
-   201 must still offer its first opportunity.
-4. Limits 1/2/3: catch, KO and flee consume exactly one opportunity per distinct
-   eligible opponent. No-Ball encounters count. Try both wild foes in partner
-   encounters and verify registry species/results and native two-foe behavior.
-5. Duplicate branching family, including released/dead Eevee family: skipped,
-   recorded and Ball blocked without item/turn loss. Disabling dupes restores
-   ordinary capture eligibility. Test 0/OFF limits independently of randomizer.
-6. Shiny in exhausted/duplicate areas: allowed bonus, no ordinary count change;
-   KO/flee does not change count. Static legendary in exhausted/dupe area:
-   allowed, tracked separately, native story restrictions still respected.
-7. Gifts/Eggs: separate and shared allowances, repeat dialogue, party full,
-   rejected gift, hatch/evolution/nickname, PC moves; verify persistent identity.
-   Cancel an evolution; history must remain unchanged. Evolve Nincada with spare
-   slot and Ball; Ninjask and Shedinja need separate IDs.
-8. Registry before Poketch, all eight Start entries, scrolling/details/back,
-   alive/dead nickname links, memorial and five special categories; save/reload.
-9. Notifications with 1/2/3, exhaustion, same-zone floors/segments, rapid doors,
-   scripts/fades, follower map transitions and OFF. Obtain Poketch through the
-   three coupons; cycle to tracker and back, including sleep/save/area changes.
-10. Faint by normal damage/recoil/poison; Center/NPC/story healing, Revive,
-    candy, PC deposit/withdraw/swap, full memorial/PC, field moves and Following.
-    Exhausted Pokemon must remain unusable and visible.
-11. Wipe with a living boxed reserve: GAME OVER, safe Center, nurse explanation,
-    automatic save result, doors/stairs/Fly/teleport/save/reload confinement,
-    registry access and cancel/confirm restart. Verify no silent prior-save
-    replacement when New Game was selected over another adventure.
-12. Hardcore Day Care: no new Egg after many steps, quarantine dialogue,
-    deposits/withdrawal/cap retained, unrelated gift Eggs allowed.
-13. Exact cap EXP, surplus discarded, Rare Candy and Day Care; each badge unlocks
-    next unscaled ace cap, allowance and scaling bonus; boss switch, rematches,
-    doubles, scripted trainer fights and native partners.
-14. Same seed/settings/data reproduce species across save/reload and different
-    movement/battle RNG actions; different seeds vary. Check held items, legal
-    moves/forms, legendary pools, wild levels and disabled domains. Obtain an HM
-    and its badge with no compatible party species; contextual use must work.
-15. Save/reload/new-slot/backup on emulator copies. Test read-only/truncated or
-    missing extension on disposable saves: fail closed, no silent Classic reset.
-    Record frame timing, memory failures, overlay/map/Following regressions.
+The records below refer to the PREVIOUS ROM, not validation of this revision.
 
 ## ARM build log
 

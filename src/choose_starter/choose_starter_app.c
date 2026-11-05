@@ -25,6 +25,10 @@
 #include "overlay_manager.h"
 #include "pltt_transfer.h"
 #include "pokemon.h"
+#include "run_extras.h"
+#include "run_session.h"
+#include "generated/text_banks.h"
+#include "res/text/bank/run_engine.h"
 #include "pokemon_sprite.h"
 #include "render_oam.h"
 #include "render_text.h"
@@ -237,6 +241,7 @@ static void StartFadeIn(ChooseStarterApp *app);
 static void StartFadeOut(ChooseStarterApp *app);
 static BOOL IsFadeDone(ChooseStarterApp *app);
 static u16 GetSelectedSpecies(u16 cursorPosition);
+static String *StarterSpeciesText(enum HeapID heapID, u16 slot, BOOL question);
 static BOOL IsSelectionMade(ChooseStarterApp *app, enum HeapID heapID);
 static void UpdateGraphics(ChooseStarterApp *app, enum HeapID heapID);
 static void DrawScene(ChooseStarterApp *app);
@@ -446,7 +451,10 @@ BOOL ChooseStarter_Exit(ApplicationManager *appMan, int *param1)
 
     SetVBlankCallback(NULL, NULL);
 
-    data->species = GetSelectedSpecies(app->cursorPosition);
+    // Story scripts retain the native slot identity for rival/counterpart
+    // branches; the award command resolves this same immutable seed mapping.
+    static const u16 originals[3] = { STARTER_OPTION_0, STARTER_OPTION_1, STARTER_OPTION_2 };
+    data->species = originals[app->cursorPosition];
 
     BOOL touchPadResult = DisableTouchPad();
     GF_ASSERT(touchPadResult == AUTO_SAMPLING_OPERATION_RESULT_SUCCESS);
@@ -688,9 +696,9 @@ static void MakePokemonSprites(ChooseStarterApp *app, enum HeapID heapID)
     PokemonSpriteManager_SetCharBaseAddrAndSize(app->spriteManager, NNS_GfdGetTexKeyAddr(texture), NNS_GfdGetTexKeySize(texture));
     PokemonSpriteManager_SetPlttBaseAddrAndSize(app->spriteManager, NNS_GfdGetPlttKeyAddr(palette), NNS_GfdGetPlttKeySize(palette));
 
-    MakePokemonSprite(&app->sprites[0], app, STARTER_OPTION_0);
-    MakePokemonSprite(&app->sprites[1], app, STARTER_OPTION_1);
-    MakePokemonSprite(&app->sprites[2], app, STARTER_OPTION_2);
+    MakePokemonSprite(&app->sprites[0], app, GetSelectedSpecies(0));
+    MakePokemonSprite(&app->sprites[1], app, GetSelectedSpecies(1));
+    MakePokemonSprite(&app->sprites[2], app, GetSelectedSpecies(2));
 
     for (int i = 0; i < NUM_STARTER_OPTIONS; i++) {
         PokemonSprite_SetAttribute(app->sprites[i], MON_SPRITE_HIDE, TRUE);
@@ -1275,6 +1283,10 @@ static u8 SetMessageWindowText(Window *window, enum HeapID heapID, int bankID, i
     MessageLoader *msgLoader = MessageLoader_Init(MSG_LOADER_PRELOAD_ENTIRE_BANK, NARC_INDEX_MSGDATA__PL_MSG, bankID, heapID);
     GF_ASSERT(msgLoader);
     String *string = MessageLoader_GetNewString(msgLoader, entryID);
+    if (bankID == 360 && entryID >= 1 && entryID <= 3 && (RunSession_Config()->flags & RUN_RANDOMIZE_GIFTS)) {
+        String_Free(string);
+        string = StarterSpeciesText(heapID, entryID - 1, TRUE);
+    }
 
     Window_FillTilemap(window, 15);
     u8 printerID = Text_AddPrinterWithParamsAndColor(window, FONT_MESSAGE, string, 0, 0, renderDelay, textColor, NULL);
@@ -1735,6 +1747,10 @@ static void SetSubplaneWindowText(Window *window, enum HeapID heapID, int bankID
     MessageLoader *msgLoader = MessageLoader_Init(MSG_LOADER_PRELOAD_ENTIRE_BANK, NARC_INDEX_MSGDATA__PL_MSG, bankID, heapID);
     GF_ASSERT(msgLoader);
     String *string = MessageLoader_GetNewString(msgLoader, entryID);
+    if (bankID == 360 && entryID >= 4 && entryID <= 6 && (RunSession_Config()->flags & RUN_RANDOMIZE_GIFTS)) {
+        String_Free(string);
+        string = StarterSpeciesText(heapID, entryID - 4, FALSE);
+    }
 
     Window_FillTilemap(window, GET_TEXT_BG_COLOR(textColor));
     Text_AddPrinterWithParamsAndColor(window, FONT_SYSTEM, string, 1, 0, TEXT_SPEED_NO_TRANSFER, textColor, NULL);
@@ -1747,8 +1763,25 @@ static void DeleteSubplaneWindow(ChooseStarterApp *app)
     Window_ClearAndCopyToVRAM(app->subplaneWindows[app->subplaneWindowIndex]);
 }
 
+static String *StarterSpeciesText(enum HeapID heapID, u16 slot, BOOL question)
+{
+    String *text = String_Init(128, heapID);
+    MessageBank_GetStringFromNARC(NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_SPECIES_NAME,
+        GetSelectedSpecies(slot), heapID, text);
+    if (question) {
+        MessageLoader *loader = MessageLoader_Init(MSG_LOADER_LOAD_ON_DEMAND,
+            NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_RUN_ENGINE, heapID);
+        String *suffix = MessageLoader_GetNewString(loader, Run_Text_StarterChoose);
+        String_Concat(text, suffix);
+        String_Free(suffix);
+        MessageLoader_Free(loader);
+    }
+    return text;
+}
+
 static u16 GetSelectedSpecies(u16 cursorPosition)
 {
+    if (cursorPosition < 3) return RunExtras_Starter(RunSession_Config(), cursorPosition);
     switch (cursorPosition) {
     case CURSOR_POSITION_LEFT:
         return STARTER_OPTION_0;

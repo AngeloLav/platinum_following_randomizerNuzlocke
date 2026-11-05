@@ -1426,7 +1426,7 @@ void PartyMenu_UpdateSlotPalette(PartyMenuApplication *application, u8 slot)
 
         if (Pokemon_GetValue(mon, MON_DATA_HP, 0) == 0) {
             palette += 2;
-        } else if (sub_0207F984(application, slot) == 1) {
+        } else if (RunGame_RefusesBattle(mon) || sub_0207F984(application, slot) == 1) {
             palette += 1;
         } else {
             palette += 0;

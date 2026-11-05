@@ -83,9 +83,20 @@ enum RunStatus RunState_Status(const RunState *state)
 
 void RunState_SetGameOver(RunState *state)
 {
+    RunState_EndRun(state, 1);
+}
+
+void RunState_EndRun(RunState *state, u8 reason)
+{
     if (RunState_Status(state) == RUN_STATUS_ACTIVE) {
         state->bytes[8] = RUN_STATUS_GAME_OVER;
+        state->bytes[11] = reason <= 2 ? reason : 0;
     }
+}
+
+u8 RunState_LossReason(const RunState *state)
+{
+    return state != NULL ? state->bytes[11] : 0;
 }
 
 BOOL RunState_CaptureActivated(const RunState *state)
@@ -95,7 +106,20 @@ BOOL RunState_CaptureActivated(const RunState *state)
 
 void RunState_ActivateCapture(RunState *state)
 {
-    state->bytes[9] = 1;
+    if (state->bytes[9] == 0) {
+        state->bytes[9] = 1;
+        state->bytes[10] = 1; // Reserved header byte: persistent one-time advice.
+    }
+}
+
+BOOL RunState_ActivationNoticePending(const RunState *state)
+{
+    return RunState_CaptureActivated(state) && state->bytes[10] == 1;
+}
+
+void RunState_AcknowledgeActivation(RunState *state)
+{
+    state->bytes[10] = 0;
 }
 
 void RunState_Visit(RunState *state, u16 zone)
@@ -177,6 +201,13 @@ enum RunCapturePermission RunState_Reserve(RunState *state, u16 zone, u16 specie
             Put16(zoneData + 2, count + 1);
         }
         return RUN_CAPTURE_DUPLICATE;
+    }
+    if (source == RUN_SOURCE_WILD) {
+        // Opportunities are distinct species in this area, independently of
+        // the global owned-family clause. A failed attempt cannot be retried.
+        for (u8 i = 0; i < zoneData[1]; i++) {
+            if (Get16(zoneData + 4 + i * 8) == species) return RUN_CAPTURE_REPEATED_SPECIES;
+        }
     }
     if (RunState_Remaining(state, zone) == 0) {
         return RUN_CAPTURE_EXHAUSTED;
@@ -387,7 +418,9 @@ BOOL RunState_Validate(const RunState *state, u32 nonce, u32 normalCounter)
         || Get32(state->bytes + 16) != normalCounter || !RunState_Config(state, &config)
         || Get32(state->bytes + 24) != RunWorld_DataVersion()
         || (state->bytes[8] != RUN_STATUS_ACTIVE && state->bytes[8] != RUN_STATUS_GAME_OVER)
-        || state->bytes[9] > 1 || RunState_MonCount(state) > RUN_MON_CAPACITY
+        || state->bytes[9] > 1 || state->bytes[10] > 1 || state->bytes[11] > 2
+        || (state->bytes[8] == RUN_STATUS_ACTIVE && state->bytes[11])
+        || (state->bytes[10] && !state->bytes[9]) || RunState_MonCount(state) > RUN_MON_CAPACITY
         || RunState_SpecialCount(state) > RUN_SPECIAL_CAPACITY || Get32(state->bytes + 28) != Checksum(state)) {
         return FALSE;
     }

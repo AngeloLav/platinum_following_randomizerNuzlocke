@@ -87,7 +87,25 @@
     ScriptEntry CommonScript_RunEnded @ 0x80A
     ScriptEntry CommonScript_RunEndedSaveFailed @ 0x80B
     ScriptEntry CommonScript_RunGiftDenied @ 0x80C
+    ScriptEntry CommonScript_RunActivated @ 0x80D
     ScriptEntryEnd
+
+CommonScript_RunActivated:
+    LockAll
+    GetRunRule 4, VAR_RESULT
+    GoToIfGt VAR_RESULT, 1, CommonScript_RunActivatedMultiple
+    Message CommonStrings_Text_RunActivatedOne
+    GoTo CommonScript_RunActivatedFinish
+
+CommonScript_RunActivatedMultiple:
+    Message CommonStrings_Text_RunActivatedMultiple
+
+CommonScript_RunActivatedFinish:
+    WaitButton
+    CloseMessage
+    GetRunRule 3, VAR_RESULT
+    ReleaseAll
+    End
 
 CommonScript_RunGiftDenied:
     Message CommonStrings_Text_RunGiftDenied
@@ -106,7 +124,15 @@ CommonScript_RunEndedSaveFailed:
 
 CommonScript_RunEnded:
     LockAll
+    GetRunRule 5, VAR_RESULT
+    GoToIfEq VAR_RESULT, 2, CommonScript_RunEndedNoEligible
     Message CommonStrings_Text_RunEnded
+    GoTo CommonScript_RunEndedFinish
+
+CommonScript_RunEndedNoEligible:
+    Message CommonStrings_Text_RunEndedNoEligible
+
+CommonScript_RunEndedFinish:
     WaitButton
     CloseMessage
     ReleaseAll

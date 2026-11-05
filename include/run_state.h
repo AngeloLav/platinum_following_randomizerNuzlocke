@@ -42,7 +42,8 @@ enum RunCapturePermission {
     RUN_CAPTURE_DUPLICATE,
     RUN_CAPTURE_EXHAUSTED,
     RUN_CAPTURE_HISTORY_FULL,
-    RUN_CAPTURE_INVALID
+    RUN_CAPTURE_INVALID,
+    RUN_CAPTURE_REPEATED_SPECIES
 };
 
 typedef struct RunState {
@@ -91,8 +92,12 @@ BOOL RunState_Init(RunState *state, const RunConfig *config, u32 nonce);
 BOOL RunState_Config(const RunState *state, RunConfig *config);
 enum RunStatus RunState_Status(const RunState *state);
 void RunState_SetGameOver(RunState *state);
+void RunState_EndRun(RunState *state, u8 reason); // 1 fainting wipe, 2 no eligible combatants.
+u8 RunState_LossReason(const RunState *state);
 BOOL RunState_CaptureActivated(const RunState *state);
 void RunState_ActivateCapture(RunState *state);
+BOOL RunState_ActivationNoticePending(const RunState *state);
+void RunState_AcknowledgeActivation(RunState *state);
 void RunState_Visit(RunState *state, u16 zone);
 BOOL RunState_Visited(const RunState *state, u16 zone);
 u16 RunState_DuplicatesSeen(const RunState *state, u16 zone);

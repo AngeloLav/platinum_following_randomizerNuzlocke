@@ -10,6 +10,8 @@ EternaCitySouthHouse_ProfOak:
     PlaySE SE_CONFIRM_sseq_3
     LockAll
     FacePlayer
+    Call EternaCitySouthHouse_TryMemberCard
+    Call EternaCitySouthHouse_TryOaksLetter
     GoToIfSet FLAG_CAUGHT_ROAMING_LEGENDARY_BIRDS, EternaCitySouthHouse_PokedexRatingsCheckOak2
     Call EternaCitySouthHouse_CheckCaughtAllRoamingLegendaryBirds
     GoToIfEq VAR_RESULT, TRUE, EternaCitySouthHouse_CaughtAllRoamingLegendaryBirds
@@ -29,6 +31,36 @@ EternaCitySouthHouse_ProfOak:
     Message EternaCitySouthHouse_Text_PokemonThatEvolvesTradingWithUpgrade
     GoTo EternaCitySouthHouse_ActivateRoamingLegendaryBirds
     End
+
+EternaCitySouthHouse_TryMemberCard:
+    GetRunRule 6, VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, EternaCitySouthHouse_EventReturn
+    Message EternaCitySouthHouse_Text_RunMemberCard
+    SetVar VAR_0x8004, ITEM_MEMBER_CARD
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, EternaCitySouthHouse_EventBagFull
+    Common_GiveItemQuantity
+    GetRunRule 8, VAR_RESULT
+    CloseMessage
+    Return
+
+EternaCitySouthHouse_TryOaksLetter:
+    GetRunRule 7, VAR_RESULT
+    GoToIfEq VAR_RESULT, FALSE, EternaCitySouthHouse_EventReturn
+    Message EternaCitySouthHouse_Text_RunOaksLetter
+    SetVar VAR_0x8004, ITEM_OAKS_LETTER
+    SetVar VAR_0x8005, 1
+    GoToIfCannotFitItem VAR_0x8004, VAR_0x8005, VAR_RESULT, EternaCitySouthHouse_EventBagFull
+    Common_GiveItemQuantity
+    GetRunRule 9, VAR_RESULT
+    CloseMessage
+    Return
+
+EternaCitySouthHouse_EventBagFull:
+    Common_MessageBagIsFull
+    CloseMessage
+EternaCitySouthHouse_EventReturn:
+    Return
 
 EternaCitySouthHouse_PokedexRatingsCheckOak:
     CallCommonScript 0x26E0

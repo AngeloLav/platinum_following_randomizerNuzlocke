@@ -45,6 +45,7 @@ BOOL Pokemon_GiveMonFromScript(enum HeapID heapID, SaveData *saveData, u16 speci
     Pokemon_Init(mon);
     Pokemon_InitWith(mon, species, level, INIT_IVS_RANDOM, FALSE, 0, OTID_NOT_SET, 0);
     Pokemon_SetCatchData(mon, trainerInfo, ITEM_POKE_BALL, metLocation, metTerrain, heapID);
+    RunGame_ApplyShiny(mon);
 
     item = heldItem;
     Pokemon_SetValue(mon, MON_DATA_HELD_ITEM, &item);
@@ -159,7 +160,7 @@ Pokemon *Party_FindFirstHatchedMon(const Party *party)
 
 BOOL Party_HasTwoAliveMons(const Party *party)
 {
-    return Party_AliveMonsCount(party) >= 2;
+    return RunGame_EligibleCount(party) >= 2;
 }
 
 void Party_GiveChampionRibbons(Party *party)

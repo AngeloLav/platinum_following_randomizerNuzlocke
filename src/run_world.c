@@ -18,6 +18,11 @@ BOOL RunWorld_ZoneKnown(u16 zone)
     return zone < 256 && sRunKnownZones[zone] != 0;
 }
 
+BOOL RunWorld_ZoneHasWild(u16 zone)
+{
+    return zone < 256 && sRunWildZones[zone] != 0;
+}
+
 BOOL RunWorld_IsBoss(u32 trainerID)
 {
     return trainerID < RUN_TRAINER_COUNT && sRunTrainerBoss[trainerID] != 0;
@@ -53,4 +58,15 @@ u32 RunWorld_ClampExp(u32 current, u32 award, u32 capExp)
         return current;
     }
     return award >= capExp - current ? capExp : current + award;
+}
+
+BOOL RunWorld_BattleEligible(const RunConfig *config, u8 badges, u8 level, u16 hp, BOOL egg, BOOL exhausted)
+{
+    return hp > 0 && !egg && !exhausted
+        && (!RunConfig_ObedienceCapEnabled(config) || level <= RunWorld_LevelCap(config, badges));
+}
+
+BOOL RunWorld_NoEligibleEndsRun(const RunConfig *config)
+{
+    return RunConfig_ObedienceCapEnabled(config) || RunConfig_EndOnPartyWipe(config);
 }

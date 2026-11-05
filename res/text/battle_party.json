@@ -423,6 +423,10 @@
         "{STRVAR_1 6, 1, 0}’s effect prevents\n",
         "the item’s use on {STRVAR_1 1, 0, 0}!"
       ]
+    },
+    {
+      "id": "BattleParty_Text_RunRefusesLabel",
+      "en_US": "NO BTL"
     }
   ]
 }

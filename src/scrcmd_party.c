@@ -20,6 +20,9 @@
 #include "pc_boxes.h"
 #include "pokemon.h"
 #include "run_game.h"
+#include "run_extras.h"
+#include "run_session.h"
+#include "generated/map_headers.h"
 #include "ribbon.h"
 #include "save_player.h"
 #include "tv_segment.h"
@@ -39,7 +42,12 @@ BOOL ScrCmd_GivePokemon(ScriptContext *ctx)
     u16 *success = ScriptContext_GetVarPointer(ctx);
 
     Party *unused = SaveData_GetParty(fieldSystem->saveData);
-    species = RunGame_RandomSpecies(RUN_SOURCE_GIFT, runEventKey, 0, species);
+    if (ctx->fieldSystem->location->mapHeaderID == MAP_HEADER_ROUTE_201 && level == 5
+        && (species == SPECIES_TURTWIG || species == SPECIES_CHIMCHAR || species == SPECIES_PIPLUP)) {
+        species = RunExtras_Starter(RunSession_Config(), species == SPECIES_TURTWIG ? 0 : species == SPECIES_CHIMCHAR ? 1 : 2);
+    } else {
+        species = RunGame_RandomSpecies(RUN_SOURCE_GIFT, runEventKey, 0, species);
+    }
     RunGame_SetGiftContext(RUN_SOURCE_GIFT, runEventKey);
     *success = Pokemon_GiveMonFromScript(HEAP_ID_FIELD2, fieldSystem->saveData, species, level, heldItem, metLocation, metTerrain);
     RunGame_ClearGiftContext();

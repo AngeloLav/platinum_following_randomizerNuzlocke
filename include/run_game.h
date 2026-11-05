@@ -40,5 +40,16 @@ void RunGame_ObserveParty(Party *party);
 int RunGame_FieldMoveSlot(Party *party, u16 move);
 void RunGame_ClearIdentity(BoxPokemon *mon);
 void RunGame_DerivedIdentity(Pokemon *mon, Pokemon *parent);
+void RunGame_ApplyShiny(Pokemon *mon);
+BOOL RunGame_RefusesBattle(Pokemon *mon);
+BOOL RunGame_ObedienceActive(void);
+u16 RunGame_BattleEntryHP(Pokemon *mon);
+BOOL RunGame_CanEnterBattle(Pokemon *mon);
+u8 RunGame_EligibleCount(const Party *party);
+u8 RunGame_RefusingCount(const Party *party);
+// Event 0: Darkrai; event 1: Shaymin. Native distribution flags are authoritative.
+BOOL RunGame_EventOffer(SaveData *save, u8 event, BOOL claim);
+u32 RunGame_EventKey(u8 event);
+u8 RunGame_EventStatus(SaveData *save, u8 event, RunSpecialRecord *record);
 
 #endif // POKEPLATINUM_RUN_GAME_H

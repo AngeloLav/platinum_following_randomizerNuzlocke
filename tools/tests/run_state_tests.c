@@ -50,16 +50,19 @@ static void TestOpportunities(void)
         assert(RunState_Visited(&state, 201));
         assert(RunState_Remaining(&state, 201) == limit);
         RunState_ActivateCapture(&state);
+        assert(RunState_ActivationNoticePending(&state));
         for (u8 i = 0; i < limit; i++) {
-            assert(RunState_Reserve(&state, 201, 399, RUN_SOURCE_WILD, FALSE, &slot) == RUN_CAPTURE_ALLOWED);
+            assert(RunState_Reserve(&state, 201, 399 + i, RUN_SOURCE_WILD, FALSE, &slot) == RUN_CAPTURE_ALLOWED);
             assert(slot == i);
             assert(RunState_Remaining(&state, 201) == limit - i - 1);
             enum RunEncounterOutcome outcome = i == 0 ? RUN_OUTCOME_DEFEATED : RUN_OUTCOME_FLED;
             assert(RunState_Finish(&state, 201, slot, outcome, 0));
             assert(RunState_Finish(&state, 201, slot, outcome, 0));
             assert(!RunState_Finish(&state, 201, slot, RUN_OUTCOME_FAILED, 0));
+            assert(RunState_Reserve(&state, 201, 399 + i, RUN_SOURCE_WILD, FALSE, &slot) == RUN_CAPTURE_REPEATED_SPECIES);
+            assert(RunState_Remaining(&state, 201) == limit - i - 1);
         }
-        assert(RunState_Reserve(&state, 201, 399, RUN_SOURCE_WILD, FALSE, &slot) == RUN_CAPTURE_EXHAUSTED);
+        assert(RunState_Reserve(&state, 201, 403, RUN_SOURCE_WILD, FALSE, &slot) == RUN_CAPTURE_EXHAUSTED);
         assert(RunState_Reserve(&state, 201, 150, RUN_SOURCE_STATIC, FALSE, &slot) == RUN_CAPTURE_ALLOWED);
         assert(slot == 0xFF && RunState_Remaining(&state, 201) == 0);
         assert(RunState_Reserve(&state, 201, 399, RUN_SOURCE_WILD, TRUE, &slot) == RUN_CAPTURE_ALLOWED);
@@ -157,6 +160,58 @@ static void TestHistory(void)
     assert(RunState_Validate(&state, 0xABCDEF01u, 100));
 }
 
+static void TestRevisedClausesAndLegacy(void)
+{
+    for (u8 rate = 0; rate < 4; rate++) for (u8 clause = 0; clause < 2; clause++) {
+        RunConfig config;
+        RunConfig_Init(&config, RUN_PRESET_HARDCORE_RANDOMIZER, 77);
+        config.shinyRate = rate;
+        config.captureAttempts = 2;
+        config.flags &= ~(RUN_SHINY_CLAUSE | RUN_DUPES_CLAUSE);
+        if (clause) config.flags |= RUN_SHINY_CLAUSE;
+        RunState_Init(&state, &config, 123);
+        RunState_ActivateCapture(&state);
+        u8 slot;
+        assert(RunState_Reserve(&state, 201, 399, RUN_SOURCE_WILD, FALSE, &slot) == RUN_CAPTURE_ALLOWED);
+        assert(RunState_Finish(&state, 201, slot, RUN_OUTCOME_DEFEATED, 0));
+        assert(RunState_Reserve(&state, 201, 399, RUN_SOURCE_WILD, FALSE, &slot) == RUN_CAPTURE_REPEATED_SPECIES);
+        assert(RunState_Remaining(&state, 201) == 1);
+        assert(RunState_Reserve(&state, 201, 399, RUN_SOURCE_WILD, TRUE, &slot)
+            == (clause ? RUN_CAPTURE_ALLOWED : RUN_CAPTURE_REPEATED_SPECIES));
+        assert(RunState_Remaining(&state, 201) == 1);
+        assert(RunState_Reserve(&state, 201, 403, RUN_SOURCE_WILD, FALSE, &slot) == RUN_CAPTURE_ALLOWED);
+        assert(RunState_Finish(&state, 201, slot, RUN_OUTCOME_FLED, 0));
+        RunState_Seal(&state, 7);
+        memcpy(&restored, &state, sizeof(state));
+        assert(RunState_Validate(&restored, 123, 7));
+        assert(RunState_Reserve(&restored, 201, 396, RUN_SOURCE_WILD, FALSE, &slot) == RUN_CAPTURE_EXHAUSTED);
+        assert(RunState_Reserve(&restored, 201, 399, RUN_SOURCE_STATIC, FALSE, &slot) == RUN_CAPTURE_ALLOWED);
+        assert(RunState_Reserve(&restored, 201, 399, RUN_SOURCE_WILD, TRUE, &slot)
+            == (clause ? RUN_CAPTURE_ALLOWED : RUN_CAPTURE_REPEATED_SPECIES));
+        assert(RunState_Remaining(&restored, 201) == 0);
+    }
+    RunConfig legacy, decoded;
+    RunConfig_Init(&legacy, RUN_PRESET_HARDCORE_RANDOMIZER, 42);
+    legacy.rulesVersion = 2;
+    assert(RunState_Init(&state, &legacy, 789));
+    RunState_ActivateCapture(&state);
+    u8 slot;
+    assert(RunState_Reserve(&state, 201, 399, RUN_SOURCE_WILD, FALSE, &slot) == RUN_CAPTURE_ALLOWED);
+    RunState_Finish(&state, 201, slot, RUN_OUTCOME_FLED, 0);
+    RunState_Seal(&state, 8);
+    assert(RunState_Validate(&state, 789, 8));
+    assert(RunState_Config(&state, &decoded) && decoded.rulesVersion == 2 && decoded.shinyRate == 0);
+    assert(!(decoded.flags & RUN_RANDOMIZE_FIELD_ITEMS) && RunState_Remaining(&state, 201) == 0);
+    assert(RunState_ActivationNoticePending(&state));
+    RunState_AcknowledgeActivation(&state);
+    RunState_ActivateCapture(&state); // More Ball acquisitions never requeue it.
+    assert(!RunState_ActivationNoticePending(&state) && RunState_CaptureActivated(&state));
+    RunState_Seal(&state, 9);
+    memcpy(&restored, &state, sizeof(state));
+    assert(RunState_Validate(&restored, 789, 9) && !RunState_ActivationNoticePending(&restored));
+    puts("PASS: every Shiny Rate/Clause combination, repeated species with Dupes OFF, exhausted new species, reload and legacy state");
+}
+
 static void TestStorage(void)
 {
     RunStoreIO io = { NULL, Read, Write };
@@ -189,6 +244,7 @@ static void TestStorage(void)
     assert(RunState_Remaining(&restored, 203) == 3);
     assert(RunStore_Load(&io, &restored, &scratch, 0xABCDEF01u, 11));
     assert(RunState_Remaining(&restored, 203) == 2);
+    assert(RunState_ActivationNoticePending(&restored));
     before = restored;
     flash[RunStore_Address(1) + 700] ^= 1;
     assert(!RunStore_Load(&io, &restored, &scratch, 0xABCDEF01u, 11));
@@ -227,12 +283,65 @@ static void TestDifficulty(void)
     assert(!RunWorld_IsBoss(0xFFFFFFFFu));
 }
 
+static void TestCapModes(void)
+{
+    RunConfig config, loaded;
+    RunState state;
+    assert(RunConfig_Init(&config, RUN_PRESET_HARDCORE_RANDOMIZER, 7));
+    assert(config.levelCapMode == RUN_CAP_EXP_LOCK && RunConfig_ExpLockEnabled(&config));
+    for (u8 mode = RUN_CAP_EXP_LOCK; mode <= RUN_CAP_OBEDIENCE; mode++) {
+        config.levelCapMode = mode;
+        assert(RunState_Init(&state, &config, 3));
+        RunState_Seal(&state, 4);
+        assert(RunState_Validate(&state, 3, 4));
+        assert(RunState_Config(&state, &loaded) && loaded.levelCapMode == mode);
+        for (u8 badges = 0; badges <= 8; badges++) {
+            u8 cap = RunWorld_LevelCap(&config, badges);
+            assert(RunWorld_BattleEligible(&config, badges, cap, 1, FALSE, FALSE));
+            assert(!RunWorld_BattleEligible(&config, badges, cap, 0, FALSE, FALSE));
+            assert(!RunWorld_BattleEligible(&config, badges, cap, 1, TRUE, FALSE));
+            assert(!RunWorld_BattleEligible(&config, badges, cap, 1, FALSE, TRUE));
+            assert(RunWorld_BattleEligible(&config, badges, cap + 1, 1, FALSE, FALSE) == (mode == RUN_CAP_EXP_LOCK));
+        }
+    }
+    config.levelCapMode = RUN_CAP_OBEDIENCE;
+    // Entry, voluntary/forced switches and replacements share this policy.
+    u8 oldCap = RunWorld_LevelCap(&config, 0);
+    assert(!RunWorld_BattleEligible(&config, 0, oldCap + 1, 30, FALSE, FALSE));
+    assert(RunWorld_BattleEligible(&config, 1, oldCap + 1, 30, FALSE, FALSE));
+    config.flags &= ~RUN_PERMADEATH;
+    assert(RunWorld_NoEligibleEndsRun(&config)); // Mandatory even without death rules.
+    assert(RunState_Init(&state, &config, 3));
+    RunMonRecord mon = {0};
+    mon.species = mon.originalSpecies = 133;
+    u16 id = RunState_AddMon(&state, &mon);
+    RunState_EndRun(&state, 2);
+    RunState_SetGameOver(&state); // Later blackout cannot overwrite refusal reason.
+    assert(RunState_Status(&state) == RUN_STATUS_GAME_OVER && RunState_LossReason(&state) == 2);
+    assert(RunState_GetMon(&state, id, &mon) && !(mon.flags & RUN_MON_EXHAUSTED));
+    RunState_Seal(&state, 4);
+    assert(RunState_Validate(&state, 3, 4));
+    config.flags &= ~RUN_LEVEL_CAPS;
+    assert(!RunWorld_NoEligibleEndsRun(&config));
+    assert(RunWorld_BattleEligible(&config, 0, 100, 30, FALSE, FALSE));
+    // Native shares are calculated first; clipping each final award cannot
+    // transfer the discarded part to another participant or EXP Share holder.
+    u32 before[3] = {1000, 900, 990};
+    u32 share[3] = {50, 50, 25};
+    u32 after[3];
+    for (u8 i = 0; i < 3; i++) after[i] = RunWorld_ClampExp(before[i], share[i], 1000);
+    assert(after[0] == 1000 && after[1] == 950 && after[2] == 1000);
+    puts("PASS: both cap modes, exact cap, refusal, badge recovery, persisted loss reason, no false death, individual EXP clipping");
+}
+
 int main(void)
 {
     TestOpportunities();
     TestHistory();
+    TestRevisedClausesAndLegacy();
     TestStorage();
     TestDifficulty();
+    TestCapModes();
     puts("PASS: capture opportunities, exemptions, dupes, history, exhaustion, CRC, 18 torn-write boundaries and native-sector preservation");
     return 0;
 }

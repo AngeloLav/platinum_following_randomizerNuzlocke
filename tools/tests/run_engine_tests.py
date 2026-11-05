@@ -47,6 +47,11 @@ def main():
         )
         (work / "run_species_data.h").write_text(generated, encoding="ascii")
         (work / "run_world_data.h").write_text(world_generated, encoding="ascii")
+        (work / "generated").mkdir()
+        for roster in ("items", "species"):
+            names = (root / "generated" / (roster + ".txt")).read_text().splitlines()
+            (work / "generated" / (roster + ".h")).write_text(
+                "enum { " + ", ".join(names) + " };\n", encoding="ascii")
         executable = work / "run_engine_tests.exe"
         command = [compiler, "-std=c99", "-pedantic", "-Wall", "-Wextra", "-Werror", "-O2",
                    "-I", str(work), "-I", str(root / "include"),
@@ -61,9 +66,9 @@ def main():
 
         mutations = [
             ("old prototype schema", 4, b"\x01\x00", 2),
-            ("future schema", 4, b"\x03\x00", 2),
+            ("future schema", 4, b"\x04\x00", 2),
             ("old prototype rules", 8, b"\x01\x00", 2),
-            ("future rules", 8, b"\x03\x00", 2),
+            ("future rules", 8, b"\x04\x00", 2),
             ("foreign data", 12, b"\x00\x00\x00\x00", 2),
             ("unknown flags", 20, b"\xff\xff\xff\xff", 1),
             ("invalid tolerance", 24, b"\x0b", 1),
@@ -75,7 +80,8 @@ def main():
             ("invalid cap allowance", 28, b"\x06", 1),
             ("zero trainer bonus", 29, b"\x00", 1),
             ("invalid trainer bonus", 29, b"\x04", 1),
-            ("reserved word", 30, b"\x01", 1),
+            ("invalid shiny rate", 30, b"\x04", 1),
+            ("invalid cap mode", 31, b"\x02", 1),
         ]
         for name, offset, replacement, expected in mutations:
             data = bytearray(original)
@@ -109,6 +115,13 @@ def main():
                         str(root / "tools/tests/run_state_tests.c"), "-o", str(state_executable)],
                        check=True, cwd=root)
         subprocess.run([str(state_executable)], check=True, cwd=root)
+        extras_executable = work / "run_extras_tests.exe"
+        subprocess.run([compiler, "-std=c99", "-pedantic", "-Wall", "-Wextra", "-Werror", "-O2",
+                        "-I", str(work), "-I", str(root / "include"),
+                        str(root / "src/run_config.c"), str(root / "src/run_randomizer.c"),
+                        str(root / "src/run_extras.c"), str(root / "tools/tests/run_extras_tests.c"),
+                        "-o", str(extras_executable), "-lm"], check=True, cwd=root)
+        subprocess.run([str(extras_executable)], check=True, cwd=root)
 
 
 if __name__ == "__main__":

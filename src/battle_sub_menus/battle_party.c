@@ -29,6 +29,9 @@
 #include "palette.h"
 #include "party.h"
 #include "pokemon.h"
+#include "run_game.h"
+#include "generated/text_banks.h"
+#include "res/text/bank/run_engine.h"
 #include "render_window.h"
 #include "sound_playback.h"
 #include "sprite_system.h"
@@ -1634,6 +1637,12 @@ static BOOL CheckCanSwitchPokemon(BattleParty *battleParty)
         StringTemplate_SetNickname(battleParty->stringTemplate, 0, Pokemon_GetBoxPokemon(pokemon->mon));
         StringTemplate_Format(battleParty->stringTemplate, battleParty->string, string);
         String_Free(string);
+        return FALSE;
+    }
+
+    if (RunGame_RefusesBattle(pokemon->mon)) {
+        MessageBank_GetStringFromNARC(NARC_INDEX_MSGDATA__PL_MSG, TEXT_BANK_RUN_ENGINE,
+            Run_Text_Refuses, battleParty->context->heapID, battleParty->string);
         return FALSE;
     }
 

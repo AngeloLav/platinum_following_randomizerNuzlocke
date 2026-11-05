@@ -24,6 +24,8 @@
 #include "overlay_manager.h"
 #include "palette.h"
 #include "pokemon.h"
+#include "run_extras.h"
+#include "run_session.h"
 #include "render_text.h"
 #include "render_window.h"
 #include "save_player.h"
@@ -1556,8 +1558,8 @@ static void RowanIntro_LoadBunearySprite(RowanIntro *manager)
 
     BuildPokemonSpriteTemplate(
         &spriteTemplate,
-        SPECIES_BUNEARY,
-        GENDER_MALE,
+        RunExtras_IntroSpecies(RunSession_Config()),
+        Pokemon_GetGenderOf(RunExtras_IntroSpecies(RunSession_Config()), 0),
         FACE_FRONT,
         FALSE,
         NULL,
@@ -2005,7 +2007,7 @@ static BOOL RowanIntro_AnimateBuneary(RowanIntro *manager, enum BunearyAnimState
         }
     } break;
     case BA_STATE_END:
-        Sound_PlayPokemonCry(SPECIES_BUNEARY, 0);
+        Sound_PlayPokemonCry(RunExtras_IntroSpecies(RunSession_Config()), 0);
         isFinished = TRUE;
         break;
     }

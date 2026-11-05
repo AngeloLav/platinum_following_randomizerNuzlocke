@@ -85,11 +85,13 @@ static void TestCodec(void)
     original.seedMode = RUN_SEED_MANUAL;
     original.levelCapAllowance = 5;
     original.trainerLevelsPerBadge = 3;
+    original.levelCapMode = RUN_CAP_OBEDIENCE;
     assert(RunConfig_Encode(&original, encoded, sizeof(encoded)));
     assert(memcmp(encoded, "RUNC", 4) == 0);
     assert(encoded[16] == 0x78 && encoded[17] == 0x56 && encoded[18] == 0x34 && encoded[19] == 0x12);
     assert(RunConfig_Decode(&restored, encoded, sizeof(encoded)) == RUN_CONFIG_READ_OK);
     assert(restored.seed == original.seed && restored.flags == original.flags);
+    assert(restored.levelCapMode == RUN_CAP_OBEDIENCE);
     assert(restored.speciesDataVersion == original.speciesDataVersion);
     assert(restored.seedMode == original.seedMode && restored.preset == original.preset);
     assert(restored.bstWeight == original.bstWeight && restored.bstTolerance == original.bstTolerance);
@@ -163,9 +165,9 @@ static void TestWeights(void)
             u32 weighted = RunRandomizer_CandidateWeight(&config, original, candidate);
             assert((weighted > 0) == eligible);
             if (eligible) {
-                assert(weighted >= 100 && weighted <= 1000);
+                assert(weighted >= 8869 && weighted <= 65535);
                 if (difference == 0) {
-                    assert(weighted == 1000);
+                    assert(weighted == 65535);
                 }
             }
         }
@@ -191,10 +193,12 @@ static void TestMappings(void)
     for (int tolerance = 10; tolerance <= 75; tolerance += 5) {
         config.bstTolerance = tolerance;
         for (u16 species = 1; species <= RunSpecies_Count(); species++) {
-            u16 result = RunRandomizer_SelectSpecies(&config, RUN_DOMAIN_WILD, 203, 2, species);
-            assert(RunSpecies_IsValid(result));
-            assert(RunRandomizer_CandidateWeight(&config, species, result) > 0);
-            assert(result == RunRandomizer_SelectSpecies(&config, RUN_DOMAIN_WILD, 203, 2, species));
+            for (int domain = RUN_DOMAIN_WILD; domain <= RUN_DOMAIN_TRAINER; domain++) {
+                u16 result = RunRandomizer_SelectSpecies(&config, domain, 203, 2, species);
+                assert(RunSpecies_IsValid(result));
+                assert(RunRandomizer_CandidateWeight(&config, species, result) > 0);
+                assert(result == RunRandomizer_SelectSpecies(&config, domain, 203, 2, species));
+            }
         }
     }
     config.bstTolerance = 25;

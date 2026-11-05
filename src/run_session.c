@@ -8,6 +8,8 @@ static u16 sNoticeZone = 0xFFFF;
 #include "run_store.h"
 #include "savedata/save_table.h"
 #include "savedata_misc.h"
+#include "generated/items.h"
+#include "run_extras.h"
 
 // Separate BSS, not FIELD1/FIELD2 or the fixed native SaveData allocation.
 static RunState sRun;
@@ -15,6 +17,7 @@ static RunConfig sConfig;
 static BOOL sConfigured;
 static BOOL sDamaged;
 static u16 sZone;
+static Bag *sOwnedBag;
 
 static BOOL Read(void *context, u32 address, void *data, u32 size)
 {
@@ -55,6 +58,7 @@ void RunSession_Reset(void)
     sConfigured = FALSE;
     sDamaged = FALSE;
     sZone = 0;
+    sOwnedBag = NULL;
 }
 
 BOOL RunSession_Confirm(SaveData *save, const RunConfig *config, u32 nonce)
@@ -64,6 +68,7 @@ BOOL RunSession_Confirm(SaveData *save, const RunConfig *config, u32 nonce)
     }
     sConfig = *config;
     sConfigured = TRUE;
+    sOwnedBag = SaveData_GetBag(save);
     // Previously unused native u32: no table sizes or offsets are changed.
     // A nonzero anchor requires a matching extension, never a silent Classic reset.
     SaveData_MiscSaveBlock(save)->unused = nonce;
@@ -93,7 +98,29 @@ BOOL RunSession_Load(SaveData *save)
     }
     sConfigured = TRUE;
     sDamaged = FALSE;
+    sOwnedBag = SaveData_GetBag(save);
+    RunSession_CheckBag(sOwnedBag);
     return TRUE;
+}
+
+void RunSession_ItemReceived(Bag *bag, u16 item)
+{
+    if (RunSession_Configured() && bag == sOwnedBag && RunExtras_UsableBall(item)) {
+        RunState_ActivateCapture(&sRun);
+    }
+}
+
+void RunSession_CheckBag(Bag *bag)
+{
+    if (!RunSession_Configured() || bag != sOwnedBag || RunState_CaptureActivated(&sRun)) return;
+    // The pocket is already categorized. Do not load item NARCs or allocate
+    // memory from this defensive check, which also runs during field frames.
+    for (u16 slot = 0; slot < POKEBALL_POCKET_SIZE; slot++) {
+        if (bag->pokeballs[slot].quantity && RunExtras_UsableBall(bag->pokeballs[slot].item)) {
+            RunSession_ItemReceived(bag, bag->pokeballs[slot].item);
+            break;
+        }
+    }
 }
 
 BOOL RunSession_PrepareSave(SaveData *save, u8 targetSlot)

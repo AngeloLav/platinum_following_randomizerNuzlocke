@@ -252,9 +252,7 @@ static BOOL FieldMap_Main(ApplicationManager *appMan, int *param1)
     FieldSystem *fieldSystem = ApplicationManager_Args(appMan);
     RunSession_SetZone(RunWorld_Zone(fieldSystem->location->mapHeaderID));
     RunGame_ObserveParty(SaveData_GetParty(fieldSystem->saveData));
-    if (RunSession_Configured() && *VarsFlags_GetVarAddress(SaveData_GetVarsFlags(fieldSystem->saveData), VAR_ROUTE_202_STATE) >= 1) {
-        RunState_ActivateCapture(RunSession_State());
-    }
+    RunSession_CheckBag(SaveData_GetBag(fieldSystem->saveData));
 
     // FOLLOWER LEADER-SWAP SYNC + COLOR MOD: both re-applied every field frame, independent of player
     // movement, so a party-leader swap via the menu (or a faint, evolution, trade, catch, etc.) takes

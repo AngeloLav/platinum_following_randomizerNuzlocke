@@ -19,6 +19,9 @@
 #include "party.h"
 #include "pc_boxes.h"
 #include "pokemon.h"
+#include "run_extras.h"
+#include "run_session.h"
+#include "generated/species.h"
 #include "ribbon.h"
 #include "save_player.h"
 #include "savedata_misc.h"
@@ -280,6 +283,8 @@ BOOL ScrCmd_BufferPlayerStarterSpeciesName(ScriptContext *ctx)
     StringTemplate **stringTemplate = FieldSystem_GetScriptMemberPtr(ctx->fieldSystem, SCRIPT_MANAGER_STR_TEMPLATE);
     u8 templateArg = ScriptContext_ReadByte(ctx);
     u16 species = SystemVars_GetPlayerStarter(SaveData_GetVarsFlags(ctx->fieldSystem->saveData));
+    if (species == SPECIES_TURTWIG || species == SPECIES_CHIMCHAR || species == SPECIES_PIPLUP)
+        species = RunExtras_Starter(RunSession_Config(), species == SPECIES_TURTWIG ? 0 : species == SPECIES_CHIMCHAR ? 1 : 2);
     String *speciesName = GetSpeciesNameString(species, HEAP_ID_FIELD1);
 
     StringTemplate_SetString(*stringTemplate, templateArg, speciesName, 0, 1, GAME_LANGUAGE);
@@ -293,6 +298,8 @@ BOOL ScrCmd_BufferRivalStarterSpeciesName(ScriptContext *ctx)
     StringTemplate **stringTemplate = FieldSystem_GetScriptMemberPtr(ctx->fieldSystem, SCRIPT_MANAGER_STR_TEMPLATE);
     u8 templateArg = ScriptContext_ReadByte(ctx);
     u16 species = SystemVars_GetRivalStarter(SaveData_GetVarsFlags(ctx->fieldSystem->saveData));
+    if (RunSession_Config()->rulesVersion >= 3 && (RunSession_Config()->flags & RUN_RANDOMIZE_GIFTS))
+        species = RunExtras_Starter(RunSession_Config(), species == SPECIES_TURTWIG ? 0 : species == SPECIES_CHIMCHAR ? 1 : 2);
     String *speciesName = GetSpeciesNameString(species, HEAP_ID_FIELD1);
 
     StringTemplate_SetString(*stringTemplate, templateArg, speciesName, 0, 1, GAME_LANGUAGE);

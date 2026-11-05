@@ -900,6 +900,18 @@
     {
       "id": "CommonStrings_Text_RunGiftDenied",
       "en_US": "Your run rules do not allow this\ngift here. No Pokemon was added.\rSeparate gift allowances can be\nselected when starting a new run.\r"
+    },
+    {
+      "id": "CommonStrings_Text_RunActivatedOne",
+      "en_US": "Nuzlocke capture rules are active!\nYou obtained your first usable Ball.\rOnly your first eligible encounter\nin each area is an ordinary chance.\rCaught, defeated or fled: chance used.\nLater ordinary captures are blocked."
+    },
+    {
+      "id": "CommonStrings_Text_RunActivatedMultiple",
+      "en_US": "Nuzlocke capture rules are active!\nYou obtained your first usable Ball.\rEach new eligible species uses one\nof this area’s capture opportunities.\rCatching, defeating or fleeing uses it.\nRepeated species give no extra chance."
+    },
+    {
+      "id": "CommonStrings_Text_RunEndedNoEligible",
+      "en_US": "Your party has no eligible Pokemon.\rLiving overleveled Pokemon are not\ndead, but this run has ended.\rView your history in the Run Registry.\nChoose Start a new run to restart."
     }
   ]
 }

@@ -20,6 +20,7 @@ Static main
 	Object main.nef.p/src_list_menu.c.o
 	Object main.nef.p/src_game_version.c.o
 	Object main.nef.p/src_run_config.c.o
+	Object main.nef.p/src_run_extras.c.o
 	Object main.nef.p/src_run_randomizer.c.o
 	Object main.nef.p/src_run_state.c.o
 	Object main.nef.p/src_run_store.c.o

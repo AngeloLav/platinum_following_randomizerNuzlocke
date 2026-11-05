@@ -583,6 +583,7 @@ static void BattleControllerPlayer_CommandSelectionInput(BattleSystem *battleSys
                     && permission != RUN_CAPTURE_ALLOWED && permission != RUN_CAPTURE_INACTIVE) {
                     msg.tags = TAG_NONE;
                     msg.id = permission == RUN_CAPTURE_DUPLICATE ? BattleStrings_Text_RunDuplicate
+                        : permission == RUN_CAPTURE_REPEATED_SPECIES ? BattleStrings_Text_RunRepeatedSpecies
                         : permission == RUN_CAPTURE_HISTORY_FULL ? BattleStrings_Text_RunHistoryFull : BattleStrings_Text_RunNoCaptures;
                     BattleController_EmitSetAlertMessage(battleSys, i, msg);
                     battleCtx->curCommandState[i] = COMMAND_SELECTION_ALERT_MESSAGE_WAIT;
@@ -619,6 +620,15 @@ static void BattleControllerPlayer_CommandSelectionInput(BattleSystem *battleSys
             if (BattleContext_IOBufferVal(battleCtx, i) == PLAYER_INPUT_CANCEL) {
                 battleCtx->curCommandState[i] = COMMAND_SELECTION_INIT;
             } else if (BattleContext_IOBufferVal(battleCtx, i)) {
+                int selected = battleCtx->ioBuffer[i][0] - 1;
+                if (RunGame_RefusesBattle(BattleSystem_GetPartyPokemon(battleSys, i, selected))) {
+                    msg.tags = TAG_NONE;
+                    msg.id = BattleStrings_Text_RunRefuses;
+                    BattleController_EmitSetAlertMessage(battleSys, i, msg);
+                    battleCtx->curCommandState[i] = COMMAND_SELECTION_ALERT_MESSAGE_WAIT;
+                    battleCtx->nextCommandState[i] = COMMAND_SELECTION_PARTY_SELECT_INIT;
+                    break;
+                }
                 battleCtx->battlerActions[i][BATTLE_ACTION_TEMP_VALUE] = battleCtx->ioBuffer[i][0] - 1;
                 battleCtx->switchedPartySlot[i] = battleCtx->ioBuffer[i][0] - 1;
                 battleCtx->curCommandState[i] = COMMAND_SELECTION_WAIT;
@@ -4150,7 +4160,7 @@ static BOOL BattleControllerPlayer_ReplaceFainted(BattleSystem *battleSys, Battl
                     Pokemon *mon = Party_GetPokemonBySlotIndex(party, j);
                     if (Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL) != FALSE
                         && Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_EGG
-                        && (curHP = Pokemon_GetValue(mon, MON_DATA_HP, NULL))) {
+                        && (curHP = RunGame_BattleEntryHP(mon))) {
                         monsAlive++;
                         if (battleCtx->selectedPartySlot[i ^ 2] != j) {
                             totalHP += curHP;
@@ -4178,7 +4188,7 @@ static BOOL BattleControllerPlayer_ReplaceFainted(BattleSystem *battleSys, Battl
 
                 if (Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL) != FALSE
                     && Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_EGG) {
-                    curHP += Pokemon_GetValue(mon, MON_DATA_HP, NULL);
+                    curHP += RunGame_BattleEntryHP(mon);
                 }
             }
 
@@ -4252,7 +4262,7 @@ static BOOL BattleControllerPlayer_CheckBattleOver(BattleSystem *battleSys, Batt
                     Pokemon *mon = Party_GetPokemonBySlotIndex(party, j);
                     if (Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_NONE
                         && Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_EGG) {
-                        totalPartyHP += Pokemon_GetValue(mon, MON_DATA_HP, NULL);
+                        totalPartyHP += BattleSystem_RunAvailableHP(battleSys, battleCtx, mon);
                     }
                 }
 
@@ -4271,7 +4281,7 @@ static BOOL BattleControllerPlayer_CheckBattleOver(BattleSystem *battleSys, Batt
                     Pokemon *mon = Party_GetPokemonBySlotIndex(party, j);
                     if (Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_NONE
                         && Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_EGG) {
-                        totalPartyHP += Pokemon_GetValue(mon, MON_DATA_HP, NULL);
+                        totalPartyHP += BattleSystem_RunAvailableHP(battleSys, battleCtx, mon);
                     }
                 }
 
@@ -4279,7 +4289,7 @@ static BOOL BattleControllerPlayer_CheckBattleOver(BattleSystem *battleSys, Batt
                     Pokemon *mon = Party_GetPokemonBySlotIndex(partnerParty, j);
                     if (Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_NONE
                         && Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_EGG) {
-                        totalPartyHP += Pokemon_GetValue(mon, MON_DATA_HP, NULL);
+                        totalPartyHP += BattleSystem_RunAvailableHP(battleSys, battleCtx, mon);
                     }
                 }
 
@@ -4300,7 +4310,7 @@ static BOOL BattleControllerPlayer_CheckBattleOver(BattleSystem *battleSys, Batt
                 Pokemon *mon = Party_GetPokemonBySlotIndex(party, j);
                 if (Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_NONE
                     && Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_EGG) {
-                    totalPartyHP += Pokemon_GetValue(mon, MON_DATA_HP, NULL);
+                    totalPartyHP += BattleSystem_RunAvailableHP(battleSys, battleCtx, mon);
                 }
             }
 

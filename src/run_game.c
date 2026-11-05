@@ -10,6 +10,7 @@
 
 #include "pokemon.h"
 #include "run_randomizer.h"
+#include "run_extras.h"
 #include "run_session.h"
 #include "run_world.h"
 #include "save_player.h"
@@ -19,10 +20,69 @@
 #include "generated/items.h"
 #include "generated/moves.h"
 #include "generated/badges.h"
+#include "generated/trainers.h"
+#include "generated/species.h"
 #include "constants/heap.h"
 #include "message.h"
 #include "string_gf.h"
 #include "res/text/bank/run_engine.h"
+#include "screen_fade.h"
+#include "script_manager.h"
+#include "pokedex.h"
+#include "system_flags.h"
+#include "system_vars.h"
+#include "generated/vars_flags.h"
+
+static BOOL RunGame_EventPrerequisites(SaveData *save, u8 event)
+{
+    VarsFlags *vars = SaveData_GetVarsFlags(save);
+    return event < 2 && SystemFlag_CheckGameCompleted(vars)
+        && Pokedex_IsNationalDexObtained(SaveData_GetPokedex(save))
+        && (event != 0 || VarsFlags_CheckFlag(vars, FLAG_WOKE_UP_CANALAVE_CITY_SAILOR_ELDRITCH_HOUSE_LITTLE_BOY));
+}
+
+BOOL RunGame_EventOffer(SaveData *save, u8 event, BOOL claim)
+{
+    if (!RunGame_EventPrerequisites(save, event)) return FALSE;
+    VarsFlags *vars = SaveData_GetVarsFlags(save);
+    enum DistributionEvent distribution = event == 0 ? DISTRIBUTION_EVENT_DARKRAI : DISTRIBUTION_EVENT_SHAYMIN;
+    u16 item = event == 0 ? ITEM_MEMBER_CARD : ITEM_OAKS_LETTER;
+    BOOL hasItem = Bag_CanRemoveItem(SaveData_GetBag(save), item, 1, HEAP_ID_FIELD2);
+    // Existing legitimate items can activate their native event too. Never set
+    // the distribution flag before the key item has actually entered the Bag.
+    if (hasItem) SystemVars_SetDistributionEventMagic(vars, distribution);
+    if (claim) return hasItem;
+    return !hasItem && !SystemVars_CheckDistributionEvent(vars, distribution);
+}
+
+u32 RunGame_EventKey(u8 event)
+{
+    return event == 0 ? ((u32)MAP_HEADER_NEWMOON_ISLAND_FOREST << 16) | SPECIES_DARKRAI
+        : ((u32)MAP_HEADER_FLOWER_PARADISE << 16) | SPECIES_SHAYMIN;
+}
+
+u8 RunGame_EventStatus(SaveData *save, u8 event, RunSpecialRecord *record)
+{
+    memset(record, 0, sizeof(*record));
+    record->eventKey = RunGame_EventKey(event);
+    record->species = event == 0 ? SPECIES_DARKRAI : SPECIES_SHAYMIN;
+    record->zone = RunWorld_Zone(record->eventKey >> 16);
+    record->source = RUN_SOURCE_STATIC;
+    if (RunSession_Configured()) {
+        for (u16 id = 1; id <= RunState_SpecialCount(RunSession_State()); id++) {
+            RunSpecialRecord actual;
+            RunState_GetSpecial(RunSession_State(), id, &actual);
+            if (actual.source == RUN_SOURCE_STATIC && actual.eventKey == record->eventKey) *record = actual;
+        }
+    }
+    // 0 unavailable, 1 available, 2 encountered, 3 caught, 4 failed (retryable).
+    if (VarsFlags_CheckFlag(SaveData_GetVarsFlags(save), event == 0 ? FLAG_CAUGHT_DARKRAI : FLAG_CAUGHT_SHAYMIN)
+        || record->caught) return 3;
+    if (record->attempts) return record->outcome == RUN_OUTCOME_PENDING ? 2 : 4;
+    return RunGame_EventPrerequisites(save, event)
+        && SystemVars_CheckDistributionEvent(SaveData_GetVarsFlags(save), event == 0 ? DISTRIBUTION_EVENT_DARKRAI : DISTRIBUTION_EVENT_SHAYMIN)
+        && Bag_CanRemoveItem(SaveData_GetBag(save), event == 0 ? ITEM_MEMBER_CARD : ITEM_OAKS_LETTER, 1, HEAP_ID_FIELD2) ? 1 : 0;
+}
 
 static const FieldBattleDTO *sBattle;
 static enum RunCapturePermission sPermission[2];
@@ -37,6 +97,23 @@ static BOOL sGiftContext;
 static enum RunEncounterSource sGiftSource;
 static u32 sGiftKey;
 static BOOL sGiftAccepted;
+
+void RunGame_ApplyShiny(Pokemon *mon)
+{
+    if (!RunSession_Configured() || !RunSession_Config()->shinyRate) return;
+    u16 species = Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL);
+    // Preserve the special Manaphy Egg's native anti-shiny hatch treatment.
+    if (species == SPECIES_MANAPHY && Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL)) return;
+    u32 oldPID = Pokemon_GetValue(mon, MON_DATA_PERSONALITY, NULL);
+    u32 pid = RunExtras_ShinyPID(oldPID, Pokemon_GetValue(mon, MON_DATA_OT_ID, NULL),
+        RunSession_Config()->shinyRate, species == SPECIES_WURMPLE ? 2 : 0);
+    if (pid != oldPID) {
+        // Native block permutation/re-encryption; stored form and other data
+        // survive. Gen IV Unown form is an explicit field, not a PID formula.
+        sub_020780C4(mon, pid);
+        Pokemon_CalcLevelAndStats(mon);
+    }
+}
 
 #define RUN_MON_TRACKED 0x40
 #define RUN_MON_DEAD    0x80
@@ -133,7 +210,7 @@ u8 RunGame_LevelCap(void)
 u32 RunGame_Experience(BoxPokemon *mon, u32 current, u32 award)
 {
     if (RunGame_Exhausted(mon)) return current;
-    if (RunSession_Configured() && !sSuspended && (RunSession_Config()->flags & RUN_LEVEL_CAPS)
+    if (RunSession_Configured() && !sSuspended && RunConfig_ExpLockEnabled(RunSession_Config())
         && (BoxPokemon_GetValue(mon, MON_DATA_UNUSED_113, NULL) & RUN_MON_TRACKED)) {
         u16 species = BoxPokemon_GetValue(mon, MON_DATA_SPECIES, NULL);
         return RunWorld_ClampExp(current, award, Pokemon_GetSpeciesBaseExpAt(species, RunGame_LevelCap()));
@@ -145,8 +222,52 @@ u32 RunGame_Experience(BoxPokemon *mon, u32 current, u32 award)
 BOOL RunGame_CanUseCandy(Pokemon *mon)
 {
     return !RunGame_Exhausted(Pokemon_GetBoxPokemon(mon))
-        && (!RunSession_Configured() || !(RunSession_Config()->flags & RUN_LEVEL_CAPS)
+        && (!RunSession_Configured() || !RunConfig_ExpLockEnabled(RunSession_Config())
             || Pokemon_GetValue(mon, MON_DATA_LEVEL, NULL) < RunGame_LevelCap());
+}
+
+BOOL RunGame_RefusesBattle(Pokemon *mon)
+{
+    if (!RunGame_ObedienceActive()) return FALSE;
+    BoxPokemon *box = Pokemon_GetBoxPokemon(mon);
+    return (BoxPokemon_GetValue(box, MON_DATA_UNUSED_113, NULL) & RUN_MON_TRACKED)
+        && !BoxPokemon_GetValue(box, MON_DATA_IS_EGG, NULL) && !RunGame_Exhausted(box)
+        && Pokemon_GetValue(mon, MON_DATA_LEVEL, NULL) > RunGame_LevelCap();
+}
+
+BOOL RunGame_ObedienceActive(void)
+{
+    return RunSession_Configured() && !sSuspended && RunConfig_ObedienceCapEnabled(RunSession_Config());
+}
+
+u16 RunGame_BattleEntryHP(Pokemon *mon)
+{
+    // Virtual eligibility value only. Never modify real HP or mark refusal dead.
+    return RunGame_RefusesBattle(mon) || RunGame_Exhausted(Pokemon_GetBoxPokemon(mon))
+        ? 0 : Pokemon_GetValue(mon, MON_DATA_HP, NULL);
+}
+
+BOOL RunGame_CanEnterBattle(Pokemon *mon)
+{
+    return !Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) && RunGame_BattleEntryHP(mon) > 0;
+}
+
+u8 RunGame_EligibleCount(const Party *party)
+{
+    u8 count = 0;
+    for (u8 slot = 0; slot < Party_GetCurrentCount(party); slot++)
+        count += RunGame_CanEnterBattle(Party_GetPokemonBySlotIndex(party, slot));
+    return count;
+}
+
+u8 RunGame_RefusingCount(const Party *party)
+{
+    u8 count = 0;
+    for (u8 slot = 0; slot < Party_GetCurrentCount(party); slot++) {
+        Pokemon *mon = Party_GetPokemonBySlotIndex(party, slot);
+        count += Pokemon_GetValue(mon, MON_DATA_HP, NULL) > 0 && RunGame_RefusesBattle(mon);
+    }
+    return count;
 }
 
 void RunGame_BeginBattle(FieldBattleDTO *dto)
@@ -160,12 +281,18 @@ void RunGame_BeginBattle(FieldBattleDTO *dto)
         sSpecial[i] = sCaught[i] = 0;
     }
     if (!RunSession_Configured() || sSuspended) return;
+    RunSession_CheckBag(dto->bag);
     Party *player = dto->parties[BATTLER_PLAYER_1];
     for (u8 i = 0; i < Party_GetCurrentCount(player); i++) {
         Pokemon *mon = Party_GetPokemonBySlotIndex(player, i);
         BoxPokemon *box = Pokemon_GetBoxPokemon(mon);
         if (!RunGame_MonID(box)) RunGame_Register(box, RUN_SOURCE_GIFT, 0);
         if (RunGame_Exhausted(box)) RunGame_Exhaust(mon);
+    }
+    if (RunConfig_ObedienceCapEnabled(RunSession_Config()) && !RunGame_EligibleCount(player)) {
+        RunState_EndRun(RunSession_State(), 2);
+        dto->resultMask = BATTLE_RESULT_LOSE;
+        return;
     }
     if ((dto->battleType & BATTLE_TYPE_TRAINER) || !RunState_CaptureActivated(RunSession_State())) return;
     RunSession_SetZone(RunWorld_Zone(dto->mapHeaderID));
@@ -223,6 +350,24 @@ void RunGame_Caught(Pokemon *mon, u8 battler, u8 partySlot)
     if (sSpecial[enemySlot]) RunState_FinishSpecial(RunSession_State(), sSpecial[enemySlot], RUN_OUTCOME_CAUGHT, sCaught[enemySlot]);
 }
 
+static u8 RunGame_ResultingBadges(const FieldBattleDTO *dto)
+{
+    static const u16 leaders[] = { TRAINER_LEADER_ROARK, TRAINER_LEADER_GARDENIA,
+        TRAINER_LEADER_FANTINA, TRAINER_LEADER_MAYLENE, TRAINER_LEADER_WAKE,
+        TRAINER_LEADER_BYRON, TRAINER_LEADER_CANDICE, TRAINER_LEADER_VOLKNER };
+    static const u8 badges[] = { BADGE_ID_COAL, BADGE_ID_FOREST, BADGE_ID_RELIC,
+        BADGE_ID_COBBLE, BADGE_ID_FEN, BADGE_ID_MINE, BADGE_ID_ICICLE, BADGE_ID_BEACON };
+    TrainerInfo *trainer = SaveData_GetTrainerInfo(SaveData_Ptr());
+    u8 count = TrainerInfo_BadgeCount(trainer);
+    // Gym scripts award the badge after the battle callback. Honor that earned
+    // cap immediately for loss assessment, without setting story flags early.
+    if (dto->resultMask == BATTLE_RESULT_WIN && (dto->battleType & BATTLE_TYPE_TRAINER)) {
+        for (u8 i = 0; i < 8; i++) if (dto->trainerIDs[BATTLER_ENEMY_1] == leaders[i]
+            && !TrainerInfo_HasBadge(trainer, badges[i])) return count < 8 ? count + 1 : count;
+    }
+    return count;
+}
+
 void RunGame_EndBattle(const FieldBattleDTO *dto)
 {
     if (sBattle != dto) return;
@@ -237,15 +382,20 @@ void RunGame_EndBattle(const FieldBattleDTO *dto)
             if (sSpecial[i]) RunState_FinishSpecial(RunSession_State(), sSpecial[i], outcome, 0);
         }
         Party *party = dto->parties[BATTLER_PLAYER_1];
+        u8 resultingBadges = RunGame_ResultingBadges(dto);
         BOOL living = FALSE;
         for (u32 i = 0; i < Party_GetCurrentCount(party); i++) {
             Pokemon *mon = Party_GetPokemonBySlotIndex(party, i);
             if (Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL)) continue;
             if (Pokemon_GetValue(mon, MON_DATA_HP, NULL) == 0) RunGame_Exhaust(mon);
-            if (!RunGame_Exhausted(Pokemon_GetBoxPokemon(mon))) living = TRUE;
+            if (RunWorld_BattleEligible(RunSession_Config(), resultingBadges,
+                Pokemon_GetValue(mon, MON_DATA_LEVEL, NULL), Pokemon_GetValue(mon, MON_DATA_HP, NULL),
+                FALSE, RunGame_Exhausted(Pokemon_GetBoxPokemon(mon)))) living = TRUE;
             RunGame_Sync(Pokemon_GetBoxPokemon(mon));
         }
-        if (!living && RunConfig_EndOnPartyWipe(RunSession_Config())) RunState_SetGameOver(RunSession_State());
+        if (!living && RunWorld_NoEligibleEndsRun(RunSession_Config()))
+            RunState_EndRun(RunSession_State(), RunGame_RefusingCount(party)
+                || !RunConfig_EndOnPartyWipe(RunSession_Config()) ? 2 : 1);
     }
     sBattle = NULL;
     sSuspended = FALSE;
@@ -298,6 +448,12 @@ u16 RunGame_RandomSpecies(enum RunEncounterSource source, u32 key, u32 slot, u16
 
 u16 RunGame_TrainerSpecies(u32 trainerID, u32 slot, u16 species)
 {
+    if (RunSession_Configured() && RunSession_Config()->rulesVersion >= 3
+        && (RunSession_Config()->flags & RUN_RANDOMIZE_GIFTS) && slot == 0) {
+        if (trainerID == TRAINER_RIVAL_ROUTE_201_TURTWIG) return RunExtras_Starter(RunSession_Config(), 1);
+        if (trainerID == TRAINER_RIVAL_ROUTE_201_CHIMCHAR) return RunExtras_Starter(RunSession_Config(), 2);
+        if (trainerID == TRAINER_RIVAL_ROUTE_201_PIPLUP) return RunExtras_Starter(RunSession_Config(), 0);
+    }
     return RunSession_Configured() ? RunRandomizer_SelectSpecies(RunSession_Config(), RUN_DOMAIN_TRAINER, trainerID, slot, species) : species;
 }
 
@@ -426,6 +582,14 @@ static BOOL RunGame_EndTask(FieldTask *task)
 
 void RunGame_PollEnd(FieldSystem *fieldSystem)
 {
+    if (RunSession_Configured() && RunSession_Config()->captureAttempts && !RunGame_Over()
+        && RunState_ActivationNoticePending(RunSession_State()) && fieldSystem->runningFieldMap
+        && !fieldSystem->task && !fieldSystem->processManager->child && IsScreenFadeDone()) {
+        // Shops/gift scripts own their messages until they finish. The advice
+        // starts through the native task/script path on the next safe frame.
+        ScriptManager_Set(fieldSystem, 0x80D, NULL);
+        return;
+    }
     // Script/battle tasks own their cleanup. Wait until their entire call stack
     // has unwound before moving maps; never abandon a task's heap environment.
     if (RunGame_Over() && fieldSystem->location->mapHeaderID != MAP_HEADER_SANDGEM_TOWN_POKECENTER_1F

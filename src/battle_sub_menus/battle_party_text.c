@@ -15,6 +15,7 @@
 #include "move_table.h"
 #include "party.h"
 #include "pokemon.h"
+#include "run_game.h"
 #include "render_text.h"
 #include "render_window.h"
 #include "string_gf.h"
@@ -1926,7 +1927,9 @@ static void RenderSelectPokemonScreen(BattleParty *battleParty)
 
     PrintSelectedPokemonName(battleParty, battleParty->context->selectedPartyIndex);
 
-    PrintButtonText(battleParty, BATTLE_SELECT_POKEMON_SCREEN_WINDOW_SHIFT, BattleParty_Text_ShiftButton);
+    PrintButtonText(battleParty, BATTLE_SELECT_POKEMON_SCREEN_WINDOW_SHIFT,
+        RunGame_RefusesBattle(battleParty->partyPokemon[battleParty->context->selectedPartyIndex].mon)
+            ? BattleParty_Text_RunRefusesLabel : BattleParty_Text_ShiftButton);
 
     if (battleParty->partyPokemon[battleParty->context->selectedPartyIndex].isEgg == FALSE) {
         PrintButtonText(battleParty, BATTLE_SELECT_POKEMON_SCREEN_WINDOW_SUMMARY, BattleParty_Text_SummaryButton);

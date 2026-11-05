@@ -68,6 +68,14 @@
         "Well, then, allow me to examine your\n",
         "Pokédex.\r"
       ]
+    },
+    {
+      "id": "EternaCitySouthHouse_Text_RunMemberCard",
+      "en_US": "Oak: You helped the sailor’s son in\nCanalave City? How wonderful!\rI have a Member Card for you.\nIt opens the Harbor Inn there.\rPerhaps you can discover what\nhappened at that old inn..."
+    },
+    {
+      "id": "EternaCitySouthHouse_Text_RunOaksLetter",
+      "en_US": "Oak: I have another favor to ask.\nPlease take this letter.\rMeet me at the white rock on\nRoute 224 when you have time."
     }
   ]
 }

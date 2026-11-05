@@ -39,6 +39,7 @@
 #include "pokedex_data_index.h"
 #include "pokedex_heightweight.h"
 #include "pokemon.h"
+#include "run_game.h"
 #include "string_gf.h"
 #include "trainer_data.h"
 #include "trainer_info.h"
@@ -66,6 +67,20 @@ static BOOL MoveCannotTriggerAnticipation(BattleContext *battleCtx, int move);
 static int CalcMoveType(BattleSystem *battleSys, BattleContext *battleCtx, int item, int move);
 
 static const Fraction sStatStageBoosts[];
+
+u16 BattleSystem_RunAvailableHP(BattleSystem *battleSys, BattleContext *battleCtx, Pokemon *mon)
+{
+    if (!RunGame_RefusesBattle(mon)) return RunGame_BattleEntryHP(mon);
+    // A Pokemon that overlevels while already active may finish this battle.
+    // It is never counted as a new bench/replacement candidate.
+    for (int battler = 0; battler < BattleSystem_GetMaxBattlers(battleSys); battler++) {
+        int slot = battleCtx->selectedPartySlot[battler];
+        if (slot < BattleSystem_GetPartyCount(battleSys, battler) && battleCtx->battleMons[battler].curHP
+            && BattleSystem_GetPartyPokemon(battleSys, battler, slot) == mon)
+            return Pokemon_GetValue(mon, MON_DATA_HP, NULL);
+    }
+    return 0;
+}
 
 void BattleSystem_InitBattleMon(BattleSystem *battleSys, BattleContext *battleCtx, int battler, int partySlot)
 {
@@ -3166,7 +3181,7 @@ BOOL BattleSystem_AnyReplacementMons(BattleSystem *battleSys, BattleContext *bat
         mon = Party_GetPokemonBySlotIndex(party, i);
         if (Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL)
             && Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) == FALSE
-            && Pokemon_GetValue(mon, MON_DATA_HP, NULL)
+            && RunGame_BattleEntryHP(mon)
             && selectedSlot1 != i
             && selectedSlot2 != i) {
             aliveMons++;
@@ -7966,7 +7981,7 @@ int BattleAI_PostKOSwitchIn(BattleSystem *battleSys, int battler)
 
             if (monSpecies != SPECIES_NONE
                 && monSpecies != SPECIES_EGG
-                && Pokemon_GetValue(mon, MON_DATA_HP, NULL)
+                && RunGame_BattleEntryHP(mon)
                 && (battlersDisregarded & FlagIndex(i)) == FALSE
                 && battleCtx->selectedPartySlot[slot1] != i
                 && battleCtx->selectedPartySlot[slot2] != i
@@ -8041,7 +8056,7 @@ int BattleAI_PostKOSwitchIn(BattleSystem *battleSys, int battler)
 
         if (monSpecies != SPECIES_NONE
             && monSpecies != SPECIES_EGG
-            && Pokemon_GetValue(mon, MON_DATA_HP, NULL)
+            && RunGame_BattleEntryHP(mon)
             && battleCtx->selectedPartySlot[slot1] != i
             && battleCtx->selectedPartySlot[slot2] != i
             && i != battleCtx->aiSwitchedPartySlot[slot1]

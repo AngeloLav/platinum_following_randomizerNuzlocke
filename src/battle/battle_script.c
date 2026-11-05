@@ -55,6 +55,7 @@
 #include "pc_boxes.h"
 #include "pokemon.h"
 #include "run_game.h"
+#include "run_session.h"
 #include "pokemon_icon.h"
 #include "pokemon_sprite.h"
 #include "render_window.h"
@@ -2446,6 +2447,19 @@ static BOOL BtlCmd_WaitMonSelection(BattleSystem *battleSys, BattleContext *batt
     for (battler = 0; battler < maxBattlers; battler++) {
         if ((battleCtx->battlerStatusFlags[battler] & BATTLER_STATUS_SWITCHING)
             && BattleContext_IOBufferVal(battleCtx, battler)) {
+            int chosen = battleCtx->ioBuffer[battler][0] - 1;
+            if (chosen < BattleSystem_GetPartyCount(battleSys, battler)
+                && RunGame_RefusesBattle(BattleSystem_GetPartyPokemon(battleSys, battler, chosen))) {
+                if (!RunGame_EligibleCount(BattleSystem_GetParty(battleSys, battler))) {
+                    RunState_EndRun(RunSession_State(), 2);
+                    BattleSystem_SetResultMask(battleSys, BATTLE_RESULT_LOSE);
+                    battleCtx->battleProgressFlag = TRUE;
+                    return FALSE;
+                }
+                BattleIO_ClearBuffer(battleCtx, battler);
+                BattleController_EmitShowPartyMenu(battleSys, battleCtx, battler, 1, 0, 6);
+                continue;
+            }
             battleCtx->switchedPartySlot[battler] = battleCtx->ioBuffer[battler][0] - 1;
             totalSwitching--;
 
@@ -2515,6 +2529,25 @@ static BOOL BtlCmd_SwitchAndUpdateMon(BattleSystem *battleSys, BattleContext *ba
 
     battleCtx->battlerStatusFlags[battler] &= ~BATTLER_STATUS_SWITCHING;
     battleCtx->battlersSwitchingMask &= FLAG_NEGATE(FlagIndex(battler));
+    if (RunGame_ObedienceActive() && (battler == BATTLER_PLAYER_1
+            || (battler == BATTLER_PLAYER_2 && !(BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_2vs2)))) {
+        int chosen = battleCtx->switchedPartySlot[battler];
+        if (chosen >= BattleSystem_GetPartyCount(battleSys, battler)
+            || !RunGame_CanEnterBattle(BattleSystem_GetPartyPokemon(battleSys, battler, chosen))) {
+            int other = battleCtx->selectedPartySlot[BattleSystem_GetPartner(battleSys, battler)];
+            for (chosen = 0; chosen < BattleSystem_GetPartyCount(battleSys, battler); chosen++) {
+                if ((chosen != other || !(BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_DOUBLES))
+                    && RunGame_CanEnterBattle(BattleSystem_GetPartyPokemon(battleSys, battler, chosen))) break;
+            }
+            if (chosen == BattleSystem_GetPartyCount(battleSys, battler)) {
+                RunState_EndRun(RunSession_State(), 2);
+                BattleSystem_SetResultMask(battleSys, BATTLE_RESULT_LOSE);
+                battleCtx->battleProgressFlag = TRUE;
+                return FALSE;
+            }
+            battleCtx->switchedPartySlot[battler] = chosen;
+        }
+    }
     battleCtx->selectedPartySlot[battler] = battleCtx->switchedPartySlot[battler];
     battleCtx->switchedPartySlot[battler] = MAX_PARTY_SIZE;
 
@@ -5253,7 +5286,7 @@ static BOOL BtlCmd_TryWhirlwind(BattleSystem *battleSys, BattleContext *battleCt
         Party *defenderParty;
         Pokemon *mon;
         int defenderPartyCount;
-        int eligibleMons = 0, maxActiveMons, i, partyStart, partyEnd, max;
+        int eligibleMons = 0, i, partyStart, partyEnd, max;
         int selectedSlot1, selectedSlot2;
 
         defenderParty = BattleSystem_GetParty(battleSys, battleCtx->defender);
@@ -5265,7 +5298,6 @@ static BOOL BtlCmd_TryWhirlwind(BattleSystem *battleSys, BattleContext *battleCt
             partyStart = 0;
             partyEnd = defenderPartyCount;
             max = defenderPartyCount;
-            maxActiveMons = 1;
             selectedSlot1 = battleCtx->selectedPartySlot[battleCtx->defender];
             selectedSlot2 = battleCtx->selectedPartySlot[battleCtx->defender];
         } else if (battleType & BATTLE_TYPE_DOUBLES) {
@@ -5273,7 +5305,6 @@ static BOOL BtlCmd_TryWhirlwind(BattleSystem *battleSys, BattleContext *battleCt
             partyStart = 0;
             partyEnd = defenderPartyCount;
             max = defenderPartyCount;
-            maxActiveMons = 2;
             selectedSlot1 = battleCtx->selectedPartySlot[battleCtx->defender];
             selectedSlot2 = battleCtx->selectedPartySlot[BattleSystem_GetPartner(battleSys, battleCtx->defender)];
         } else {
@@ -5281,7 +5312,6 @@ static BOOL BtlCmd_TryWhirlwind(BattleSystem *battleSys, BattleContext *battleCt
             partyStart = 0;
             partyEnd = defenderPartyCount;
             max = defenderPartyCount;
-            maxActiveMons = 1;
             selectedSlot1 = battleCtx->selectedPartySlot[battleCtx->defender];
             selectedSlot2 = battleCtx->selectedPartySlot[battleCtx->defender];
         }
@@ -5292,13 +5322,13 @@ static BOOL BtlCmd_TryWhirlwind(BattleSystem *battleSys, BattleContext *battleCt
 
             if (Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL)
                 && Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) == FALSE
-                && Pokemon_GetValue(mon, MON_DATA_HP, NULL)) {
+                && RunGame_BattleEntryHP(mon) && i != selectedSlot1 && i != selectedSlot2) {
                 eligibleMons++;
             }
         }
 
         // Check if there are more eligible mons in the back of the party.
-        if (eligibleMons <= maxActiveMons) {
+        if (eligibleMons == 0) {
             BattleScript_Iter(battleCtx, jumpOnFail);
         } else if (BattleSystem_CanWhirlwind(battleSys, battleCtx)) {
             // Pick a random eligible mon from the back of the party.
@@ -5311,7 +5341,7 @@ static BOOL BtlCmd_TryWhirlwind(BattleSystem *battleSys, BattleContext *battleCt
                 mon = Party_GetPokemonBySlotIndex(defenderParty, i);
             } while (Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL) == SPECIES_NONE
                 || Pokemon_GetValue(mon, MON_DATA_IS_EGG, NULL) == TRUE
-                || Pokemon_GetValue(mon, MON_DATA_HP, NULL) == 0);
+                || RunGame_BattleEntryHP(mon) == 0);
 
             battleCtx->switchedPartySlot[battleCtx->defender] = i;
         } else {
@@ -8877,7 +8907,7 @@ static BOOL BtlCmd_CheckBlackOut(BattleSystem *battleSys, BattleContext *battleC
 
             if (Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_NONE
                 && Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_EGG) {
-                aliveMons += Pokemon_GetValue(mon, MON_DATA_HP, NULL);
+                aliveMons += BattleSystem_RunAvailableHP(battleSys, battleCtx, mon);
             }
         }
 
@@ -8891,7 +8921,7 @@ static BOOL BtlCmd_CheckBlackOut(BattleSystem *battleSys, BattleContext *battleC
 
                 if (Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_NONE
                     && Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_EGG) {
-                    aliveMons += Pokemon_GetValue(mon, MON_DATA_HP, NULL);
+                    aliveMons += BattleSystem_RunAvailableHP(battleSys, battleCtx, mon);
                 }
             }
         }
@@ -8908,7 +8938,7 @@ static BOOL BtlCmd_CheckBlackOut(BattleSystem *battleSys, BattleContext *battleC
 
             if (Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_NONE
                 && Pokemon_GetValue(mon, MON_DATA_SPECIES_OR_EGG, NULL) != SPECIES_EGG) {
-                aliveMons += Pokemon_GetValue(mon, MON_DATA_HP, NULL);
+                aliveMons += BattleSystem_RunAvailableHP(battleSys, battleCtx, mon);
             }
         }
 

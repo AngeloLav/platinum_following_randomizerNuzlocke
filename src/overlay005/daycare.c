@@ -707,6 +707,7 @@ void Egg_CreateEgg(Pokemon *egg, u16 species, u8 param2, TrainerInfo *trainerInf
     }
 
     UpdateMonStatusAndTrainerInfo(egg, trainerInfo, param4, metLocation, HEAP_ID_SYSTEM);
+    RunGame_ApplyShiny(egg);
 }
 
 static void Egg_SetInitialData(Pokemon *mon, u16 species, Daycare *daycare, u32 monOTID, u8 form)
@@ -779,6 +780,7 @@ void Daycare_GiveEggFromDaycare(Daycare *daycare, Party *party, TrainerInfo *tra
     isEgg = TRUE;
     Pokemon_SetValue(mon, MON_DATA_IS_EGG, &isEgg);
 
+    RunGame_ApplyShiny(mon);
     if (RunSession_Configured()) {
         u32 event = 0xD0000000u ^ Pokemon_GetValue(mon, MON_DATA_PERSONALITY, NULL);
         u16 special = RunState_SpecialAttempt(RunSession_State(), event, RunSession_Zone(), species, RUN_SOURCE_EGG);

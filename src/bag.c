@@ -12,6 +12,7 @@
 #include "heap.h"
 #include "item.h"
 #include "savedata.h"
+#include "run_session.h"
 
 #define BAG_SLOT_INVALID ((u32)(-1))
 
@@ -146,6 +147,7 @@ BOOL Bag_TryAddItem(Bag *bag, u16 item, u16 count, enum HeapID heapID)
 
     slot->item = item;
     slot->quantity += count;
+    if (count) RunSession_ItemReceived(bag, item);
 
     u32 pocketSize;
     u32 pocket = Bag_GetPocketForItem(bag, item, &slot, &pocketSize, heapID);

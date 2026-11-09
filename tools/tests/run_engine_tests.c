@@ -79,6 +79,23 @@ static void TestPresets(void)
 
 static void TestCodec(void)
 {
+    for (u8 value = 10; value <= 75; value += 5) {
+        assert(RunConfig_AdjustValue(value, 10, 75, 5, TRUE) == (value == 10 ? 10 : value - 5));
+        assert(RunConfig_AdjustValue(value, 10, 75, 5, FALSE) == (value == 75 ? 75 : value + 5));
+    }
+    for (u8 value = 0; value <= 100; value += 5) {
+        assert(RunConfig_AdjustValue(value, 0, 100, 5, TRUE) == (value == 0 ? 0 : value - 5));
+        assert(RunConfig_AdjustValue(value, 0, 100, 5, FALSE) == (value == 100 ? 100 : value + 5));
+    }
+    assert(RunConfig_AdjustValue(1, 0, 3, 1, TRUE) == 0);
+    assert(RunConfig_AdjustValue(1, 0, 3, 1, FALSE) == 2);
+    RunConfig legacyFlags;
+    RunConfig_Init(&legacyFlags, RUN_PRESET_NUZLOCKE, 1);
+    legacyFlags.flags &= ~RUN_END_ON_PARTY_WIPE;
+    assert(RunConfig_EndOnPartyWipe(&legacyFlags));
+    assert(RunConfig_EffectivePreset(&legacyFlags) == RUN_PRESET_NUZLOCKE);
+    legacyFlags.flags &= ~RUN_PERMADEATH;
+    assert(!RunConfig_EndOnPartyWipe(&legacyFlags));
     RunConfig original, restored, before;
     u8 encoded[RUN_CONFIG_WIRE_SIZE], damaged[RUN_CONFIG_WIRE_SIZE];
     assert(RunConfig_Init(&original, RUN_PRESET_HARDCORE_RANDOMIZER, 0x12345678u));

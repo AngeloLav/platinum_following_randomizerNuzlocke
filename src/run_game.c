@@ -15,6 +15,7 @@
 #include "run_world.h"
 #include "save_player.h"
 #include "savedata/save_table.h"
+#include "savedata_misc.h"
 #include "pc_boxes.h"
 #include "bag.h"
 #include "generated/items.h"
@@ -28,6 +29,8 @@
 #include "res/text/bank/run_engine.h"
 #include "screen_fade.h"
 #include "script_manager.h"
+#include "field_system.h"
+#include "run_menu.h"
 #include "pokedex.h"
 #include "system_flags.h"
 #include "system_vars.h"
@@ -275,6 +278,8 @@ void RunGame_BeginBattle(FieldBattleDTO *dto)
     if (sBattle == dto) return;
     sBattle = dto;
     sSuspended = (dto->battleType & (BATTLE_TYPE_LINK | BATTLE_TYPE_FRONTIER | BATTLE_TYPE_DEBUG | BATTLE_TYPE_CATCH_TUTORIAL)) != 0;
+    // Native first rival battle has an explicit loss story branch and healing.
+    if (dto->battleStatusMask & BATTLE_STATUS_FIRST_BATTLE) sSuspended = TRUE;
     for (u8 i = 0; i < 2; i++) {
         sPermission[i] = RUN_CAPTURE_INACTIVE;
         sOpportunity[i] = 0xFF;
@@ -495,13 +500,14 @@ BOOL RunGame_GiftResult(void) { return sGiftAccepted; }
 
 void RunGame_AdjustTrainerParty(Party *party, u32 trainerID, u32 battler, u32 battleType)
 {
-    if (!RunSession_Configured() || !(battler & 1) || (battleType & (BATTLE_TYPE_LINK | BATTLE_TYPE_FRONTIER))) return;
+    if (!RunSession_Configured() || battler == BATTLER_PLAYER_1 || !trainerID
+        || (battleType & (BATTLE_TYPE_LINK | BATTLE_TYPE_FRONTIER))) return;
     for (u32 slot = 0; slot < Party_GetCurrentCount(party); slot++) {
         Pokemon *mon = Party_GetPokemonBySlotIndex(party, slot);
         u16 original = Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL);
         u16 species = RunGame_TrainerSpecies(trainerID, slot, original);
         u8 baseLevel = Pokemon_GetValue(mon, MON_DATA_LEVEL, NULL);
-        u8 level = RunGame_TrainerLevel(trainerID, baseLevel);
+        u8 level = (battler & 1) ? RunGame_TrainerLevel(trainerID, baseLevel) : baseLevel;
         if (species != original) {
             u32 personality = Pokemon_GetValue(mon, MON_DATA_PERSONALITY, NULL);
             u32 ivs = Pokemon_GetValue(mon, MON_DATA_COMBINED_IVS, NULL);
@@ -552,9 +558,36 @@ void RunGame_StoreExhausted(SaveData *save)
     }
 }
 
+static u32 sDefeatedNonce;
+
+BOOL RunGame_Restart(SaveData *save)
+{
+    // Only the ended run currently anchored to this SaveData may be erased.
+    // The caller must have closed the battle and field before reaching here.
+    if (save != SaveData_Ptr() || !RunSession_Configured() || !RunGame_Over()
+        || SaveData_OverwriteCheck(save)
+        || SaveData_MiscSaveBlock(save)->unused != RunState_Nonce(RunSession_State())) {
+        return FALSE;
+    }
+    if (!SaveData_Erase(save)) return FALSE;
+    RunSession_Reset();
+    sDefeatedNonce = 0;
+    return TRUE;
+}
+
 BOOL RunGame_Over(void)
 {
-    return RunSession_Configured() && RunState_Status(RunSession_State()) == RUN_STATUS_GAME_OVER;
+    if (!RunSession_Configured()) return FALSE;
+    if (RunState_Status(RunSession_State()) == RUN_STATUS_GAME_OVER) {
+        sDefeatedNonce = RunState_Nonce(RunSession_State());
+        return TRUE;
+    }
+    // An I/O failure must not let Continue resume the same run in this process.
+    if (sDefeatedNonce && sDefeatedNonce == RunState_Nonce(RunSession_State())) {
+        RunState_EndRun(RunSession_State(), 0);
+        return TRUE;
+    }
+    return FALSE;
 }
 
 void RunGame_ConfineLocation(Location *location)
@@ -567,16 +600,19 @@ void RunGame_ConfineLocation(Location *location)
     location->faceDirection = FACE_UP;
 }
 
-static BOOL RunGame_EndTask(FieldTask *task)
+BOOL RunGame_EndRunTask(FieldTask *task)
 {
+    FieldSystem *fieldSystem = FieldTask_GetFieldSystem(task);
     int *state = FieldTask_GetState(task);
     if (*state == 0) {
+        // Finalize the map first. Erasure happens in a separate application
+        // after the entire FieldSystem has been freed, with a visible notice.
         (*state)++;
-        if (FieldSystem_IsRunningFieldMap(FieldTask_GetFieldSystem(task))) FieldTransition_FinishMap(task);
-    } else if (*state == 1) {
-        (*state)++;
-        FieldTask_StartBlackOutFromBattle(task);
-    } else return TRUE;
+        if (FieldSystem_HasParentProcess(fieldSystem)) FieldTransition_FinishMap(task);
+    } else {
+        fieldSystem->processManager->kill = TRUE;
+        return TRUE;
+    }
     return FALSE;
 }
 
@@ -592,9 +628,9 @@ void RunGame_PollEnd(FieldSystem *fieldSystem)
     }
     // Script/battle tasks own their cleanup. Wait until their entire call stack
     // has unwound before moving maps; never abandon a task's heap environment.
-    if (RunGame_Over() && fieldSystem->location->mapHeaderID != MAP_HEADER_SANDGEM_TOWN_POKECENTER_1F
-        && !fieldSystem->task && !fieldSystem->processManager->child) {
-        FieldSystem_CreateTask(fieldSystem, RunGame_EndTask, NULL);
+    if (RunGame_Over() && !fieldSystem->task && !fieldSystem->processManager->child
+        && !fieldSystem->processManager->kill) {
+        FieldSystem_CreateTask(fieldSystem, RunGame_EndRunTask, NULL);
     }
 }
 

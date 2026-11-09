@@ -9,9 +9,9 @@
     ],
     "class": "CLASS_PHYSICAL",
     "type": "TYPE_ROCK",
-    "power": 95,
-    "accuracy": 95,
-    "pp": 15,
+    "power": 75,
+    "accuracy": 90,
+    "pp": 10,
     "effect": {
         "type": "BATTLE_EFFECT_FLINCH_HIT",
         "chance": 30

@@ -9,9 +9,9 @@
     ],
     "class": "CLASS_SPECIAL",
     "type": "TYPE_PSYCHIC",
-    "power": 250,
+    "power": 140,
     "accuracy": 90,
-    "pp": 10,
+    "pp": 5,
     "effect": {
         "type": "BATTLE_EFFECT_USER_SP_ATK_DOWN_2",
         "chance": 100

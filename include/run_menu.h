@@ -6,6 +6,8 @@
 
 extern const ApplicationManagerTemplate gRunConfigMenuTemplate;
 extern const ApplicationManagerTemplate gRunRegistryMenuTemplate;
+extern const ApplicationManagerTemplate gRunRestartMenuTemplate;
+BOOL RunRestartMenu_Init(ApplicationManager *appMan, int *state);
 BOOL RunConfigMenu_Init(ApplicationManager *appMan, int *state);
 BOOL RunRegistryMenu_Init(ApplicationManager *appMan, int *state);
 BOOL RunMenu_Main(ApplicationManager *appMan, int *state);

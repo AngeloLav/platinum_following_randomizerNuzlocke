@@ -1,11 +1,11 @@
 {
     "base_stats": {
-        "hp": 80,
+        "hp": 60,
         "attack": 79,
-        "defense": 135,
+        "defense": 105,
         "speed": 36,
         "special_attack": 59,
-        "special_defense": 95
+        "special_defense": 85
     },
     "types": [ "TYPE_BUG", "TYPE_GROUND" ],
     "catch_rate": 45,

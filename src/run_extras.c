@@ -84,9 +84,9 @@ static u8 Unown(u32 p)
 u32 RunExtras_ShinyPID(u32 personality, u32 trainerID, u8 rate, u8 constraint)
 {
     u16 x = (personality >> 16) ^ personality ^ (trainerID >> 16) ^ trainerID;
-    // 8/16/32/64-wide XOR intervals implement the four probabilities.
+    // 8/16/32/64/128-wide XOR intervals implement the five probabilities.
     // Existing/forced shinies and all ineligible draws are untouched.
-    if (rate == 0 || rate > 3 || x < 8 || x >= (8u << rate)) return personality;
+    if (rate == 0 || rate > 4 || x < 8 || x >= (8u << rate)) return personality;
     u16 ot = trainerID ^ (trainerID >> 16);
     u32 nature = personality % 25;
     // Keep low byte (gender/ability bit). Bounded construction, no game RNG.

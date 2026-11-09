@@ -151,7 +151,7 @@
     },
     {
       "id": "Run_Text_Controls",
-      "en_US": "Up/Down: select  Left/Right: change\nA: edit  B: top  Last row: review"
+      "en_US": "UP/DOWN: select  LEFT/RIGHT: change\nA: choose   B: top"
     },
     {
       "id": "Run_Text_ReadOnly",
@@ -443,11 +443,11 @@
     },
     {
       "id": "Run_Text_ReviewControls",
-      "en_US": "Up/Down: review  B: edit settings\nLast row: A to begin this run"
+      "en_US": "UP/DOWN: review   A: confirm\nB: edit"
     },
     {
       "id": "Run_Text_ConfigNav",
-      "en_US": "RUN SETTINGS   Up/Down: scroll"
+      "en_US": "UP/DOWN: scroll"
     },
     {
       "id": "Run_Text_NavRun",
@@ -583,7 +583,7 @@
     },
     {
       "id": "Run_Text_HelpShinyRate",
-      "en_US": "Changes how often newly generated\nPokemon are shiny. A smaller\ndenominator means more shinies.\nExisting Pokemon never change.\nShiny Clause is a separate rule.\nForced shinies and special Egg\nrestrictions retain native behavior."
+      "en_US": "Newly generated Pokemon only.\nOriginal: 1/8192\nIncreased: 1/4096\nHigh: 1/2048\nVery High: 1/1024\nUltra High: 1/512\nIndependent from Shiny Clause.\nExisting Pokemon are unchanged."
     },
     {
       "id": "Run_Text_HelpSeparateGifts",
@@ -756,6 +756,202 @@
     {
       "id": "Run_Text_HelpMythicalEvent",
       "en_US": "Original postgame event encounter.\nProfessor Oak in Eterna gives the\nKey Items once prerequisites are met.\nStatics ignore ordinary limits and\ndupes. Failed attempts retain native\nretry behavior and reuse one record."
+    },
+    {
+      "id": "Run_Text_DetailWild",
+      "en_US": "Replaces ordinary wild species with seeded choices. Grass, caves, surfing, fishing and other normal methods use BST Range and BST Similarity. Levels stay native.\nUse LEFT/RIGHT to adjust this option before starting. Review the complete settings before Confirm. This choice is saved with the run and cannot be changed during the adventure."
+    },
+    {
+      "id": "Run_Text_DetailTrainers",
+      "en_US": "Replaces opposing trainer species using the seed and team slot. Party size and held items stay native. Changed species receive valid level-up moves.\nIncludes friendly allied NPCs. Their original levels, party structure and story identity are preserved."
+    },
+    {
+      "id": "Run_Text_DetailTolerance",
+      "en_US": "Controls how much stronger or weaker a replacement Pokemon can be, using its total base stats. BST does not depend on level. Example: BST 400 at 25% allows replacement BSTs from 300 to 500.\nChange by exactly 5 percentage points with LEFT/RIGHT. Stops at 10 and 75 percent. Requires a species randomizer enabled."
+    },
+    {
+      "id": "Run_Text_DetailWeight",
+      "en_US": "Controls how likely similar BST values are chosen from the pool. 0%: equal candidate chances. 25%: slight preference. 50%: moderate preference. 75%: strong preference. 100%: very strong preference. Every eligible species can occur.\nRange defines eligibility. Similarity changes probability inside that pool. Steps are 5 percent, clamped from 0 to 100. All eligible species remain possible.\nRequires a Wild, Trainer, Static, Gift or Egg species randomizer."
+    },
+    {
+      "id": "Run_Text_DetailLegendaries",
+      "en_US": "Separates ordinary Pokemon from legendary and mythical Pokemon. Legendary restrictions apply before BST weighting and any fallback.\nUse LEFT/RIGHT to adjust this option before starting. Review the complete settings before Confirm. This choice is saved with the run and cannot be changed during the adventure.\nRequires a Wild, Trainer, Static, Gift or Egg species randomizer."
+    },
+    {
+      "id": "Run_Text_DetailStatic",
+      "en_US": "Randomizes eligible scripted static species. Static capture exemptions remain mandatory. Roamers keep their stored species and native story bookkeeping.\nUse LEFT/RIGHT to adjust this option before starting. Review the complete settings before Confirm. This choice is saved with the run and cannot be changed during the adventure."
+    },
+    {
+      "id": "Run_Text_DetailGifts",
+      "en_US": "Randomizes scripted gift Pokemon, including the three starters. Starter previews and the granted Pokemon use the same mapping. Trades retain their native species.\nUse LEFT/RIGHT to adjust this option before starting. Review the complete settings before Confirm. This choice is saved with the run and cannot be changed during the adventure."
+    },
+    {
+      "id": "Run_Text_DetailEggs",
+      "en_US": "Randomizes scripted gift Egg species. Hatching spends no new area opportunity. Breeding Eggs retain their parent-derived species.\nUse LEFT/RIGHT to adjust this option before starting. Review the complete settings before Confirm. This choice is saved with the run and cannot be changed during the adventure."
+    },
+    {
+      "id": "Run_Text_DetailFieldItems",
+      "en_US": "Randomizes ordinary visible and hidden overworld pickups. Important story items, Key Items, HMs, TMs, fossils and orbs stay native. NPC gifts, shops and held items are unaffected. Quantities and pickup flags are preserved.\nUse LEFT/RIGHT to adjust this option before starting. Review the complete settings before Confirm. This choice is saved with the run and cannot be changed during the adventure."
+    },
+    {
+      "id": "Run_Text_DetailSeedMode",
+      "en_US": "Automatic creates a seed when the run is configured. Manual lets you edit its eight hexadecimal digits on the Seed row. The resolved seed is stored with the run.\nUse LEFT/RIGHT to adjust this option before starting. Review the complete settings before Confirm. This choice is saved with the run and cannot be changed during the adventure."
+    },
+    {
+      "id": "Run_Text_DetailAttempts",
+      "en_US": "Each eligible encounter reserves one opportunity immediately. Catching, defeating or fleeing all spend it. With 2 or 3 chances, repeat species do not reserve another chance in the same area. OFF disables area capture limits.\nUse LEFT/RIGHT to adjust this option before starting. Review the complete settings before Confirm. This choice is saved with the run and cannot be changed during the adventure."
+    },
+    {
+      "id": "Run_Text_DetailDupes",
+      "en_US": "Previously owned evolutionary families are duplicates, including branching evolutions and Pokemon that died or were released. Duplicates spend no ordinary chance and cannot be caught.\nUse LEFT/RIGHT to adjust this option before starting. Review the complete settings before Confirm. This choice is saved with the run and cannot be changed during the adventure.\nRequires capture opportunities set to 1, 2 or 3."
+    },
+    {
+      "id": "Run_Text_DetailShiny",
+      "en_US": "Shiny wild Pokemon may be caught as bonus encounters despite dupes or an exhausted area. They spend no ordinary chance. This does not change how often shinies appear.\nUse LEFT/RIGHT to adjust this option before starting. Review the complete settings before Confirm. This choice is saved with the run and cannot be changed during the adventure.\nRequires capture opportunities set to 1, 2 or 3. Shiny Rate is independent."
+    },
+    {
+      "id": "Run_Text_DetailShinyRate",
+      "en_US": "Choose the shiny probability for newly generated Pokemon: Original 1/8192, Increased 1/4096, High 1/2048, Very High 1/1024 or Ultra High 1/512.\nExisting Pokemon and forced shinies remain unchanged. Gender, nature and ability are preserved. Shiny Clause is independent: it controls capture exemptions, not shiny generation."
+    },
+    {
+      "id": "Run_Text_DetailSeparateGifts",
+      "en_US": "Gift Pokemon have their own event record and spend no area chance. OFF makes an eligible gift share the ordinary area allowance.\nInactive when capture opportunities are OFF. Gift events remain tracked separately."
+    },
+    {
+      "id": "Run_Text_DetailSeparateEggs",
+      "en_US": "Gift Eggs have their own event record and spend no area chance. OFF shares the area allowance. Hatching never spends a chance.\nHatching never spends an opportunity at the hatching location. Inactive when capture opportunities are OFF."
+    },
+    {
+      "id": "Run_Text_DetailPermadeath",
+      "en_US": "A fainted owned Pokemon becomes permanently exhausted. Healing, Revives and PC storage cannot restore it. Its history remains in the Memorial while the run lasts.\nWith no eligible party member, the run ends even with living PC reserves. The save is erased and run configuration opens automatically. OFF allows normal healing. Obedience can still end a run."
+    },
+    {
+      "id": "Run_Text_DetailDayCare",
+      "en_US": "ON permits native breeding Eggs. OFF quarantines Egg production and collection during this run. Gift Eggs remain a separate system.\nUse LEFT/RIGHT to adjust this option before starting. Review the complete settings before Confirm. This choice is saved with the run and cannot be changed during the adventure."
+    },
+    {
+      "id": "Run_Text_DetailCap",
+      "en_US": "Uses the next unscaled boss ace plus your allowance, at most 100. Trainer scaling never raises it. The chosen Level Cap Mode controls EXP or battle-entry enforcement. After eight badges: Cynthia.\nUse LEFT/RIGHT to adjust this option before starting. Review the complete settings before Confirm. This choice is saved with the run and cannot be changed during the adventure."
+    },
+    {
+      "id": "Run_Text_DetailCapMode",
+      "en_US": "Choose EXP Lock or Obedience Cap. EXP Lock is the default. This choice is ignored when Level Cap is OFF.\nEXP Lock discards surplus EXP per recipient without redistribution. Obedience allows EXP, but blocks above-cap entry and switches. With zero eligible party members, your run ends even with Permadeath OFF. Requires Level Caps ON."
+    },
+    {
+      "id": "Run_Text_DetailAllowance",
+      "en_US": "Adds this many levels to the normal cap. It never raises a cap above level 100. Inactive when Level Cap is OFF.\nRequires Level Caps ON. Adds 0 to 5 levels, in steps of one."
+    },
+    {
+      "id": "Run_Text_DetailScaling",
+      "en_US": "Adds levels to opposing trainer Pokemon based on earned badges. Wild levels remain unchanged. Link and facility battles keep their native parties.\nUse LEFT/RIGHT to adjust this option before starting. Review the complete settings before Confirm. This choice is saved with the run and cannot be changed during the adventure."
+    },
+    {
+      "id": "Run_Text_DetailBonus",
+      "en_US": "Additional trainer levels equal badges times Levels per badge. Levels cannot exceed 100. Inactive when Trainer scaling is OFF.\nRequires Trainer Scaling ON. Steps are one level per badge, from 1 to 3. Allied NPCs keep their original levels."
+    },
+    {
+      "id": "Run_Text_DetailBosses",
+      "en_US": "Includes leaders, rivals and other classified strong trainers in badge-based scaling. OFF keeps their native levels. Inactive when scaling is OFF.\nRequires Trainer Scaling ON. Species randomization is independent."
+    },
+    {
+      "id": "Run_Text_DetailNotifications",
+      "en_US": "Shows remaining capture chances after the native area-name popup. Repeated floors of one logical area do not repeat the notice. Tracking works even when this notification is disabled.\nUse LEFT/RIGHT to adjust this option before starting. Review the complete settings before Confirm. This choice is saved with the run and cannot be changed during the adventure."
+    },
+    {
+      "id": "Run_Text_DetailPreset",
+      "en_US": "Choose a preset to initialize all settings consistently. Changing a setting makes the effective profile Custom. You can review every setting before confirming. Classic disables randomization and Nuzlocke enforcement; Following remains available."
+    },
+    {
+      "id": "Run_Text_DetailSeed",
+      "en_US": "Automatic resolves a seed for this run. Manual edits eight hexadecimal digits: LEFT/RIGHT selects a digit, UP/DOWN changes it. A accepts, B cancels. The same saved seed, settings and data version reproduce species mappings independently of ordinary battle RNG."
+    },
+    {
+      "id": "Run_Text_DetailReview",
+      "en_US": "Review every selected setting and seed. B returns to editing. Only A on the final Confirm row starts Rowan. Closing X help never confirms the run."
+    },
+    {
+      "id": "Run_Text_HelpModalControls",
+      "en_US": "A: NEXT / FIRST   B/X: CLOSE"
+    },
+    {
+      "id": "Run_Text_HelpDisabled",
+      "en_US": "Disabled: enable its parent rule."
+    },
+    {
+      "id": "Run_Text_TrackerTitle",
+      "en_US": "NUZLOCKE TRACKER"
+    },
+    {
+      "id": "Run_Text_TrackerCaptures",
+      "en_US": "CAPTURES LEFT"
+    },
+    {
+      "id": "Run_Text_TrackerSlash",
+      "en_US": "/"
+    },
+    {
+      "id": "Run_Text_TrackerCap",
+      "en_US": "LEVEL CAP"
+    },
+    {
+      "id": "Run_Text_TrackerBadges",
+      "en_US": "BADGES"
+    },
+    {
+      "id": "Run_Text_TrackerBonus",
+      "en_US": "BONUS"
+    },
+    {
+      "id": "Run_Text_TrackerInactive",
+      "en_US": "TRACKING INACTIVE"
+    },
+    {
+      "id": "Run_Text_TrackerOff",
+      "en_US": "CAPTURE LIMIT OFF"
+    },
+    {
+      "id": "Run_Text_TrackerNoWild",
+      "en_US": "NO WILD ENCOUNTERS"
+    },
+    {
+      "id": "Run_Text_TrackerAvailable",
+      "en_US": "AVAILABLE"
+    },
+    {
+      "id": "Run_Text_TrackerExhausted",
+      "en_US": "EXHAUSTED"
+    },
+    {
+      "id": "Run_Text_EndTitle",
+      "en_US": "Your Nuzlocke run has ended.\nYour final history has been saved.\n\nReturning to the title screen...\nChoose NEW GAME for a new run."
+    },
+    {
+      "id": "Run_Text_EndSaveWarning",
+      "en_US": "Your Nuzlocke run has ended.\nFinal save failed or was protected.\nUnsaved history stays in memory.\nPowering off may lose this result.\n\nA/B: Return to the title screen.\nChoose NEW GAME for a new run."
+    },
+    {
+      "id": "Run_Text_TrackerDetails",
+      "en_US": "START: RUN REGISTRY"
+    },
+    {
+      "id": "Run_Text_TrackerOneReady",
+      "en_US": "ACTIVE: 1 READY"
+    },
+    {
+      "id": "Run_Text_RateUltraHigh",
+      "en_US": "1/512 Ultra High"
+    },
+    {
+      "id": "Run_Text_EndContinue",
+      "en_US": "This run has already ended.\nContinue cannot resume this run.\n\nA/B: Return to the title screen.\nChoose NEW GAME for a new run."
+    },
+    {
+      "id": "Run_Text_RestartWorking",
+      "en_US": "Your run has ended.\nStarting a new run...\n\nErasing the saved adventure.\nDo not turn off the power."
+    },
+    {
+      "id": "Run_Text_RestartFailed",
+      "en_US": "The run could not be reset.\nRun configuration has not opened.\n\nA: Try again\nB: Return to the title screen"
     }
   ]
 }

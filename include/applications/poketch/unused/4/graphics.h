@@ -19,6 +19,9 @@ typedef struct UnusedApp4Graphics {
     String *line;
     String *value;
     u8 refreshCounter;
+    u16 lastZone;
+    u32 lastState;
+    BOOL displayReady;
 } UnusedApp4Graphics;
 
 BOOL PoketchUnusedApp4Graphics_New(UnusedApp4Graphics **dest, const Unused4Data *data, BgConfig *bgConfig);

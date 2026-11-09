@@ -96,6 +96,7 @@ static int BoxPokemon_HoldsMail(BoxPokemon *boxMon)
 
 static void Daycare_MoveToDaycareMonFromParty(Party *party, int partySlot, DaycareMon *daycareMon, SaveData *saveData)
 {
+    if (RunGame_Exhausted(Pokemon_GetBoxPokemon(Party_GetPokemonBySlotIndex(party, partySlot)))) return;
     Pokemon *mon = Party_GetPokemonBySlotIndex(party, partySlot);
     const u16 *trainerName;
     charcode_t nickname[MON_NAME_LEN + 1];
@@ -123,7 +124,6 @@ static void Daycare_MoveToDaycareMonFromParty(Party *party, int partySlot, Dayca
 
 void Daycare_MoveToEmptySlotFromParty(Party *party, int partySlot, Daycare *daycare, SaveData *saveData)
 {
-    if (RunGame_Exhausted(Pokemon_GetBoxPokemon(Party_GetPokemonBySlotIndex(party, partySlot)))) return;
     int daycareSlot;
     GameRecords *records = SaveData_GetGameRecords(saveData);
 
@@ -619,106 +619,10 @@ static void Egg_TryGiveVoltTackle(Pokemon *mon, Daycare *daycare)
     }
 }
 
-// QOL (2026-10-11, HG parity, per user request): selected legendaries can breed with each other (they are all in the
-// Undiscovered egg group and most are genderless, which vanilla forbids). Two Pokemon can breed when they share at least
-// one group below; gender is ignored for every group except Heatran's, which requires one male and one female.
-// Rayquaza is in two groups.
-#define LEGEND_BREED_MEW_MEWTWO        (1 << 0)
-#define LEGEND_BREED_SKY_BIRDS_DRAGONS (1 << 1) // Rayquaza, Articuno, Zapdos, Moltres, Lugia, Ho-Oh, Latias, Latios
-#define LEGEND_BREED_BEASTS            (1 << 2) // Raikou, Entei, Suicune
-#define LEGEND_BREED_MYTHICAL          (1 << 3) // Celebi, Manaphy, Phione, Jirachi, Shaymin
-#define LEGEND_BREED_REGIS             (1 << 4) // Regice, Regirock, Registeel, Regigigas
-#define LEGEND_BREED_WEATHER_TRIO      (1 << 5) // Groudon, Kyogre, Rayquaza
-#define LEGEND_BREED_LAKE_TRIO         (1 << 6) // Uxie, Mesprit, Azelf
-#define LEGEND_BREED_CREATION_TRIO     (1 << 7) // Dialga, Palkia, Giratina
-#define LEGEND_BREED_DEOXYS            (1 << 8)
-#define LEGEND_BREED_HEATRAN           (1 << 9) // opposite genders only
-#define LEGEND_BREED_CRESSELIA         (1 << 10)
-#define LEGEND_BREED_DARKRAI           (1 << 11)
-#define LEGEND_BREED_ARCEUS            (1 << 12)
-
-static u16 Egg_GetLegendaryBreedingGroups(u16 species)
-{
-    switch (species) {
-    case SPECIES_MEW:
-    case SPECIES_MEWTWO:
-        return LEGEND_BREED_MEW_MEWTWO;
-    case SPECIES_RAYQUAZA:
-        return LEGEND_BREED_SKY_BIRDS_DRAGONS | LEGEND_BREED_WEATHER_TRIO;
-    case SPECIES_ARTICUNO:
-    case SPECIES_ZAPDOS:
-    case SPECIES_MOLTRES:
-    case SPECIES_LUGIA:
-    case SPECIES_HO_OH:
-    case SPECIES_LATIAS:
-    case SPECIES_LATIOS:
-        return LEGEND_BREED_SKY_BIRDS_DRAGONS;
-    case SPECIES_RAIKOU:
-    case SPECIES_ENTEI:
-    case SPECIES_SUICUNE:
-        return LEGEND_BREED_BEASTS;
-    case SPECIES_CELEBI:
-    case SPECIES_MANAPHY:
-    case SPECIES_PHIONE:
-    case SPECIES_JIRACHI:
-    case SPECIES_SHAYMIN:
-        return LEGEND_BREED_MYTHICAL;
-    case SPECIES_REGICE:
-    case SPECIES_REGIROCK:
-    case SPECIES_REGISTEEL:
-    case SPECIES_REGIGIGAS:
-        return LEGEND_BREED_REGIS;
-    case SPECIES_GROUDON:
-    case SPECIES_KYOGRE:
-        return LEGEND_BREED_WEATHER_TRIO;
-    case SPECIES_UXIE:
-    case SPECIES_MESPRIT:
-    case SPECIES_AZELF:
-        return LEGEND_BREED_LAKE_TRIO;
-    case SPECIES_DIALGA:
-    case SPECIES_PALKIA:
-    case SPECIES_GIRATINA:
-        return LEGEND_BREED_CREATION_TRIO;
-    case SPECIES_DEOXYS:
-        return LEGEND_BREED_DEOXYS;
-    case SPECIES_HEATRAN:
-        return LEGEND_BREED_HEATRAN;
-    case SPECIES_CRESSELIA:
-        return LEGEND_BREED_CRESSELIA;
-    case SPECIES_DARKRAI:
-        return LEGEND_BREED_DARKRAI;
-    case SPECIES_ARCEUS:
-        return LEGEND_BREED_ARCEUS;
-    }
-
-    return 0;
-}
-
-static BOOL Egg_LegendaryPairCanBreed(u16 species1, u16 species2, u32 gender1, u32 gender2)
-{
-    u16 shared = Egg_GetLegendaryBreedingGroups(species1) & Egg_GetLegendaryBreedingGroups(species2);
-
-    if (shared == 0) {
-        return FALSE;
-    }
-
-    if (shared == LEGEND_BREED_HEATRAN) {
-        // Heatran only breeds with another Heatran of the opposite gender.
-        return gender1 != gender2 && gender1 != GENDER_NONE && gender2 != GENDER_NONE;
-    }
-
-    return TRUE;
-}
-
-static u16 Egg_DetermineEggSpeciesAndParentSlots(Daycare *daycare, u8 parentSlots[], u8 *speciesParentSlot)
+static u16 Egg_DetermineEggSpeciesAndParentSlots(Daycare *daycare, u8 parentSlots[])
 {
     u16 species[NUM_DAYCARE_MONS], i, eggSpecies;
     BoxPokemon *boxMons[NUM_DAYCARE_MONS];
-    BOOL dittoPair = FALSE;
-
-    // Genderless legendary pairs have no female and no Ditto, so the loop below would leave these unset.
-    parentSlots[0] = 0;
-    parentSlots[1] = 1;
 
     Daycare_CopyDaycareMonToBoxMonArray(daycare, boxMons);
 
@@ -726,19 +630,13 @@ static u16 Egg_DetermineEggSpeciesAndParentSlots(Daycare *daycare, u8 parentSlot
         if ((species[i] = BoxPokemon_GetValue(boxMons[i], MON_DATA_SPECIES, NULL)) == SPECIES_DITTO) {
             parentSlots[0] = i ^ 1;
             parentSlots[1] = i;
-            dittoPair = TRUE;
         } else if (BoxPokemon_GetGender(boxMons[i]) == GENDER_FEMALE) {
             parentSlots[0] = i;
             parentSlots[1] = i ^ 1;
         }
     }
 
-    // HG SYNC (port of PokeHeartGold ENTRY CF item 4): 50/50 chance the egg follows the FATHER's species line instead
-    // of the mother's (vanilla always used the mother's). Only for a real two-species pair - Ditto never contributes a
-    // species. *speciesParentSlot tells the caller which parent donated the species (and therefore the form), since
-    // parentSlots[0]/[1] keep their mother/father meaning for move and IV inheritance.
-    *speciesParentSlot = (!dittoPair && (LCRNG_Next() % 2) == 0) ? parentSlots[1] : parentSlots[0];
-    eggSpecies = Pokemon_GetBaseSpeciesFromPersonalData(species[*speciesParentSlot]);
+    eggSpecies = Pokemon_GetBaseSpeciesFromPersonalData(species[parentSlots[0]]);
 
     if (eggSpecies == SPECIES_NIDORAN_F) {
         if (Daycare_GetOffspringPersonality(daycare) & EGG_GENDER_MALE) {
@@ -854,151 +752,24 @@ static void Egg_SetInitialData(Pokemon *mon, u16 species, Daycare *daycare, u32 
     String_Free(string);
 }
 
-// HG SYNC (port of PokeHeartGold ENTRY CF item 6, ENTRY DB, and HG's 2026-10-04 coloration rule in src/get_egg.c):
-// parental trait inheritance, layered on top of the vanilla IV inheritance (Egg_InheritIVs). Trait <-> data:
-//   - "coloration"   : the low 20 bits of the personality (hue 0-9, saturation 10-14, value 15-19 - see
-//                       PersonalityRotatePalette). One standalone roll: 10% with no Everstone, 15% with one, 20% with
-//                       two; the donor parent is picked 50/50. Copying it also changes nature, gender and ability slot
-//                       (derived from the same bits) - accepted in HG, kept the same here.
-//   - "ability byte" : the ability-donor seed is (defIV << 5) | spDefIV (ApplyAbilityDonor, pokemon.c), so inheriting it
-//                       copies the parent's Def and Sp. Def IVs. If the parent's seed is outside the donor range (0 or
-//                       987-1023, i.e. it shows its own ability), it is re-encoded as the parent's own species + 493 so
-//                       the egg reproduces the ability the parent shows (ENTRY DB).
-//   - "type1"/"type2": the type-override seeds are the HP / Speed IVs (ApplyCustomType, pokemon.c).
-// The three IV traits each get an independent 10% roll per parent (father applied second, wins if both hit), then a
-// 5% roll per parent for a full copy of all three; every chance is doubled per Everstone holder (1x / 2x / 4x).
-// The personality must be changed through sub_020780C4 (Platinum's SetMonPersonality), which re-shuffles the data
-// blocks - a raw write would desync them.
-#define PARENTAL_INHERIT_BASE_CHANCE             10
-#define PARENTAL_INHERIT_FULL_CHANCE             5
-#define PARENTAL_COLORATION_BASE_CHANCE          10 // percent with no Everstone
-#define PARENTAL_COLORATION_CHANCE_PER_EVERSTONE 5  // +5 per Everstone holder: 10 / 15 / 20 percent
-#define PARENTAL_COLORATION_MASK                 0xFFFFF
-
-static u32 Daycare_GetEverstoneCount(Daycare *daycare)
-{
-    BoxPokemon *parents[NUM_DAYCARE_MONS];
-    u32 count = 0;
-
-    Daycare_CopyDaycareMonToBoxMonArray(daycare, parents);
-
-    for (int i = 0; i < NUM_DAYCARE_MONS; i++) {
-        if (BoxPokemon_GetValue(parents[i], MON_DATA_HELD_ITEM, NULL) == ITEM_EVERSTONE) {
-            count++;
-        }
-    }
-
-    return count;
-}
-
-static BOOL Egg_RollInheritChance(u32 basePercent, u32 everstoneMultiplier)
-{
-    return (LCRNG_Next() % 100) < (basePercent * everstoneMultiplier);
-}
-
-static void Egg_InheritColorationFromParent(Pokemon *egg, BoxPokemon *parent)
-{
-    u32 parentPersonality = BoxPokemon_GetValue(parent, MON_DATA_PERSONALITY, NULL);
-    u32 eggPersonality = Pokemon_GetValue(egg, MON_DATA_PERSONALITY, NULL);
-
-    eggPersonality = (eggPersonality & ~PARENTAL_COLORATION_MASK) | (parentPersonality & PARENTAL_COLORATION_MASK);
-    sub_020780C4(egg, eggPersonality);
-}
-
-static void Egg_InheritAbilityByteFromParent(Pokemon *egg, BoxPokemon *parent)
-{
-    u8 defIV = BoxPokemon_GetValue(parent, MON_DATA_DEF_IV, NULL);
-    u8 spDefIV = BoxPokemon_GetValue(parent, MON_DATA_SPDEF_IV, NULL);
-    u32 seed = (defIV << 5) | spDefIV;
-
-    if (seed == 0 || seed > NATIONAL_DEX_COUNT * 2) {
-        seed = BoxPokemon_GetValue(parent, MON_DATA_SPECIES, NULL) + NATIONAL_DEX_COUNT;
-        defIV = seed >> 5;
-        spDefIV = seed & 0x1F;
-    }
-
-    Pokemon_SetValue(egg, MON_DATA_DEF_IV, &defIV);
-    Pokemon_SetValue(egg, MON_DATA_SPDEF_IV, &spDefIV);
-}
-
-static void Egg_InheritType1FromParent(Pokemon *egg, BoxPokemon *parent)
-{
-    u8 iv = BoxPokemon_GetValue(parent, MON_DATA_HP_IV, NULL);
-    Pokemon_SetValue(egg, MON_DATA_HP_IV, &iv);
-}
-
-static void Egg_InheritType2FromParent(Pokemon *egg, BoxPokemon *parent)
-{
-    u8 iv = BoxPokemon_GetValue(parent, MON_DATA_SPEED_IV, NULL);
-    Pokemon_SetValue(egg, MON_DATA_SPEED_IV, &iv);
-}
-
-static void Egg_ApplyParentalInheritance(Pokemon *egg, Daycare *daycare, const u8 *parentSlots)
-{
-    u32 everstoneCount = Daycare_GetEverstoneCount(daycare);
-    u32 everstoneMult = 1 << everstoneCount;
-    BoxPokemon *mother = Daycare_GetBoxMon(daycare, parentSlots[0]);
-    BoxPokemon *father = Daycare_GetBoxMon(daycare, parentSlots[1]);
-
-    if ((LCRNG_Next() % 100) < PARENTAL_COLORATION_BASE_CHANCE + PARENTAL_COLORATION_CHANCE_PER_EVERSTONE * everstoneCount) {
-        Egg_InheritColorationFromParent(egg, (LCRNG_Next() % 2 == 0) ? mother : father);
-    }
-
-    if (Egg_RollInheritChance(PARENTAL_INHERIT_BASE_CHANCE, everstoneMult)) {
-        Egg_InheritAbilityByteFromParent(egg, mother);
-    }
-    if (Egg_RollInheritChance(PARENTAL_INHERIT_BASE_CHANCE, everstoneMult)) {
-        Egg_InheritAbilityByteFromParent(egg, father);
-    }
-    if (Egg_RollInheritChance(PARENTAL_INHERIT_BASE_CHANCE, everstoneMult)) {
-        Egg_InheritType1FromParent(egg, mother);
-    }
-    if (Egg_RollInheritChance(PARENTAL_INHERIT_BASE_CHANCE, everstoneMult)) {
-        Egg_InheritType1FromParent(egg, father);
-    }
-    if (Egg_RollInheritChance(PARENTAL_INHERIT_BASE_CHANCE, everstoneMult)) {
-        Egg_InheritType2FromParent(egg, mother);
-    }
-    if (Egg_RollInheritChance(PARENTAL_INHERIT_BASE_CHANCE, everstoneMult)) {
-        Egg_InheritType2FromParent(egg, father);
-    }
-    if (Egg_RollInheritChance(PARENTAL_INHERIT_FULL_CHANCE, everstoneMult)) {
-        Egg_InheritAbilityByteFromParent(egg, mother);
-        Egg_InheritType1FromParent(egg, mother);
-        Egg_InheritType2FromParent(egg, mother);
-    }
-    if (Egg_RollInheritChance(PARENTAL_INHERIT_FULL_CHANCE, everstoneMult)) {
-        Egg_InheritAbilityByteFromParent(egg, father);
-        Egg_InheritType1FromParent(egg, father);
-        Egg_InheritType2FromParent(egg, father);
-    }
-}
-
 void Daycare_GiveEggFromDaycare(Daycare *daycare, Party *party, TrainerInfo *trainerInfo)
 {
     if (!RunGame_DayCareEggs()) return;
     u16 species;
-    u8 parentSlots[NUM_DAYCARE_MONS], isEgg, speciesParentSlot;
+    u8 parentSlots[NUM_DAYCARE_MONS], isEgg;
     Pokemon *mon = Pokemon_New(HEAP_ID_FIELD1);
 
-    species = Egg_DetermineEggSpeciesAndParentSlots(daycare, parentSlots, &speciesParentSlot);
+    species = Egg_DetermineEggSpeciesAndParentSlots(daycare, parentSlots);
     species = Daycare_AlterEggSpeciesWithIncenseItem(species, daycare);
 
     u32 monOTID = TrainerInfo_ID(trainerInfo);
-    // HG SYNC (ENTRY CF item 4): the form (Unown letter, Burmy cloak, ...) comes from whichever parent donated the species.
-    BoxPokemon *boxMon = Daycare_GetBoxMon(daycare, speciesParentSlot);
+    BoxPokemon *boxMon = Daycare_GetBoxMon(daycare, parentSlots[0]);
     u8 form = BoxPokemon_GetValue(boxMon, MON_DATA_FORM, NULL);
-
-    if (Egg_GetLegendaryBreedingGroups(species) != 0) {
-        // Legendary eggs always start in the base form (no Origin Giratina / Sky Shaymin / plate-type Arceus / Deoxys forme eggs).
-        form = 0;
-    }
 
     Egg_SetInitialData(mon, species, daycare, monOTID, form);
 
     Egg_InheritIVs(mon, daycare);
     Egg_BuildMoveset(mon, Daycare_GetBoxMon(daycare, parentSlots[1]), Daycare_GetBoxMon(daycare, parentSlots[0]));
-    Egg_ApplyParentalInheritance(mon, daycare, parentSlots); // HG SYNC (ENTRY CF item 6)
 
     UpdateMonStatusAndTrainerInfo(mon, trainerInfo, 3, SpecialMetLoc_GetId(1, 0), HEAP_ID_FIELD1);
 
@@ -1021,11 +792,6 @@ void Daycare_GiveEggFromDaycare(Daycare *daycare, Party *party, TrainerInfo *tra
     Heap_Free(mon);
 }
 
-// HG SYNC (port of PokeHeartGold ENTRY CF item 2 / CP): eggs hatch 50x faster - this value is subtracted from an
-// egg's remaining hatch cycles once per egg cycle (255 steps), so multiplying it makes the counter reach 0 in 1/50th as
-// many cycles without changing the cycle length. Flame Body / Magma Armor still double it (2 x 50).
-#define EGG_HATCH_SPEED_MULTIPLIER 50
-
 static int Party_GetEggCyclesToSubtract(Party *party)
 {
     u8 i;
@@ -1037,12 +803,12 @@ static int Party_GetEggCyclesToSubtract(Party *party)
             ability = Pokemon_GetValue(Party_GetPokemonBySlotIndex(party, i), MON_DATA_ABILITY, NULL);
 
             if ((ability == ABILITY_MAGMA_ARMOR) || (ability == ABILITY_FLAME_BODY)) {
-                return 2 * EGG_HATCH_SPEED_MULTIPLIER;
+                return 2;
             }
         }
     }
 
-    return 1 * EGG_HATCH_SPEED_MULTIPLIER;
+    return 1;
 }
 
 static u8 Egg_AreEggGroupsCompatible(u16 *eggGroupSlots1, u16 *eggGroupSlots2)
@@ -1075,12 +841,14 @@ static u8 BoxMon_GetPairDaycareCompatibilityScore(BoxPokemon **boxMonPair)
         eggGroups[i][1] = SpeciesData_GetSpeciesValue(species[i], SPECIES_DATA_EGG_GROUP_2);
     }
 
+    if (eggGroups[0][0] == EGG_GROUP_UNDISCOVERED || eggGroups[1][0] == EGG_GROUP_UNDISCOVERED) {
+        return PARENTS_INCOMPATIBLE;
+    }
+
     if (eggGroups[0][0] == EGG_GROUP_DITTO && eggGroups[1][0] == EGG_GROUP_DITTO) {
         return PARENTS_INCOMPATIBLE;
     }
 
-    // HG SYNC (port of PokeHeartGold ENTRY CF item 1): Ditto can breed with ANY Pokemon, including Undiscovered-egg-group
-    // legendaries - the Ditto check now comes before the Undiscovered-group check below instead of after it.
     if (eggGroups[0][0] == EGG_GROUP_DITTO || eggGroups[1][0] == EGG_GROUP_DITTO) {
         if (trainerIDs[0] == trainerIDs[1]) {
             return PARENTS_LOW_COMPATIBILITY;
@@ -1089,26 +857,16 @@ static u8 BoxMon_GetPairDaycareCompatibilityScore(BoxPokemon **boxMonPair)
         }
     }
 
-    // QOL (2026-10-11, HG parity): selected legendary groups breed with each other (ignoring egg group and, except
-    // Heatran, gender); the compatibility score below is then computed as for any other compatible pair.
-    BOOL legendaryPair = Egg_LegendaryPairCanBreed(species[0], species[1], genders[0], genders[1]);
+    if (genders[0] == genders[1]) {
+        return PARENTS_INCOMPATIBLE;
+    }
 
-    if (legendaryPair == FALSE) {
-        if (eggGroups[0][0] == EGG_GROUP_UNDISCOVERED || eggGroups[1][0] == EGG_GROUP_UNDISCOVERED) {
-            return PARENTS_INCOMPATIBLE;
-        }
+    if ((genders[0] == GENDER_NONE) || (genders[1] == GENDER_NONE)) {
+        return PARENTS_INCOMPATIBLE;
+    }
 
-        if (genders[0] == genders[1]) {
-            return PARENTS_INCOMPATIBLE;
-        }
-
-        if ((genders[0] == GENDER_NONE) || (genders[1] == GENDER_NONE)) {
-            return PARENTS_INCOMPATIBLE;
-        }
-
-        if (Egg_AreEggGroupsCompatible(eggGroups[0], eggGroups[1]) == FALSE) {
-            return PARENTS_INCOMPATIBLE;
-        }
+    if (Egg_AreEggGroupsCompatible(eggGroups[0], eggGroups[1]) == FALSE) {
+        return PARENTS_INCOMPATIBLE;
     }
 
     if (species[0] == species[1]) {
@@ -1190,16 +948,6 @@ BOOL Daycare_Update(Daycare *daycare, Party *party, FieldSystem *fieldSystem)
     if (RunGame_DayCareEggs() && (Daycare_HasEgg(daycare) == FALSE) && (monCount == NUM_DAYCARE_MONS)) {
         if ((DaycareMon_GetSteps(Daycare_GetDaycareMon(daycare, 1)) & 0xff) == 0xff) {
             compatibilityScore = Daycare_GetCompatibilityScore(daycare);
-
-            // HG SYNC (port of PokeHeartGold ENTRY CF item 3): 20x the chance to produce an egg on each check (every 256
-            // steps). The score is one of PARENTS_LOW/MED/MAX_COMPATIBILITY (20/50/70), so it is boosted here and capped at
-            // 100 rather than changing those constants (they also drive the compatibility message).
-            compatibilityScore *= 20;
-
-            if (compatibilityScore > 100) {
-                compatibilityScore = 100;
-            }
-
             rand = LCRNG_Next();
             rand = (rand * 100) / 0xffff;
 
@@ -1227,13 +975,10 @@ BOOL Daycare_Update(Daycare *daycare, Party *party, FieldSystem *fieldSystem)
                 eggCycles = Pokemon_GetValue(mon, MON_DATA_FRIENDSHIP, NULL);
 
                 if (eggCycles != 0) {
-                    // HG SYNC (ENTRY CF/CP): with the 50x multiplier an egg usually has fewer cycles left than
-                    // toSubtract; vanilla then only took 1 per cycle, which would make most eggs (10-40 cycles) no faster
-                    // at all. Clamp to 0 instead, so the egg hatches at the next cycle as the 50x speed-up intends.
                     if (eggCycles >= toSubtract) {
                         eggCycles -= toSubtract;
                     } else {
-                        eggCycles = 0;
+                        eggCycles--;
                     }
 
                     Pokemon_SetValue(mon, MON_DATA_FRIENDSHIP, (u8 *)&eggCycles);

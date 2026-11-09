@@ -8,9 +8,9 @@
     ],
     "class": "CLASS_SPECIAL",
     "type": "TYPE_PSYCHIC",
-    "power": 75,
+    "power": 65,
     "accuracy": 100,
-    "pp": 25,
+    "pp": 20,
     "effect": {
         "type": "BATTLE_EFFECT_CONFUSE_HIT",
         "chance": 10

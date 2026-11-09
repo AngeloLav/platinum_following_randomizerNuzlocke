@@ -15,12 +15,10 @@
 #include "generated/abilities.h"
 #include "generated/game_records.h"
 #include "generated/genders.h"
-#include "generated/trainer_classes.h"
 
 #include "struct_decls/battle_system.h"
 #include "struct_defs/battler_data.h"
 #include "struct_defs/fraction.h"
-#include "struct_defs/trainer.h"
 
 #include "battle/battle_context.h"
 #include "battle/battle_controller.h"
@@ -1292,13 +1290,13 @@ u8 BattleSystem_CompareBattlerSpeed(BattleSystem *battleSys, BattleContext *batt
         battler1Speed *= 2;
     }
 
-    // HG SYNC (port of PokeHeartGold ENTRY DA): Quick Claw (the only HOLD_EFFECT_SOMETIMES_PRIORITY item) now
-    // activates every time instead of 20% of the time. Custap Berry (HOLD_EFFECT_PINCH_PRIORITY) is unchanged.
     if (battler1ItemEffect == HOLD_EFFECT_SOMETIMES_PRIORITY) {
-        battler1QuickClaw = 1;
+        if (battleCtx->speedRand[battler1] % (100 / battler1ItemParam) == 0) {
+            battler1QuickClaw = 1;
 
-        if (ignoreQuickClaw == FALSE) {
-            battleCtx->battleMons[battler1].moveEffectsData.quickClaw = 1;
+            if (ignoreQuickClaw == FALSE) {
+                battleCtx->battleMons[battler1].moveEffectsData.quickClaw = 1;
+            }
         }
     }
 
@@ -1358,12 +1356,13 @@ u8 BattleSystem_CompareBattlerSpeed(BattleSystem *battleSys, BattleContext *batt
         battler2Speed *= 2;
     }
 
-    // HG SYNC (ENTRY DA): Quick Claw always activates, see battler1 above.
     if (battler2ItemEffect == HOLD_EFFECT_SOMETIMES_PRIORITY) {
-        battler2QuickClaw = 1;
+        if (battleCtx->speedRand[battler2] % (100 / battler2ItemParam) == 0) {
+            battler2QuickClaw = 1;
 
-        if (ignoreQuickClaw == FALSE) {
-            battleCtx->battleMons[battler2].moveEffectsData.quickClaw = 1;
+            if (ignoreQuickClaw == FALSE) {
+                battleCtx->battleMons[battler2].moveEffectsData.quickClaw = 1;
+            }
         }
     }
 
@@ -2570,20 +2569,6 @@ static BOOL BasicTypeMulApplies(BattleContext *battleCtx, int attacker, int defe
         result = FALSE;
     }
 
-    // QOL (2026-10-11, HG parity, per user request): a type immunity (x0 row) is treated as normal effectiveness (x1)
-    // when the attacker has Mold Breaker, or when EITHER battler has No Guard (No Guard already works for both sides'
-    // accuracy). Skipping the row leaves the other type of a dual-typed defender to apply as usual. Ability-based
-    // immunities such as Levitate are separate checks and are unchanged.
-    if (sTypeMatchupMultipliers[chartEntry][2] == TYPE_MULTI_IMMUNE) {
-        int attackerAbility = Battler_Ability(battleCtx, attacker);
-
-        if (attackerAbility == ABILITY_MOLD_BREAKER
-            || attackerAbility == ABILITY_NO_GUARD
-            || Battler_Ability(battleCtx, defender) == ABILITY_NO_GUARD) {
-            result = FALSE;
-        }
-    }
-
     return result;
 }
 
@@ -2706,666 +2691,6 @@ int BattleSystem_ApplyTypeChart(BattleSystem *battleSys, BattleContext *battleCt
     }
 
     return damage;
-}
-
-// ENTRY P99: ARCEUS TRANSFORMS BEFORE IT IS HIT. Effectiveness of moveType against a defender of the given type(s), x10 (0 =
-// immune, 5 = resisted, 10 = neutral, 20 = super effective; products for two types), from the same chart rows
-// BattleSystem_ApplyTypeChart uses: its Foresight/Scrappy handling of the Ghost rows and BasicTypeMulApplies (Iron Ball /
-// Ingrain, Roost, Gravity, Miracle Eye, Mold Breaker / No Guard).
-static int ArceusTransform_TypeMul(BattleContext *battleCtx, int attacker, int defender, int moveType, int type1, int type2)
-{
-    int mul = 10;
-
-    for (int i = 0; sTypeMatchupMultipliers[i][0] != 0xFF; i++) {
-        if (sTypeMatchupMultipliers[i][0] == 0xFE) {
-            if ((battleCtx->battleMons[defender].statusVolatile & VOLATILE_CONDITION_FORESIGHT)
-                || Battler_Ability(battleCtx, attacker) == ABILITY_SCRAPPY) {
-                break;
-            }
-
-            continue;
-        }
-
-        if (sTypeMatchupMultipliers[i][0] != moveType || BasicTypeMulApplies(battleCtx, attacker, defender, i) == FALSE) {
-            continue;
-        }
-
-        if (sTypeMatchupMultipliers[i][1] == type1) {
-            mul = mul * sTypeMatchupMultipliers[i][2] / 10;
-        }
-
-        if (sTypeMatchupMultipliers[i][1] == type2 && type2 != type1) {
-            mul = mul * sTypeMatchupMultipliers[i][2] / 10;
-        }
-    }
-
-    return mul;
-}
-
-BOOL BattleSystem_TryArceusTransform(BattleSystem *battleSys, BattleContext *battleCtx)
-{
-    int attacker = battleCtx->attacker;
-    int defender = battleCtx->defender;
-
-    if (defender == BATTLER_NONE || defender == attacker || (BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_LINK)) {
-        return FALSE;
-    }
-
-    BattleMon *mon = &battleCtx->battleMons[defender];
-
-    if (mon->species != SPECIES_ARCEUS
-        || mon->curHP == 0
-        || (mon->statusVolatile & VOLATILE_CONDITION_TRANSFORM)
-        || battleCtx->turnFlags[defender].arceusTransformed
-        || (battleCtx->moveStatusFlags & MOVE_STATUS_NO_EFFECTS)) {
-        return FALSE;
-    }
-
-    // ENTRY P113: these fixed-damage moves transform it too. Their damage ignores resistances, so only an immunity helps:
-    // Seismic Toss -> Ghost, Night Shade -> Normal, Psywave -> Dark, Sonic Boom -> Ghost (the type chart picks it, so
-    // Normalize, Foresight / Scrappy and Mold Breaker / No Guard are honoured). Dragon Rage and the other fixed-damage
-    // moves (SYSCTL_IGNORE_TYPE_CHECKS) still do not.
-    BOOL fixedDamage = battleCtx->moveCur == MOVE_SEISMIC_TOSS
-        || battleCtx->moveCur == MOVE_NIGHT_SHADE
-        || battleCtx->moveCur == MOVE_PSYWAVE
-        || battleCtx->moveCur == MOVE_SONIC_BOOM;
-
-    // Only the moves the type chart is run for (BattleControllerPlayer_CheckTypeChart).
-    if (((CURRENT_MOVE_DATA.range == RANGE_USER
-             || CURRENT_MOVE_DATA.range == RANGE_USER_SIDE
-             || CURRENT_MOVE_DATA.power == 0
-             || (battleCtx->battleStatusMask & SYSCTL_IGNORE_IMMUNITIES)
-             || (battleCtx->battleStatusMask & SYSCTL_FIRST_OF_MULTI_TURN))
-            && battleCtx->moveCur != MOVE_THUNDER_WAVE)
-        || battleCtx->moveCur == MOVE_STRUGGLE
-        || ((battleCtx->battleStatusMask & SYSCTL_IGNORE_TYPE_CHECKS) && !fixedDamage)) {
-        return FALSE;
-    }
-
-    int moveType;
-
-    if (Battler_Ability(battleCtx, attacker) == ABILITY_NORMALIZE) {
-        moveType = TYPE_NORMAL;
-    } else if (battleCtx->moveType) {
-        moveType = battleCtx->moveType;
-    } else {
-        moveType = CURRENT_MOVE_DATA.type;
-    }
-
-    if (moveType == TYPE_MYSTERY) {
-        return FALSE;
-    }
-
-    // A Ground move that cannot reach it anyway (Levitate / Magnet Rise, as in BattleSystem_ApplyTypeChart).
-    if (moveType == TYPE_GROUND
-        && Battler_HeldItemEffect(battleCtx, defender) != HOLD_EFFECT_SPEED_DOWN_GROUNDED
-        && (Battler_IgnorableAbility(battleCtx, attacker, defender, ABILITY_LEVITATE) == TRUE
-            || (mon->moveEffectsData.magnetRiseTurns && (mon->moveEffectsMask & MOVE_EFFECT_INGRAIN) == FALSE))) {
-        return FALSE;
-    }
-
-    int type, best = 0x7FFF, count = 0;
-
-    for (type = TYPE_NORMAL; type <= TYPE_DARK; type++) {
-        if (type == TYPE_MYSTERY) {
-            continue;
-        }
-
-        int mul = ArceusTransform_TypeMul(battleCtx, attacker, defender, moveType, type, type);
-
-        if (mul < best) {
-            best = mul;
-            count = 1;
-        } else if (mul == best) {
-            count++;
-        }
-    }
-
-    // Nothing resists it (fixed damage: nothing is immune to it), or its current typing is already as good as it gets: no
-    // transformation.
-    if (best >= 10
-        || (fixedDamage && best != 0)
-        || ArceusTransform_TypeMul(battleCtx, attacker, defender, moveType,
-               BattleMon_Get(battleCtx, defender, BATTLEMON_TYPE_1, NULL), BattleMon_Get(battleCtx, defender, BATTLEMON_TYPE_2, NULL))
-            <= best) {
-        return FALSE;
-    }
-
-    int pick = BattleSystem_RandNext(battleSys) % count;
-
-    for (type = TYPE_NORMAL; type <= TYPE_DARK; type++) {
-        if (type != TYPE_MYSTERY && ArceusTransform_TypeMul(battleCtx, attacker, defender, moveType, type, type) == best && pick-- == 0) {
-            break;
-        }
-    }
-
-    // Battle data only: the party Pokemon keeps its own form (BattleController_EmitUpdatePartyMon), and switching out or
-    // the end of the battle brings back its own types. Arceus' form number is its type.
-    mon->type1 = type;
-    mon->type2 = type;
-    mon->formNum = type;
-    mon->moveEffectsData.arceusTransformed = TRUE; // keeps this type (Battler_MonType, form check) until it switches out
-    battleCtx->turnFlags[defender].arceusTransformed = TRUE;
-
-    return TRUE;
-}
-
-// ---------------------------------------------------------------------------------------------------------------------
-// ENTRY P109: THE TRAINER AI KNOWS WHAT A "MAXIMUM INFORMED" PLAYER WOULD KNOW (user request 2026-10-16; replaces the
-// first-turn-only hiding of 2026-10-11).
-//
-// Any Pokemon's types and ability can differ from its species' (custom type from the HP / Speed IV, ability donor), so the AI
-// starts out assuming the species' own types and the species' own ability, as the player has to. It then learns from what
-// anyone watching the battle sees, and remembers it per Pokemon (party slot) for the whole battle, through any switching:
-//  - every hit whose effectiveness is shown ("super effective", "not very effective", neither, "doesn't affect"), with the
-//    exact multiplier (a player can tell x4 from x2 by the damage) - BattleAI_ObserveMoveResult;
-//  - every move a Pokemon uses: one its species cannot learn (level-up, TM/HM, egg, tutor - its own or its base form's) can
-//    only be a per-type level-up move (ENTRY P108) or a TM learned through its type, so it has that type -
-//    BattleAI_ObserveMoveUsed, worked out in trainer_ai.c (TrainerAI_UpdateMoveKnowledge);
-//  - every ability named in a battle message (BattleMessage_AbilityTag) - BattleAI_ObserveAbility.
-// While the AI thinks (TrainerAI_Main, TrainerAI_PickCommand, BattleAI_PostKOSwitchIn) the opposing Pokemon get the types it
-// believes - of all typings that fit everything seen, the one closest to the species' own (each type kept in its slot counts,
-// as each custom type replaces one slot) - and the ability it believes; afterwards the real ones are put back, so the battle
-// itself is unaffected. A type change shown on screen (Transform, Conversion, Color Change, Forecast, Arceus) is seen as is.
-// Champion Cynthia knows everything from the start, as in the unmodified game.
-// ---------------------------------------------------------------------------------------------------------------------
-#define AI_NUM_TYPES (TYPE_DARK + 1)
-
-// type chart rows the observer knew were switched off when it saw a hit (the rows BattleSystem_ApplyTypeChart skips)
-#define AI_CHART_GHOST_ROWS_OFF    (1 << 0) // Foresight / Scrappy: Normal and Fighting moves hit Ghost
-#define AI_CHART_FLYING_IMMUNE_OFF (1 << 1) // Iron Ball / Ingrain / Gravity: Ground moves hit Flying
-#define AI_CHART_FLYING_ROWS_OFF   (1 << 2) // Roost
-#define AI_CHART_DARK_IMMUNE_OFF   (1 << 3) // Miracle Eye: Psychic moves hit Dark
-#define AI_CHART_IMMUNE_ROWS_OFF   (1 << 4) // Mold Breaker / No Guard (QOL 2026-10-11): no x0 row
-
-static AIMonKnowledge *BattleAI_Knowledge(BattleSystem *battleSys, BattleContext *battleCtx, int battler)
-{
-    Party *party;
-    int owner;
-    int slot;
-
-    if (battler < 0 || battler >= MAX_BATTLERS) {
-        return NULL;
-    }
-
-    slot = battleCtx->selectedPartySlot[battler];
-
-    if (slot >= MAX_PARTY_SIZE) {
-        return NULL;
-    }
-
-    // battlers sharing a party (doubles) share the knowledge of its Pokemon
-    party = BattleSystem_GetParty(battleSys, battler);
-
-    for (owner = 0; owner < battler; owner++) {
-        if (BattleSystem_GetParty(battleSys, owner) == party) {
-            break;
-        }
-    }
-
-    return &battleCtx->aiMonKnowledge[owner][slot];
-}
-
-// FALSE once the battler's types are no longer its Pokemon's own: a change shown on screen, which the AI sees as it is.
-static BOOL BattleAI_HasOwnTypes(BattleSystem *battleSys, BattleContext *battleCtx, int battler)
-{
-    BattleMon *mon = &battleCtx->battleMons[battler];
-    Pokemon *partyMon;
-
-    if (mon->species == SPECIES_ARCEUS
-        || (mon->statusVolatile & VOLATILE_CONDITION_TRANSFORM)
-        || mon->moveEffectsData.arceusTransformed) {
-        return FALSE;
-    }
-
-    partyMon = BattleSystem_GetPartyPokemon(battleSys, battler, battleCtx->selectedPartySlot[battler]);
-
-    return mon->type1 == Pokemon_GetValue(partyMon, MON_DATA_TYPE_1, NULL)
-        && mon->type2 == Pokemon_GetValue(partyMon, MON_DATA_TYPE_2, NULL);
-}
-
-static u8 BattleAI_ChartRules(BattleContext *battleCtx, int attacker, int defender, const AIMonKnowledge *knowledge)
-{
-    BattleMon *mon = &battleCtx->battleMons[defender];
-    int attackerAbility = Battler_Ability(battleCtx, attacker);
-    u8 rules = 0;
-
-    if ((mon->statusVolatile & VOLATILE_CONDITION_FORESIGHT) || attackerAbility == ABILITY_SCRAPPY) {
-        rules |= AI_CHART_GHOST_ROWS_OFF;
-    }
-
-    if (Battler_HeldItemEffect(battleCtx, defender) == HOLD_EFFECT_SPEED_DOWN_GROUNDED
-        || (mon->moveEffectsMask & MOVE_EFFECT_INGRAIN)
-        || (battleCtx->fieldConditionsMask & FIELD_CONDITION_GRAVITY)) {
-        rules |= AI_CHART_FLYING_IMMUNE_OFF;
-    }
-
-    if (battleCtx->turnFlags[defender].roosting) {
-        rules |= AI_CHART_FLYING_ROWS_OFF;
-    }
-
-    if (mon->moveEffectsMask & MOVE_EFFECT_MIRACLE_EYE) {
-        rules |= AI_CHART_DARK_IMMUNE_OFF;
-    }
-
-    // the defender's No Guard only counts once it has been named
-    if (attackerAbility == ABILITY_MOLD_BREAKER
-        || attackerAbility == ABILITY_NO_GUARD
-        || battleCtx->aiContext.battlerAbilities[defender] == ABILITY_NO_GUARD
-        || (knowledge != NULL && knowledge->knownAbility == ABILITY_NO_GUARD)) {
-        rules |= AI_CHART_IMMUNE_ROWS_OFF;
-    }
-
-    return rules;
-}
-
-// Effectiveness (x10) of moveType against one defending type, skipping the rows the rules switch off.
-static int BattleAI_TypeFactor(int moveType, int defType, u8 rules)
-{
-    int mul = 10;
-
-    for (int i = 0; sTypeMatchupMultipliers[i][0] != 0xFF; i++) {
-        if (sTypeMatchupMultipliers[i][0] == 0xFE) {
-            if (rules & AI_CHART_GHOST_ROWS_OFF) {
-                break;
-            }
-
-            continue;
-        }
-
-        if (sTypeMatchupMultipliers[i][0] != moveType || sTypeMatchupMultipliers[i][1] != defType) {
-            continue;
-        }
-
-        if (sTypeMatchupMultipliers[i][2] == TYPE_MULTI_IMMUNE
-            && ((rules & AI_CHART_IMMUNE_ROWS_OFF)
-                || (defType == TYPE_FLYING && (rules & AI_CHART_FLYING_IMMUNE_OFF))
-                || (defType == TYPE_DARK && (rules & AI_CHART_DARK_IMMUNE_OFF)))) {
-            continue;
-        }
-
-        if (defType == TYPE_FLYING && (rules & AI_CHART_FLYING_ROWS_OFF)) {
-            continue;
-        }
-
-        mul = mul * sTypeMatchupMultipliers[i][2] / 10;
-    }
-
-    return mul;
-}
-
-static void BattleAI_AddObservation(AIMonKnowledge *knowledge, u8 moveType, u8 rules, u8 mul)
-{
-    int i;
-
-    for (i = 0; i < knowledge->numObs; i++) {
-        if (knowledge->obsMoveType[i] == moveType && knowledge->obsRules[i] == rules && knowledge->obsMul[i] == mul) {
-            return;
-        }
-    }
-
-    if (knowledge->numObs < AI_KNOWLEDGE_MAX_OBSERVATIONS) {
-        i = knowledge->numObs++;
-    } else {
-        i = knowledge->nextObs;
-        knowledge->nextObs = (knowledge->nextObs + 1) % AI_KNOWLEDGE_MAX_OBSERVATIONS;
-    }
-
-    knowledge->obsMoveType[i] = moveType;
-    knowledge->obsRules[i] = rules;
-    knowledge->obsMul[i] = mul;
-}
-
-// Called once per target as the current move's result is decided (BattleControllerPlayer_CheckMoveFailure): records the
-// effectiveness shown for it, if the type chart decided it.
-void BattleAI_ObserveMoveResult(BattleSystem *battleSys, BattleContext *battleCtx)
-{
-    int attacker = battleCtx->attacker;
-    int defender = battleCtx->defender;
-    u32 flags = battleCtx->moveStatusFlags;
-    AIMonKnowledge *knowledge;
-    int moveType, mul;
-    u8 seen;
-
-    if ((BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_LINK)
-        || defender == BATTLER_NONE
-        || defender == attacker
-        || (flags & (MOVE_STATUS_NO_MORE_WORK | MOVE_STATUS_NO_PP))
-        || (battleCtx->multiHitCheckFlags & SYSCTL_SKIP_TYPE_CHART_CHECK)
-        || battleCtx->moveCur == MOVE_STRUGGLE) {
-        return;
-    }
-
-    // only the moves the type chart is run for (BattleControllerPlayer_CheckTypeChart)
-    if ((CURRENT_MOVE_DATA.range == RANGE_USER
-            || CURRENT_MOVE_DATA.range == RANGE_USER_SIDE
-            || CURRENT_MOVE_DATA.power == 0
-            || (battleCtx->battleStatusMask & SYSCTL_IGNORE_IMMUNITIES)
-            || (battleCtx->battleStatusMask & SYSCTL_FIRST_OF_MULTI_TURN))
-        && battleCtx->moveCur != MOVE_THUNDER_WAVE) {
-        return;
-    }
-
-    if (BattleAI_HasOwnTypes(battleSys, battleCtx, defender) == FALSE) {
-        return;
-    }
-
-    if (Battler_Ability(battleCtx, attacker) == ABILITY_NORMALIZE) {
-        moveType = TYPE_NORMAL;
-    } else if (battleCtx->moveType) {
-        moveType = battleCtx->moveType;
-    } else {
-        moveType = CURRENT_MOVE_DATA.type;
-    }
-
-    if (moveType == TYPE_MYSTERY) {
-        return;
-    }
-
-    mul = ArceusTransform_TypeMul(battleCtx, attacker, defender, moveType,
-        BattleMon_Get(battleCtx, defender, BATTLEMON_TYPE_1, NULL), BattleMon_Get(battleCtx, defender, BATTLEMON_TYPE_2, NULL));
-
-    if (flags & MOVE_STATUS_DID_NOT_HIT) {
-        // "It doesn't affect ..." - and nothing else (a miss, Protect, Levitate, Wonder Guard, ...) explains it
-        if ((flags & MOVE_STATUS_INEFFECTIVE) == FALSE
-            || (flags & (MOVE_STATUS_MISSED | MOVE_STATUS_SEMI_INVULNERABLE | MOVE_STATUS_PROTECTED | MOVE_STATUS_LEVITATED | MOVE_STATUS_WONDER_GUARD | MOVE_STATUS_MAGNET_RISE))
-            || mul != 0) {
-            return;
-        }
-
-        seen = 0;
-    } else if (mul == 0) {
-        return;
-    } else if (CURRENT_MOVE_DATA.power == 0 || (battleCtx->battleStatusMask & SYSCTL_IGNORE_TYPE_CHECKS)) {
-        seen = AI_KNOWLEDGE_NOT_IMMUNE; // Thunder Wave, fixed damage: no effectiveness message
-    } else {
-        // the message shown must match: super effective / not very effective / neither
-        if (((flags & MOVE_STATUS_SUPER_EFFECTIVE) != 0) != (mul > 10)
-            || ((flags & MOVE_STATUS_NOT_VERY_EFFECTIVE) != 0) != (mul < 10)) {
-            return;
-        }
-
-        seen = mul;
-    }
-
-    knowledge = BattleAI_Knowledge(battleSys, battleCtx, defender);
-
-    if (knowledge != NULL) {
-        BattleAI_AddObservation(knowledge, moveType, BattleAI_ChartRules(battleCtx, attacker, defender, knowledge), seen);
-    }
-}
-
-// Called when a battler's attack message has been shown (BattleControllerPlayer_UpdateMoveBuffers).
-void BattleAI_ObserveMoveUsed(BattleSystem *battleSys, BattleContext *battleCtx, int battler, u16 move)
-{
-    BattleMon *mon = &battleCtx->battleMons[battler];
-    AIMonKnowledge *knowledge;
-    Pokemon *partyMon;
-    int i;
-
-    if ((BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_LINK)
-        || move == MOVE_NONE
-        || move == MOVE_STRUGGLE
-        || mon->species == SPECIES_SMEARGLE
-        || (mon->statusVolatile & VOLATILE_CONDITION_TRANSFORM)) {
-        return;
-    }
-
-    // only one of its own moves (not one copied by Mimic)
-    partyMon = BattleSystem_GetPartyPokemon(battleSys, battler, battleCtx->selectedPartySlot[battler]);
-
-    for (i = 0; i < LEARNED_MOVES_MAX; i++) {
-        if (Pokemon_GetValue(partyMon, MON_DATA_MOVE1 + i, NULL) == move) {
-            break;
-        }
-    }
-
-    if (i == LEARNED_MOVES_MAX || (knowledge = BattleAI_Knowledge(battleSys, battleCtx, battler)) == NULL) {
-        return;
-    }
-
-    for (i = 0; i < LEARNED_MOVES_MAX; i++) {
-        if (knowledge->seenMoves[i] == move) {
-            return;
-        }
-
-        if (knowledge->seenMoves[i] == MOVE_NONE) {
-            knowledge->seenMoves[i] = move;
-            knowledge->seenMoveTypes[i] = 0;
-            return;
-        }
-    }
-}
-
-// Called when a battle message names a battler's ability (BattleMessage_AbilityTag).
-void BattleAI_ObserveAbility(BattleSystem *battleSys, BattleContext *battleCtx, int battler, int ability)
-{
-    AIMonKnowledge *knowledge;
-
-    if ((BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_LINK)
-        || ability == ABILITY_NONE
-        || (knowledge = BattleAI_Knowledge(battleSys, battleCtx, battler)) == NULL) {
-        return;
-    }
-
-    // only its own ability (not one it got from Skill Swap, Role Play, ...)
-    if (ability == Pokemon_GetValue(BattleSystem_GetPartyPokemon(battleSys, battler, battleCtx->selectedPartySlot[battler]), MON_DATA_ABILITY, NULL)) {
-        knowledge->knownAbility = ability;
-    }
-}
-
-// Of all typings that fit everything seen, the one closest to the species' own. If nothing fits (something the AI could
-// not see explains a result), the move hints are dropped first, then the oldest hits one by one.
-static void BattleAI_BelieveTypes(BattleContext *battleCtx, int battler, const AIMonKnowledge *knowledge, u8 *type1, u8 *type2)
-{
-    BattleMon *mon = &battleCtx->battleMons[battler];
-    u8 factors[AI_KNOWLEDGE_MAX_OBSERVATIONS][AI_NUM_TYPES];
-    u32 moveTypes[LEARNED_MOVES_MAX];
-    int default1 = SpeciesData_GetFormValue(mon->species, mon->formNum, SPECIES_DATA_TYPE_1);
-    int default2 = SpeciesData_GetFormValue(mon->species, mon->formNum, SPECIES_DATA_TYPE_2);
-    int numObs = knowledge->numObs;
-    int oldest = numObs < AI_KNOWLEDGE_MAX_OBSERVATIONS ? 0 : knowledge->nextObs;
-    int numMoveHints = 0;
-    int i, obs, t1, t2, pass, skip, mul, score, bestScore;
-
-    *type1 = default1;
-    *type2 = default2;
-
-    for (i = 0; i < numObs; i++) {
-        for (t1 = 0; t1 < AI_NUM_TYPES; t1++) {
-            factors[i][t1] = BattleAI_TypeFactor(knowledge->obsMoveType[i], t1, knowledge->obsRules[i]);
-        }
-    }
-
-    for (i = 0; i < LEARNED_MOVES_MAX; i++) {
-        if (knowledge->seenMoveTypes[i] & ~AI_KNOWLEDGE_MOVE_CHECKED) {
-            moveTypes[numMoveHints++] = knowledge->seenMoveTypes[i] & ~AI_KNOWLEDGE_MOVE_CHECKED;
-        }
-    }
-
-    // pass 0: everything; pass 1: without the move hints; pass 1 + n: also without the n oldest hits
-    for (pass = 0; pass <= numObs + 1; pass++) {
-        skip = pass <= 1 ? 0 : pass - 1;
-        bestScore = -1;
-
-        for (t1 = 0; t1 < AI_NUM_TYPES; t1++) {
-            if (t1 == TYPE_MYSTERY) {
-                continue;
-            }
-
-            for (t2 = 0; t2 < AI_NUM_TYPES; t2++) {
-                if (t2 == TYPE_MYSTERY) {
-                    continue;
-                }
-
-                score = (t1 == default1) + (t2 == default2);
-
-                if (score <= bestScore) {
-                    continue;
-                }
-
-                for (i = skip; i < numObs; i++) {
-                    obs = (oldest + i) % AI_KNOWLEDGE_MAX_OBSERVATIONS;
-                    mul = t1 == t2 ? factors[obs][t1] : factors[obs][t1] * factors[obs][t2] / 10;
-
-                    if (knowledge->obsMul[obs] == AI_KNOWLEDGE_NOT_IMMUNE ? mul == 0 : mul != knowledge->obsMul[obs]) {
-                        break;
-                    }
-                }
-
-                if (i < numObs) {
-                    continue;
-                }
-
-                if (pass == 0) {
-                    for (i = 0; i < numMoveHints; i++) {
-                        if ((moveTypes[i] & (FlagIndex(t1) | FlagIndex(t2))) == 0) {
-                            break;
-                        }
-                    }
-
-                    if (i < numMoveHints) {
-                        continue;
-                    }
-                }
-
-                bestScore = score;
-                *type1 = t1;
-                *type2 = t2;
-            }
-        }
-
-        if (bestScore >= 0) {
-            return;
-        }
-    }
-}
-
-// Abilities that name themselves as their Pokemon comes in (weather, Intimidate, Frisk, Mold Breaker, ...).
-static BOOL BattleAI_AbilityAnnouncesItself(int ability)
-{
-    switch (ability) {
-    case ABILITY_DRIZZLE:
-    case ABILITY_DROUGHT:
-    case ABILITY_SAND_STREAM:
-    case ABILITY_SNOW_WARNING:
-    case ABILITY_CLOUD_NINE:
-    case ABILITY_AIR_LOCK:
-    case ABILITY_FORECAST:
-    case ABILITY_INTIMIDATE:
-    case ABILITY_DOWNLOAD:
-    case ABILITY_ANTICIPATION:
-    case ABILITY_FOREWARN:
-    case ABILITY_FRISK:
-    case ABILITY_SLOW_START:
-    case ABILITY_MOLD_BREAKER:
-    case ABILITY_PRESSURE:
-    case ABILITY_TRACE:
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
-static int BattleAI_BelieveAbility(BattleContext *battleCtx, int battler, const AIMonKnowledge *knowledge)
-{
-    BattleMon *mon = &battleCtx->battleMons[battler];
-    int ability;
-
-    // named while on the field (or given by a move)
-    if (battleCtx->aiContext.battlerAbilities[battler] != ABILITY_NONE) {
-        return battleCtx->aiContext.battlerAbilities[battler];
-    }
-
-    if (knowledge != NULL && knowledge->knownAbility != ABILITY_NONE) {
-        return knowledge->knownAbility;
-    }
-
-    if (BattleAI_AbilityAnnouncesItself(mon->ability)) {
-        return mon->ability;
-    }
-
-    ability = Pokemon_GetOriginalAbilityOf(mon->species, mon->personality);
-
-    return ability != ABILITY_NONE ? ability : mon->ability;
-}
-
-static BOOL BattleAI_KnowsEverything(BattleSystem *battleSys, int aiBattler)
-{
-    return (BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_TRAINER)
-        && BattleSystem_GetTrainer(battleSys, aiBattler)->header.trainerType == TRAINER_CLASS_CHAMPION_CYNTHIA;
-}
-
-static u8 sAIHideDepth = 0;
-static u8 sAIHiddenMask = 0;
-static u8 sAISavedType1[MAX_BATTLERS];
-static u8 sAISavedType2[MAX_BATTLERS];
-static u8 sAISavedAbility[MAX_BATTLERS];
-
-void BattleAI_HideOpponentInfo(BattleSystem *battleSys, BattleContext *battleCtx, int aiBattler)
-{
-    int battler;
-
-    // already hidden by the caller (TrainerAI_PickCommand -> BattleAI_PostKOSwitchIn)
-    if (sAIHideDepth++ != 0) {
-        return;
-    }
-
-    sAIHiddenMask = 0;
-
-    if ((BattleSystem_GetBattleType(battleSys) & BATTLE_TYPE_LINK) || BattleAI_KnowsEverything(battleSys, aiBattler)) {
-        return;
-    }
-
-    for (battler = 0; battler < MAX_BATTLERS; battler++) {
-        BattleMon *mon = &battleCtx->battleMons[battler];
-        AIMonKnowledge *knowledge;
-        u8 type1, type2;
-
-        // only the opposing side's information is hidden
-        if ((battler & 1) == (aiBattler & 1) || mon->species == SPECIES_NONE || mon->curHP == 0) {
-            continue;
-        }
-
-        knowledge = BattleAI_Knowledge(battleSys, battleCtx, battler);
-
-        sAIHiddenMask |= FlagIndex(battler);
-        sAISavedType1[battler] = mon->type1;
-        sAISavedType2[battler] = mon->type2;
-        sAISavedAbility[battler] = mon->ability;
-
-        if (knowledge != NULL && BattleAI_HasOwnTypes(battleSys, battleCtx, battler)) {
-            BattleAI_BelieveTypes(battleCtx, battler, knowledge, &type1, &type2);
-            mon->type1 = type1;
-            mon->type2 = type2;
-        }
-
-        // an ability named before it switched out is still known (the AI scripts read battlerAbilities first)
-        if (knowledge != NULL && knowledge->knownAbility != ABILITY_NONE && battleCtx->aiContext.battlerAbilities[battler] == ABILITY_NONE) {
-            battleCtx->aiContext.battlerAbilities[battler] = knowledge->knownAbility;
-        }
-
-        mon->ability = BattleAI_BelieveAbility(battleCtx, battler, knowledge);
-    }
-}
-
-void BattleAI_RestoreOpponentInfo(BattleContext *battleCtx)
-{
-    int battler;
-
-    if (sAIHideDepth == 0 || --sAIHideDepth != 0) {
-        return;
-    }
-
-    for (battler = 0; battler < MAX_BATTLERS; battler++) {
-        if (sAIHiddenMask & FlagIndex(battler)) {
-            battleCtx->battleMons[battler].type1 = sAISavedType1[battler];
-            battleCtx->battleMons[battler].type2 = sAISavedType2[battler];
-            battleCtx->battleMons[battler].ability = sAISavedAbility[battler];
-        }
-    }
-
-    sAIHiddenMask = 0;
 }
 
 void BattleSystem_CalcEffectiveness(BattleContext *battleCtx, int move, int inType, int attackerAbility, int defenderAbility, int defenderItemEffect, int defenderType1, int defenderType2, u32 *moveStatusMask)
@@ -7088,7 +6413,6 @@ BOOL BattleSystem_TriggerFormChange(BattleSystem *battleSys, BattleContext *batt
 
         if (battleCtx->battleMons[battleCtx->msgBattlerTemp].species == SPECIES_ARCEUS
             && battleCtx->battleMons[battleCtx->msgBattlerTemp].curHP
-            && battleCtx->battleMons[battleCtx->msgBattlerTemp].moveEffectsData.arceusTransformed == FALSE // ENTRY P99
             && Battler_Ability(battleCtx, battleCtx->msgBattlerTemp) == ABILITY_MULTITYPE) {
             arceusForm = Pokemon_GetArceusTypeOf(Item_LoadParam(battleCtx->battleMons[battleCtx->msgBattlerTemp].heldItem, ITEM_PARAM_HOLD_EFFECT, HEAP_ID_BATTLE));
 
@@ -7619,13 +6943,6 @@ int BattleSystem_CalcMoveDamage(BattleSystem *battleSys,
             spDefenseStat = spDefenseStat * 15 / 10;
         }
 
-        // HG SYNC (port of PokeHeartGold ENTRY BA item 2): new rule mirroring the one above - Ice-type Pokemon get
-        // 1.5x Defense while it is hailing (same Cloud Nine/Air Lock guard, same multiplier, checked on the target).
-        if ((fieldConditions & FIELD_CONDITION_HAILING)
-            && (defenderParams.type1 == TYPE_ICE || defenderParams.type2 == TYPE_ICE)) {
-            defenseStat = defenseStat * 15 / 10;
-        }
-
         if ((fieldConditions & FIELD_CONDITION_SUNNY)
             && BattleSystem_CountAbility(battleSys, battleCtx, COUNT_ALIVE_BATTLERS_OUR_SIDE, attacker, ABILITY_FLOWER_GIFT)) {
             attackStat = attackStat * 15 / 10;
@@ -7822,7 +7139,6 @@ int BattleSystem_CalcCriticalMulti(BattleSystem *battleSys, BattleContext *battl
         + (itemEffect == HOLD_EFFECT_CRITRATE_UP)
         + criticalStage
         + (attackerAbility == ABILITY_SUPER_LUCK)
-        + (attackerAbility == ABILITY_SNIPER) // HG SYNC (port of PokeHeartGold ENTRY DA): Sniper also gives +1 crit stage
         + (2 * (itemEffect == HOLD_EFFECT_CHANSEY_CRITRATE_UP && attackerSpecies == SPECIES_CHANSEY))
         + (2 * (itemEffect == HOLD_EFFECT_FARFETCHD_CRITRATE_UP && attackerSpecies == SPECIES_FARFETCHD));
 
@@ -8325,10 +7641,8 @@ static u8 Battler_MonType(BattleContext *battleCtx, int battler, enum BattleMonP
         GF_ASSERT(FALSE);
     }
 
-    // ENTRY P99: once Arceus has transformed (BattleSystem_TryArceusTransform) its stored types win over the plate.
     if (battleCtx->battleMons[battler].species == SPECIES_ARCEUS
-        && battleCtx->battleMons[battler].ability == ABILITY_MULTITYPE
-        && battleCtx->battleMons[battler].moveEffectsData.arceusTransformed == FALSE) {
+        && battleCtx->battleMons[battler].ability == ABILITY_MULTITYPE) {
         switch (BattleSystem_GetItemData(battleCtx, battleCtx->battleMons[battler].heldItem, ITEM_PARAM_HOLD_EFFECT)) {
         case HOLD_EFFECT_ARCEUS_FIRE:
             type = TYPE_FIRE;
@@ -8621,22 +7935,7 @@ static int CalcMoveType(BattleSystem *battleSys, BattleContext *battleCtx, int i
     return type;
 }
 
-static int BattleAI_PostKOSwitchInInternal(BattleSystem *battleSys, int battler);
-
-// ENTRY P109: the choice reads the opponent's types and ability - what the AI knows of them.
 int BattleAI_PostKOSwitchIn(BattleSystem *battleSys, int battler)
-{
-    BattleContext *battleCtx = BattleSystem_GetBattleContext(battleSys);
-    int result;
-
-    BattleAI_HideOpponentInfo(battleSys, battleCtx, battler);
-    result = BattleAI_PostKOSwitchInInternal(battleSys, battler);
-    BattleAI_RestoreOpponentInfo(battleCtx);
-
-    return result;
-}
-
-static int BattleAI_PostKOSwitchInInternal(BattleSystem *battleSys, int battler)
 {
     // Must keep C89-style declaration to match
     int i, j;
@@ -8917,4 +8216,47 @@ int Move_CalcVariableType(BattleSystem *battleSys, BattleContext *battleCtx, Pok
     }
 
     return type;
+}
+
+// Compatibility with existing battle messages. Vanilla mechanics require no
+// adaptive Arceus transformation or custom type/ability inference.
+BOOL BattleSystem_TryArceusTransform(BattleSystem *battleSys, BattleContext *battleCtx)
+{
+    (void)battleSys;
+    (void)battleCtx;
+    return FALSE;
+}
+
+void BattleAI_ObserveMoveResult(BattleSystem *battleSys, BattleContext *battleCtx)
+{
+    (void)battleSys;
+    (void)battleCtx;
+}
+
+void BattleAI_ObserveMoveUsed(BattleSystem *battleSys, BattleContext *battleCtx, int battler, u16 move)
+{
+    (void)battleSys;
+    (void)battleCtx;
+    (void)battler;
+    (void)move;
+}
+
+void BattleAI_ObserveAbility(BattleSystem *battleSys, BattleContext *battleCtx, int battler, int ability)
+{
+    (void)battleSys;
+    (void)battleCtx;
+    (void)battler;
+    (void)ability;
+}
+
+void BattleAI_HideOpponentInfo(BattleSystem *battleSys, BattleContext *battleCtx, int aiBattler)
+{
+    (void)battleSys;
+    (void)battleCtx;
+    (void)aiBattler;
+}
+
+void BattleAI_RestoreOpponentInfo(BattleContext *battleCtx)
+{
+    (void)battleCtx;
 }

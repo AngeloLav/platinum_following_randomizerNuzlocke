@@ -77,8 +77,16 @@ BOOL RunSession_Confirm(SaveData *save, const RunConfig *config, u32 nonce)
 
 BOOL RunSession_Load(SaveData *save)
 {
-    RunSession_Reset();
     u32 nonce = SaveData_MiscSaveBlock(save)->unused;
+    // Preserve the finalized history if an ended adventure is selected again,
+    // especially when its last checkpoint could not be written. Continue is
+    // gated before field initialization; no stale living party can resume it.
+    if (sConfigured && nonce && nonce == RunState_Nonce(&sRun)
+        && RunState_Status(&sRun) == RUN_STATUS_GAME_OVER) {
+        sOwnedBag = SaveData_GetBag(save);
+        return TRUE;
+    }
+    RunSession_Reset();
     if (nonce == 0) {
         return TRUE; // Unmodified retail/Following saves remain Classic.
     }

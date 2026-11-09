@@ -1,6 +1,7 @@
 #include "scrcmd.h"
 #include "run_game.h"
 #include "run_session.h"
+#include "constants/regi_ruins.h"
 
 #include <nitro.h>
 #include <nitro/code16.h>
@@ -6052,6 +6053,13 @@ static BOOL ScrCmd_CheckHasAllLegendaryTitansInParty(ScriptContext *ctx)
     u16 *destVar = ScriptContext_GetVarPointer(ctx);
 
     *destVar = HasAllLegendaryTitansInParty(ctx->fieldSystem->saveData);
+    if (!*destVar && RunSession_Configured() && (RunSession_Config()->flags & RUN_RANDOMIZE_STATICS)) {
+        // Randomized ruins still prove completion by their native caught state.
+        VarsFlags *vars = SaveData_GetVarsFlags(ctx->fieldSystem->saveData);
+        *destVar = *VarsFlags_GetVarAddress(vars, VAR_ROCK_PEAK_RUINS_STATE) == RUINS_STATE_CAUGHT_REGI
+            && *VarsFlags_GetVarAddress(vars, VAR_ICEBERG_RUINS_STATE) == RUINS_STATE_CAUGHT_REGI
+            && *VarsFlags_GetVarAddress(vars, VAR_IRON_RUINS_STATE) == RUINS_STATE_CAUGHT_REGI;
+    }
     return FALSE;
 }
 
@@ -7291,6 +7299,13 @@ static BOOL ScrCmd_CheckPartyHasFatefulEncounterRegigigas(ScriptContext *ctx)
     u16 *destVar = ScriptContext_GetVarPointer(ctx);
 
     *destVar = FALSE;
+    // Native ruins and dot puzzles remain intact. Postgame National Dex
+    // substitutes for the expired distributed-Regigigas requirement.
+    if (SystemFlag_CheckGameCompleted(SaveData_GetVarsFlags(ctx->fieldSystem->saveData))
+        && Pokedex_IsNationalDexObtained(SaveData_GetPokedex(ctx->fieldSystem->saveData))) {
+        *destVar = TRUE;
+        return FALSE;
+    }
     int partyCount = Party_GetCurrentCount(SaveData_GetParty(ctx->fieldSystem->saveData));
 
     for (int i = 0; i < partyCount; i++) {

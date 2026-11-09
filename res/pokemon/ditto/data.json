@@ -1,11 +1,11 @@
 {
     "base_stats": {
-        "hp": 78,
+        "hp": 48,
         "attack": 48,
-        "defense": 68,
-        "speed": 78,
+        "defense": 48,
+        "speed": 48,
         "special_attack": 48,
-        "special_defense": 68
+        "special_defense": 48
     },
     "types": [ "TYPE_NORMAL", "TYPE_NORMAL" ],
     "catch_rate": 35,
@@ -19,7 +19,7 @@
         "special_defense": 0
     },
     "held_items": {
-        "common": "ITEM_NONE",
+        "common": "ITEM_QUICK_POWDER",
         "rare": "ITEM_METAL_POWDER"
     },
     "gender_ratio": "GENDER_RATIO_NO_GENDER",

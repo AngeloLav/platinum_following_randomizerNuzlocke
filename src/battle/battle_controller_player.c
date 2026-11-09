@@ -3200,7 +3200,6 @@ static void BattleControllerPlayer_BeforeMove(BattleSystem *battleSys, BattleCon
 {
     switch (battleCtx->beforeMoveCheckState) {
     case BEFORE_MOVE_STATE_QUICK_CLAW:
-        battleCtx->arceusTransformPending = 0; // ENTRY P99
         BattleControllerPlayer_LoadQuickClawCheck(battleSys, battleCtx);
         battleCtx->beforeMoveCheckState++;
         return;
@@ -3291,7 +3290,6 @@ enum TryMoveState {
     TRY_MOVE_STATE_TRIGGER_REDIRECTION_ABILITIES,
     TRY_MOVE_STATE_CHECK_MOVE_HITS,
     TRY_MOVE_STATE_CHECK_MOVE_HIT_OVERRIDES,
-    TRY_MOVE_STATE_ARCEUS_TRANSFORM, // ENTRY P99
     TRY_MOVE_STATE_CHECK_TYPE_CHART,
     TRY_MOVE_STATE_TRIGGER_IMMUNITY_ABILITIES,
 
@@ -3332,25 +3330,6 @@ static void BattleControllerPlayer_TryMove(BattleSystem *battleSys, BattleContex
         }
 
         battleCtx->tryMoveCheckState++;
-
-    case TRY_MOVE_STATE_ARCEUS_TRANSFORM:
-        // ENTRY P99: an Arceus about to be hit changes type right before the type chart, so the move hits the new type.
-        // The transformation is shown after "<attacker> used <move>!": straight away if that message has already been
-        // printed (or will not be), otherwise by BtlCmd_PrintAttackMessage when it is.
-        battleCtx->tryMoveCheckState++;
-
-        if ((battleCtx->multiHitCheckFlags & SYSCTL_SKIP_TYPE_CHART_CHECK) == FALSE
-            && battleCtx->defender != BATTLER_NONE
-            && BattleSystem_TryArceusTransform(battleSys, battleCtx) == TRUE) {
-            if (battleCtx->battleStatusMask & SYSCTL_SKIP_ATTACK_MESSAGE) {
-                LOAD_SUBSEQ(subscript_arceus_transform);
-                battleCtx->command = BATTLE_CONTROL_EXEC_SCRIPT;
-                battleCtx->commandNext = BATTLE_CONTROL_TRY_MOVE;
-                return;
-            }
-
-            battleCtx->arceusTransformPending = battleCtx->defender + 1;
-        }
 
     case TRY_MOVE_STATE_CHECK_TYPE_CHART:
         if ((battleCtx->multiHitCheckFlags & SYSCTL_SKIP_TYPE_CHART_CHECK) == FALSE
@@ -3394,7 +3373,6 @@ static void BattleControllerPlayer_PrimaryEffect(BattleSystem *battleSys, Battle
 
 static void BattleControllerPlayer_CheckMoveFailure(BattleSystem *battleSys, BattleContext *battleCtx)
 {
-    BattleAI_ObserveMoveResult(battleSys, battleCtx); // ENTRY P109: the AI sees how well the move works on its target
 
     if (battleCtx->moveStatusFlags & MOVE_STATUS_NO_MORE_WORK) {
         battleCtx->command = BATTLE_CONTROL_LOOP_SPREAD_MOVES;
@@ -4036,7 +4014,6 @@ static void BattleControllerPlayer_UpdateMoveBuffers(BattleSystem *battleSys, Ba
 
     if (battleCtx->battleStatusMask2 & SYSCTL_ATTACK_MESSAGE_SHOWN) {
         battleCtx->moveSketched[battleCtx->attacker] = battleCtx->moveTemp;
-        BattleAI_ObserveMoveUsed(battleSys, battleCtx, battleCtx->attacker, battleCtx->moveTemp); // ENTRY P109
     }
 
     BattleControllerPlayer_UpdateFlagsWhenHit(battleSys, battleCtx);
@@ -4081,7 +4058,6 @@ static void BattleControllerPlayer_MoveEnd(BattleSystem *battleSys, BattleContex
         battleCtx->turnOrderCounter++;
     }
 
-    battleCtx->arceusTransformPending = 0; // ENTRY P99: never carried into the next move
     BattleContext_Init(battleCtx);
     battleCtx->command = BATTLE_CONTROL_BRANCH_ACTIONS;
 }

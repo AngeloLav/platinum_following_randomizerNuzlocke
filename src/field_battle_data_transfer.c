@@ -43,6 +43,8 @@
 #include "poketch.h"
 #include "rtc.h"
 #include "run_game.h"
+#include "run_session.h"
+#include "generated/moves.h"
 #include "save_player.h"
 #include "savedata.h"
 #include "string_gf.h"
@@ -165,9 +167,22 @@ FieldBattleDTO *FieldBattleDTO_NewCatchingTutorial(enum HeapID heapID, const Fie
     Bag_TryAddItem(dto->bag, ITEM_POKE_BALL, 20, heapID);
 
     mon = Pokemon_New(heapID);
-    Pokemon_InitWith(mon, SystemVars_GetPlayerCounterpartStarter(SaveData_GetVarsFlags(fieldSystem->saveData)), 5, INIT_IVS_RANDOM, FALSE, 0, OTID_NOT_SHINY, 0);
+    u16 tutorialAlly = RunGame_TrainerSpecies(0x5455544Fu, 0,
+        SystemVars_GetPlayerCounterpartStarter(SaveData_GetVarsFlags(fieldSystem->saveData)));
+    Pokemon_InitWith(mon, tutorialAlly, 5, INIT_IVS_RANDOM, FALSE, 0, OTID_NOT_SHINY, 0);
+    // Demonstration choreography uses a reliable nonlethal hit, regardless of
+    // the replacement's learnset. This temporary party is never the player's.
+    if (RunSession_Configured() && (RunSession_Config()->flags & RUN_RANDOMIZE_TRAINERS)) {
+        Pokemon_SetMoveSlot(mon, MOVE_TACKLE, 0);
+        for (u8 slot = 1; slot < 4; slot++) Pokemon_SetMoveSlot(mon, MOVE_NONE, slot);
+    }
     Party_AddPokemon(dto->parties[BATTLER_PLAYER_1], mon);
-    Pokemon_InitWith(mon, SPECIES_BIDOOF, 2, INIT_IVS_RANDOM, FALSE, 0, OTID_NOT_SHINY, 0);
+    Pokemon_InitWith(mon, RunGame_RandomSpecies(RUN_SOURCE_WILD, 0x5455544Fu, 0, SPECIES_BIDOOF), 2, INIT_IVS_RANDOM, FALSE, 0, OTID_NOT_SHINY, 0);
+    if (RunSession_Configured() && (RunSession_Config()->flags & RUN_RANDOMIZE_WILD)) {
+        // No Teleport, self-destruction or other move can interrupt the demo.
+        Pokemon_SetMoveSlot(mon, MOVE_TACKLE, 0);
+        for (u8 slot = 1; slot < 4; slot++) Pokemon_SetMoveSlot(mon, MOVE_NONE, slot);
+    }
     Party_AddPokemon(dto->parties[BATTLER_ENEMY_1], mon);
     Heap_Free(mon);
 

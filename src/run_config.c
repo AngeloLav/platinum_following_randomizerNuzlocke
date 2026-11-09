@@ -91,7 +91,7 @@ BOOL RunConfig_IsValid(const RunConfig *config)
         && config->speciesDataVersion == RUN_SPECIES_DATA_VERSION
         && (config->flags & ~RUN_KNOWN_FLAGS) == 0
         && (config->rulesVersion == 2 || config->rulesVersion == RUN_RULES_VERSION)
-        && config->shinyRate <= 3
+        && config->shinyRate <= 4
         && config->levelCapMode <= RUN_CAP_OBEDIENCE
         && (config->rulesVersion != 2 || (config->shinyRate == 0 && config->levelCapMode == RUN_CAP_EXP_LOCK && !(config->flags & RUN_RANDOMIZE_FIELD_ITEMS)))
         && config->bstTolerance >= 10 && config->bstTolerance <= 75
@@ -104,6 +104,12 @@ BOOL RunConfig_IsValid(const RunConfig *config)
         && config->trainerLevelsPerBadge >= 1 && config->trainerLevelsPerBadge <= 3;
 }
 
+u8 RunConfig_AdjustValue(u8 value, u8 low, u8 high, u8 step, BOOL decrease)
+{
+    int next = value + (decrease ? -(int)step : step);
+    return next < low ? low : next > high ? high : next;
+}
+
 enum RunPreset RunConfig_EffectivePreset(const RunConfig *config)
 {
     if (!RunConfig_IsValid(config) || config->preset == RUN_PRESET_CUSTOM) {
@@ -113,7 +119,7 @@ enum RunPreset RunConfig_EffectivePreset(const RunConfig *config)
     RunConfig reference;
     RunConfig_Init(&reference, config->preset, config->seed);
 
-    if (config->flags != reference.flags
+    if (((config->flags ^ reference.flags) & ~RUN_END_ON_PARTY_WIPE) != 0
         || config->bstTolerance != reference.bstTolerance
         || config->bstWeight != reference.bstWeight
         || config->captureAttempts != reference.captureAttempts
@@ -143,8 +149,9 @@ BOOL RunConfig_ShinyClauseEnabled(const RunConfig *config)
 
 BOOL RunConfig_EndOnPartyWipe(const RunConfig *config)
 {
-    return RunConfig_IsValid(config) && (config->flags & RUN_PERMADEATH) != 0
-        && (config->flags & RUN_END_ON_PARTY_WIPE) != 0;
+    // The old wire bit is retained byte-exactly. Permadeath is the single
+    // authority, including legacy configurations with a missing wipe bit.
+    return RunConfig_IsValid(config) && (config->flags & RUN_PERMADEATH) != 0;
 }
 
 BOOL RunConfig_DayCareEggsEnabled(const RunConfig *config)

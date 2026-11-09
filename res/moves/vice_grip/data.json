@@ -8,7 +8,7 @@
     ],
     "class": "CLASS_PHYSICAL",
     "type": "TYPE_NORMAL",
-    "power": 95,
+    "power": 55,
     "accuracy": 100,
     "pp": 30,
     "effect": {

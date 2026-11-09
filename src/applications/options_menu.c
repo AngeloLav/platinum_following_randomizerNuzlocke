@@ -43,6 +43,7 @@
 #include "trainer_info.h"
 #include "applications/title_screen.h"
 #include "game_overlay.h"
+#include "game_start.h"
 #include "res/text/bank/run_engine.h"
 
 #include "res/graphics/options_menu/config_gra.naix"
@@ -1018,11 +1019,10 @@ static const RunMenuOption sRunOptions[] = {
     RUN_NUMBER(Run_Text_Attempts, 2, captureAttempts, 0, 3, 1),
     RUN_BOOL(Run_Text_Dupes, 2, RUN_DUPES_CLAUSE),
     RUN_BOOL(Run_Text_Shiny, 2, RUN_SHINY_CLAUSE),
-    RUN_NUMBER(Run_Text_ShinyRate, 2, shinyRate, 0, 3, 1),
+    RUN_NUMBER(Run_Text_ShinyRate, 2, shinyRate, 0, 4, 1),
     RUN_BOOL(Run_Text_SeparateGifts, 2, RUN_SEPARATE_GIFTS),
     RUN_BOOL(Run_Text_SeparateEggs, 2, RUN_SEPARATE_EGGS),
     RUN_BOOL(Run_Text_Permadeath, 3, RUN_PERMADEATH),
-    RUN_BOOL(Run_Text_Wipe, 3, RUN_END_ON_PARTY_WIPE),
     RUN_BOOL(Run_Text_DayCare, 3, RUN_DAY_CARE_EGGS),
     RUN_BOOL(Run_Text_Cap, 4, RUN_LEVEL_CAPS),
     RUN_NUMBER(Run_Text_CapMode, 4, levelCapMode, 0, 1, 1),
@@ -1034,6 +1034,9 @@ static const RunMenuOption sRunOptions[] = {
 };
 #undef RUN_BOOL
 #undef RUN_NUMBER
+
+static const u16 sRunShinyRates[] = { Run_Text_RateOriginal, Run_Text_RateIncreased,
+    Run_Text_RateHigh, Run_Text_RateVeryHigh, Run_Text_RateUltraHigh };
 
 typedef struct RunMenuData {
     OptionsMenuData native;
@@ -1071,6 +1074,13 @@ typedef struct RunMenuData {
     u16 zoneCount;
     u32 summary[7];
     BOOL currentAreaDetails;
+    BOOL modalHelp;
+    u8 helpPage;
+    BOOL helpMore;
+    BOOL restarting;
+    BOOL restartErased;
+    BOOL restartFailed;
+    u16 restartWait;
 } RunMenuData;
 
 static u8 RunSpecialCategory(const RunSpecialRecord *event)
@@ -1180,13 +1190,22 @@ static void RunOptionValue(RunMenuData *menu, const RunMenuOption *option)
         if (option->label == Run_Text_SeedMode) {
             RunMessage(menu, value ? Run_Text_Manual : Run_Text_Auto, menu->value);
         } else if (option->label == Run_Text_ShinyRate) {
-            RunMessage(menu, Run_Text_RateOriginal + value, menu->value);
+            RunMessage(menu, sRunShinyRates[value], menu->value);
         } else if (option->label == Run_Text_CapMode) {
             RunMessage(menu, value == RUN_CAP_OBEDIENCE ? Run_Text_ObedienceCap : Run_Text_ExpLock, menu->value);
         } else if (option->label == Run_Text_Attempts && value == 0) {
             RunMessage(menu, Run_Text_Off, menu->value);
         } else {
             RunNumber(menu, value);
+            if (option->label == Run_Text_Tolerance || option->label == Run_Text_Weight) {
+                charcode_t chars[16];
+                u32 i = 0;
+                if (option->label == Run_Text_Tolerance) { chars[i++] = CHAR_PLUS; chars[i++] = CHAR_SLASH; chars[i++] = CHAR_MINUS; }
+                for (u32 j = 0; j < menu->value->size; j++) chars[i++] = menu->value->data[j];
+                chars[i++] = CHAR_PERCENT;
+                chars[i] = CHAR_EOS;
+                String_CopyChars(menu->value, chars);
+            }
         }
     }
 }
@@ -1314,7 +1333,7 @@ static void RunOverview(RunMenuData *menu, int row)
         (menu->draft.flags & (row == 15 ? RUN_RANDOMIZE_WILD : row == 16 ? RUN_RANDOMIZE_TRAINERS : RUN_RANDOMIZE_FIELD_ITEMS)) ? Run_Text_On : Run_Text_Off, menu->value);
     if (row == 17) RunNumber(menu, menu->draft.bstTolerance);
     if (row == 18) RunNumber(menu, menu->draft.bstWeight);
-    if (row == 19) RunMessage(menu, Run_Text_RateOriginal + menu->draft.shinyRate, menu->value);
+    if (row == 19) RunMessage(menu, sRunShinyRates[menu->draft.shinyRate], menu->value);
     if (row == 12 && menu->draft.rulesVersion == 2) RunMessage(menu, Run_Text_Legacy, menu->value);
     if (row >= 22 && row <= 28) RunNumber(menu, menu->summary[row - 22]);
     if (row == 29) RunNumber(menu, RunGame_EligibleCount(SaveData_GetParty(menu->save)));
@@ -1429,8 +1448,63 @@ static void RunPrepareRegistry(RunMenuData *menu)
     }
 }
 
+static void RunDrawModalHelp(RunMenuData *menu)
+{
+    static const u16 descriptions[] = { Run_Text_DetailWild, Run_Text_DetailTrainers, Run_Text_DetailTolerance, Run_Text_DetailWeight, Run_Text_DetailLegendaries, Run_Text_DetailStatic, Run_Text_DetailGifts, Run_Text_DetailEggs, Run_Text_DetailFieldItems, Run_Text_DetailSeedMode, Run_Text_DetailAttempts, Run_Text_DetailDupes, Run_Text_DetailShiny, Run_Text_DetailShinyRate, Run_Text_DetailSeparateGifts, Run_Text_DetailSeparateEggs, Run_Text_DetailPermadeath, Run_Text_DetailDayCare, Run_Text_DetailCap, Run_Text_DetailCapMode, Run_Text_DetailAllowance, Run_Text_DetailScaling, Run_Text_DetailBonus, Run_Text_DetailBosses, Run_Text_DetailNotifications };
+    u16 title = menu->cursor == 0 ? Run_Text_Preset
+        : menu->cursor <= SNELEMS(sRunOptions) ? sRunOptions[menu->cursor - 1].label
+        : menu->cursor == SNELEMS(sRunOptions) + 1 ? Run_Text_Seed : Run_Text_Review;
+    u16 detail = menu->cursor == 0 ? Run_Text_DetailPreset
+        : menu->cursor <= SNELEMS(sRunOptions) ? descriptions[menu->cursor - 1]
+        : menu->cursor == SNELEMS(sRunOptions) + 1 ? Run_Text_DetailSeed : Run_Text_DetailReview;
+    Window *window = &menu->helpWindow;
+    Window_FillTilemap(window, PIXEL_FILL(15));
+    RunMessage(menu, title, menu->line);
+    RunPrint(window, menu->line, 0, 0, FALSE);
+    RunMessage(menu, Run_Text_HelpModalControls, menu->line);
+    RunPrint(window, menu->line, 0, 140, FALSE);
+    if (menu->cursor > 0 && menu->cursor <= SNELEMS(sRunOptions)
+        && !RunOptionEnabled(menu, &sRunOptions[menu->cursor - 1])) {
+        RunMessage(menu, Run_Text_HelpDisabled, menu->line);
+        RunPrint(window, menu->line, 0, 124, FALSE);
+    }
+    RunMessage(menu, detail, menu->line);
+    u32 at = 0, line = 0;
+    while (at < menu->line->size) {
+        u32 end = at, space = at;
+        while (end < menu->line->size && menu->line->data[end] != CHAR_CR && end - at < 120) {
+            if (menu->line->data[end] == CHAR_SPACE) space = end;
+            String_CopyNumChars(menu->value, menu->line->data + at, end - at + 1);
+            if (Font_CalcStringWidth(FONT_SYSTEM, menu->value, 0) > 216) break;
+            end++;
+        }
+        if (end < menu->line->size && menu->line->data[end] != CHAR_CR && space > at) end = space;
+        if (end == at) end++;
+        if (line / 6 == menu->helpPage) {
+            String_CopyNumChars(menu->value, menu->line->data + at, end - at);
+            RunPrint(window, menu->value, 0, 24 + (line % 6) * 16, FALSE);
+        }
+        line++;
+        at = end;
+        while (at < menu->line->size && (menu->line->data[at] == CHAR_SPACE || menu->line->data[at] == CHAR_CR)) at++;
+    }
+    menu->helpMore = line > (menu->helpPage + 1) * 6;
+    Window_CopyToVRAM(window);
+}
+
 static void RunDraw(RunMenuData *menu)
 {
+    if (menu->restarting) {
+        for (u32 i = 0; i < NUM_WINDOWS; i++) {
+            Window_FillTilemap(&menu->native.windows.asArray[i], PIXEL_FILL(15));
+            Window_CopyToVRAM(&menu->native.windows.asArray[i]);
+        }
+        Window_FillTilemap(&menu->helpWindow, PIXEL_FILL(15));
+        RunMessage(menu, menu->restartFailed ? Run_Text_RestartFailed : Run_Text_RestartWorking, menu->line);
+        RunPrint(&menu->helpWindow, menu->line, 0, 16, FALSE);
+        Window_CopyToVRAM(&menu->helpWindow);
+        return;
+    }
     Window *entries = &menu->native.windows.entries;
     Window *description = &menu->native.windows.description;
     Window_FillTilemap(entries, PIXEL_FILL(15));
@@ -1591,18 +1665,19 @@ static void RunDraw(RunMenuData *menu)
         RunPrint(&menu->helpWindow, menu->line, 0, 32, FALSE);
         Window_CopyToVRAM(&menu->helpWindow);
     }
+    if (menu->modalHelp) RunDrawModalHelp(menu);
     Bg_SetOffset(menu->native.bgConfig, BG_LAYER_MAIN_0, BG_OFFSET_UPDATE_SET_Y,
         -(FIRST_ENTRY_OFFSET + (menu->cursor - menu->scroll) * RUN_ROW_HEIGHT));
     for (u32 i = 0; i < NUM_WINDOWS; i++) Window_CopyToVRAM(&menu->native.windows.asArray[i]);
 }
 
-static BOOL RunMenu_InitCommon(ApplicationManager *appMan, BOOL newRun)
+static BOOL RunMenu_InitCommon(ApplicationManager *appMan, BOOL newRun, BOOL standalone)
 {
     Heap_Create(HEAP_ID_APPLICATION, HEAP_ID_OPTIONS_MENU, HEAP_ALLOCATION_SIZE);
     RunMenuData *menu = ApplicationManager_NewData(appMan, sizeof(RunMenuData), HEAP_ID_OPTIONS_MENU);
     if (menu == NULL) { OS_ResetSystem(RESET_CLEAN); return FALSE; }
     memset(menu, 0, sizeof(*menu));
-    menu->save = newRun ? ((ApplicationArgs *)ApplicationManager_Args(appMan))->saveData : ApplicationManager_Args(appMan);
+    menu->save = standalone ? ((ApplicationArgs *)ApplicationManager_Args(appMan))->saveData : ApplicationManager_Args(appMan);
     menu->native.heapID = HEAP_ID_OPTIONS_MENU;
     menu->native.saveOptions = SaveData_GetOptions(menu->save);
     menu->native.options.messageBoxStyle = Options_Frame(menu->native.saveOptions);
@@ -1621,18 +1696,25 @@ static BOOL RunMenu_InitCommon(ApplicationManager *appMan, BOOL newRun)
     }
     menu->digits = MessageLoader_GetNewString(menu->messages, Run_Text_Digits);
     if (!menu->digits) { OS_ResetSystem(RESET_CLEAN); return FALSE; }
-    if (!menu->newRun) RunPrepareRegistry(menu);
+    if (!menu->newRun && !standalone) RunPrepareRegistry(menu);
     return TRUE;
 }
 
 BOOL RunConfigMenu_Init(ApplicationManager *appMan, int *state)
 {
-    return RunMenu_InitCommon(appMan, TRUE);
+    return RunMenu_InitCommon(appMan, TRUE, TRUE);
 }
 
 BOOL RunRegistryMenu_Init(ApplicationManager *appMan, int *state)
 {
-    return RunMenu_InitCommon(appMan, FALSE);
+    return RunMenu_InitCommon(appMan, FALSE, FALSE);
+}
+
+BOOL RunRestartMenu_Init(ApplicationManager *appMan, int *state)
+{
+    BOOL result = RunMenu_InitCommon(appMan, FALSE, TRUE);
+    ((RunMenuData *)ApplicationManager_Data(appMan))->restarting = TRUE;
+    return result;
 }
 
 BOOL RunMenu_Main(ApplicationManager *appMan, int *state)
@@ -1654,13 +1736,33 @@ BOOL RunMenu_Main(ApplicationManager *appMan, int *state)
         menu->helpReady = TRUE;
         GXLayers_TurnBothDispOn();
         RunDraw(menu);
-        StartScreenFade(FADE_MAIN_ONLY, FADE_TYPE_BRIGHTNESS_IN, FADE_TYPE_BRIGHTNESS_IN, COLOR_BLACK, 6, 1, HEAP_ID_OPTIONS_MENU);
+        StartScreenFade(FADE_BOTH_SCREENS, FADE_TYPE_BRIGHTNESS_IN, FADE_TYPE_BRIGHTNESS_IN, COLOR_BLACK, 6, 1, HEAP_ID_OPTIONS_MENU);
         (*state)++;
     } else if (*state == 1) {
         if (IsScreenFadeDone()) (*state)++;
     } else if (*state == 2) {
         BOOL close = FALSE;
-        if (menu->resetPrompt) {
+        if (menu->restarting) {
+            if (menu->restartFailed) {
+                if (JOY_NEW(PAD_BUTTON_B)) close = TRUE;
+                else if (JOY_NEW(PAD_BUTTON_A)) {
+                    menu->restartFailed = FALSE;
+                    menu->restartWait = 0;
+                }
+            } else if (++menu->restartWait >= 2) {
+                // Give VBlank time to display the notice before native flash
+                // erasure. No input is needed for a successful restart.
+                menu->restartErased = RunGame_Restart(menu->save);
+                menu->restartFailed = !menu->restartErased;
+                close = menu->restartErased;
+            }
+        } else if (menu->modalHelp) {
+            if (JOY_NEW(PAD_BUTTON_B | PAD_BUTTON_X)) menu->modalHelp = FALSE;
+            else if (JOY_NEW(PAD_BUTTON_A)) menu->helpPage = menu->helpMore ? menu->helpPage + 1 : 0;
+        } else if ((menu->newRun || menu->settingsView) && !menu->seedEditing && JOY_NEW(PAD_BUTTON_X)) {
+            menu->modalHelp = TRUE;
+            menu->helpPage = 0;
+        } else if (menu->resetPrompt) {
             if (JOY_NEW(PAD_BUTTON_B)) menu->resetPrompt = FALSE;
             if (JOY_NEW(PAD_BUTTON_A) && SaveData_Erase(menu->save)) OS_ResetSystem(RESET_CLEAN);
         } else if (menu->damaged) {
@@ -1722,8 +1824,7 @@ BOOL RunMenu_Main(ApplicationManager *appMan, int *state)
                             }
                         } else {
                             u8 *value = (u8 *)&menu->draft + option->offset;
-                            int next = *value + (JOY_REPEAT(PAD_KEY_LEFT) ? -option->step : option->step);
-                            *value = next < option->low ? option->high : next > option->high ? option->low : next;
+                            *value = RunConfig_AdjustValue(*value, option->low, option->high, option->step, JOY_REPEAT(PAD_KEY_LEFT));
                             if (option->label == Run_Text_SeedMode && *value == RUN_SEED_AUTO) menu->draft.seed = MTRNG_Next();
                         }
                     }
@@ -1773,7 +1874,7 @@ BOOL RunMenu_Main(ApplicationManager *appMan, int *state)
             RunDraw(menu);
         }
         if (close) {
-            StartScreenFade(FADE_MAIN_ONLY, FADE_TYPE_BRIGHTNESS_OUT, FADE_TYPE_BRIGHTNESS_OUT, COLOR_BLACK, 6, 1, HEAP_ID_OPTIONS_MENU);
+            StartScreenFade(FADE_BOTH_SCREENS, FADE_TYPE_BRIGHTNESS_OUT, FADE_TYPE_BRIGHTNESS_OUT, COLOR_BLACK, 6, 1, HEAP_ID_OPTIONS_MENU);
             (*state)++;
         }
     } else if (*state == 3) {
@@ -1796,6 +1897,8 @@ BOOL RunMenu_Exit(ApplicationManager *appMan, int *state)
     RunMenuData *menu = ApplicationManager_Data(appMan);
     BOOL newRun = menu->newRun;
     BOOL damaged = menu->damaged;
+    BOOL restarting = menu->restarting;
+    BOOL restartErased = menu->restartErased;
     MessageLoader_Free(menu->messages);
     MessageLoader_Free(menu->locations);
     MessageLoader_Free(menu->species);
@@ -1807,7 +1910,9 @@ BOOL RunMenu_Exit(ApplicationManager *appMan, int *state)
     if (newRun) {
         extern const ApplicationManagerTemplate gRowanIntroAppTemplate;
         EnqueueApplication(FS_OVERLAY_ID_NONE, &gRowanIntroAppTemplate);
-    } else if (damaged) {
+    } else if (restartErased) {
+        EnqueueApplication(FS_OVERLAY_ID_NONE, &gGameStartRowanIntroAppTemplate);
+    } else if (damaged || restarting) {
         EnqueueApplication(FS_OVERLAY_ID(game_opening), &gTitleScreenAppTemplate);
     }
     return TRUE;

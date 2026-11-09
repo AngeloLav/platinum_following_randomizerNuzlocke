@@ -115,25 +115,18 @@ CommonScript_RunGiftDenied:
     End
 
 CommonScript_RunEndedSaveFailed:
-    LockAll
-    Message CommonStrings_Text_RunSaveFailed
-    WaitButton
-    CloseMessage
     GoTo CommonScript_RunEnded
     End
 
 CommonScript_RunEnded:
     LockAll
-    GetRunRule 5, VAR_RESULT
-    GoToIfEq VAR_RESULT, 2, CommonScript_RunEndedNoEligible
-    Message CommonStrings_Text_RunEnded
     GoTo CommonScript_RunEndedFinish
 
 CommonScript_RunEndedNoEligible:
-    Message CommonStrings_Text_RunEndedNoEligible
+    GoTo CommonScript_RunEndedFinish
 
 CommonScript_RunEndedFinish:
-    WaitButton
+    @ Release the script task so the engine can close the field and restart.
     CloseMessage
     ReleaseAll
     End
@@ -424,11 +417,7 @@ CommonScript_PoisonWhiteout:
 
 CommonScript_SaveAndStoreResult:
     ClearFlag FLAG_MAP_LOCAL_SAVE_EXTRA_BLOCK
-    @ HG SYNC (port of PokeHeartGold ENTRY CI/CJ, reworked for Platinum's script-driven save menu): Save from the Start
-    @ Menu (this script, common script 5, started by StartMenu_Save) goes straight to saving - no "Would you like to save
-    @ the game?" and no "Is it OK to overwrite it?". Other saves (Common_SaveGame: link contests, Union Room, ...) keep
-    @ their prompts through CommonScript_TrySaveGame.
-    Call CommonScript_TrySaveGameNoPrompt
+    Call CommonScript_TrySaveGame
     StoreSaveResult VAR_RESULT
     CloseMessage
     End
@@ -457,23 +446,6 @@ CommonScript_TrySaveGame:
     GoToIfEq VAR_RESULT, SAVE_TYPE_NO_DATA_EXISTS, CommonScript_SavingALotOfData
     GoToIfEq VAR_RESULT, SAVE_TYPE_FULL_SAVE, CommonScript_FullSaveAskOverwrite
     GoToIfEq VAR_RESULT, SAVE_TYPE_QUICK_SAVE, CommonScript_QuickSaveAskOverwrite
-    End
-
-@ HG SYNC: CommonScript_TrySaveGame without the two Yes/No questions, as if both were answered Yes. The "impossible to
-@ save" check and the save info window stay; every path ends in the same Return as CommonScript_TrySaveGame's.
-CommonScript_TrySaveGameNoPrompt:
-    CheckSaveType VAR_RESULT
-    GoToIfEq VAR_RESULT, SAVE_TYPE_OVERWRITE, CommonScript_SaveTypeOverwrite
-    OpenSaveInfo
-    CheckSaveType VAR_RESULT
-    GoToIfEq VAR_RESULT, SAVE_TYPE_NO_DATA_EXISTS, CommonScript_SavingALotOfData
-    GoToIfEq VAR_RESULT, SAVE_TYPE_FULL_SAVE, CommonScript_SavingALotOfData
-    GoToIfEq VAR_RESULT, SAVE_TYPE_QUICK_SAVE, CommonScript_QuickSaveNoPrompt
-    End
-
-CommonScript_QuickSaveNoPrompt:
-    GoToIfUnset FLAG_MAP_LOCAL_SAVE_EXTRA_BLOCK, CommonScript_StartQuickSave
-    GoToIfSet FLAG_MAP_LOCAL_SAVE_EXTRA_BLOCK, CommonScript_QuickSaveCheckMiscFlag
     End
 
 CommonScript_SaveTypeOverwrite:

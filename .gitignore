@@ -127,3 +127,6 @@ compile_commands.json
 
 # Rom
 *.nds
+
+# Local playtest backups and layout previews
+artifacts/

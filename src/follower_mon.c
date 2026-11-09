@@ -2092,18 +2092,11 @@ static const u16 *FollowerMon_GetHGShinyPalette(u16 graphicsID)
     }
 }
 
-// ENTRY P78: HeartGold's two per-species follower colour fixes, copied from PokeHeartGold src/follow_mon.c
-// (FollowMon_GetBrightnessPercent / FollowMon_GetHueOffsets / FollowMon_BrightenColor; Changelog ENTRY Z and AA).
-// Shiny Totodile's follower palette is a few shades too dark next to its status-screen sprite, so each colour is
-// scaled by FOLLOWER_HG_TOTODILE_SHINY_BRIGHTNESS_PERCENT per RGB channel BEFORE the personality rotation.
-#define FOLLOWER_HG_TOTODILE_SHINY_BRIGHTNESS_PERCENT 125
-
+// Keep the supplied HG normal/shiny follower palettes at their native brightness.
 static u32 FollowerMon_GetHGBrightnessPercent(u16 graphicsID, BOOL shiny)
 {
-    if (shiny && graphicsID == OBJ_EVENT_GFX_TOTODILE) {
-        return FOLLOWER_HG_TOTODILE_SHINY_BRIGHTNESS_PERCENT;
-    }
-
+    (void)graphicsID;
+    (void)shiny;
     return 100;
 }
 

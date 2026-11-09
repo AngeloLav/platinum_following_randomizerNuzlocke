@@ -417,10 +417,9 @@ static void sub_02073E18(BoxPokemon *boxMon, int monSpecies, int monLevel, int m
     BoxPokemon_SetValue(boxMon, MON_DATA_PERSONALITY, &monPersonality);
 
     if (monOTIDSource == OTID_NOT_SHINY) {
-        // COLOR MOD (port of PokeHeartGold ENTRY AD item 2): this used to reroll the OT ID until the mon
-        // could not be shiny (a "no shiny trainer/starter/etc mons" guarantee). One unconstrained roll,
-        // same as every other OT ID source, so these mons can be shiny too (at the new SHINY_ODDS rate).
-        monOTID = (LCRNG_Next() | (LCRNG_Next() << 16));
+        do {
+            monOTID = (LCRNG_Next() | (LCRNG_Next() << 16));
+        } while (Pokemon_IsPersonalityShiny(monOTID, monPersonality));
     } else if (monOTIDSource != OTID_SET) {
         monOTID = 0;
     }
@@ -764,44 +763,7 @@ static inline u32 GetRibbon(u64 mask, enum PokemonDataParam param, enum PokemonD
     return (mask & (bit << (param - ribbonStart))) != 0;
 }
 
-// COLOR MOD (port of PokeHeartGold ENTRY AD item 3): HP IV overrides type1 and Speed IV overrides type2
-// when that IV is a valid type index (below CUSTOM_TYPE_COUNT and not TYPE_MYSTERY). There is one place
-// every type is read from (the MON_DATA_TYPE_1 / MON_DATA_TYPE_2 case below), which every other reader
-// (battle, summary screen, TM/HM compat) goes through, so the override lives here once and can't be
-// missed or reset on a switch-in; nothing stored in a save changes.
-#define CUSTOM_TYPE_COUNT 18
-static u32 ApplyCustomType(u32 speciesType, u32 iv)
-{
-    if (iv < CUSTOM_TYPE_COUNT && iv != TYPE_MYSTERY) {
-        return iv;
-    }
-    return speciesType;
-}
-
-// COLOR MOD (port of PokeHeartGold ENTRY AC): a mon's ability can be replaced by another species'
-// ability ("donor"), decided only by its Def and Sp.Def IVs, so it is fixed and repeatable per
-// individual (see PokeHeartGold's Changelog ENTRY AC for the full derivation of this seed -> donor
-// mapping against the FireRed romhack it was ported from). Unlike HG, no separate generated lookup
-// table is needed here: SpeciesData_GetSpeciesValue is already a per-species data accessor called
-// unconditionally elsewhere in this same getter (see the type case below), so it's safe to call again
-// here on every ability read.
-// HG SYNC (port of PokeHeartGold ENTRY CE item 1): the seed -> donor mapping is now a direct, wrapping species index:
-// seed 0 -> no donor (keep the real ability); 1..493 -> donor species = seed; 494..986 -> seed - 493 (a second pass
-// through 1..493); 987..1023 -> no donor. The seed itself is unchanged: (defIV << 5) | spDefIV.
-static u32 GetAbilityDonorSpecies(u32 seed)
-{
-    if (seed == 0 || seed > NATIONAL_DEX_COUNT * 2) {
-        return SPECIES_NONE;
-    }
-    if (seed <= NATIONAL_DEX_COUNT) {
-        return seed;
-    }
-    return seed - NATIONAL_DEX_COUNT;
-}
-
-// HG SYNC (ENTRY CE): which of the mon's OWN ability slots it uses (0 = ability 1, 1 = ability 2) - the same rule
-// BoxPokemon_CalcAbility uses when it creates the mon. Used only by the Multitype type override now (ApplyAbilityDonor
-// picks the donor slot from the personality's low bit alone - see there).
+// Native ability slot, also used by the battle AI's species-ability lookup.
 static u32 GetMonAbilitySlot(u32 species, u32 personality)
 {
     if (species == SPECIES_NONE || species > NATIONAL_DEX_COUNT) {
@@ -811,9 +773,7 @@ static u32 GetMonAbilitySlot(u32 species, u32 personality)
     return (SpeciesData_GetSpeciesValue(species, SPECIES_DATA_ABILITY_2) != ABILITY_NONE && (personality & 1)) ? 1 : 0;
 }
 
-// QOL (2026-10-11): the ability a Pokemon of this species and personality would have WITHOUT the ability-donor override
-// (same slot rule the game uses when it creates the mon). Used by the trainer AI, which on the first turn of a battle
-// is only allowed to know this "original" ability - see TrainerAI_HidePlayerInfo.
+// Species ability for the native personality slot; used by the existing AI.
 u32 Pokemon_GetOriginalAbilityOf(u32 species, u32 personality)
 {
     if (species == SPECIES_NONE || species > NATIONAL_DEX_COUNT) {
@@ -822,33 +782,6 @@ u32 Pokemon_GetOriginalAbilityOf(u32 species, u32 personality)
 
     return SpeciesData_GetSpeciesValue(species, GetMonAbilitySlot(species, personality) == 1 ? SPECIES_DATA_ABILITY_2 : SPECIES_DATA_ABILITY_1);
 }
-
-static u32 ApplyAbilityDonor(u32 storedAbility, u32 species, u32 personality, const PokemonDataBlockB *blockB)
-{
-    if (species == SPECIES_NONE || species > NATIONAL_DEX_COUNT || blockB->isEgg) {
-        return storedAbility;
-    }
-
-    u32 donor = GetAbilityDonorSpecies((blockB->defIV << 5) | blockB->spDefIV);
-    if (donor == SPECIES_NONE) {
-        return storedAbility;
-    }
-
-    // HG SYNC (QOL 2026-10-05): the donor slot follows the personality's low bit ALONE, so a species with only one ability of its
-    // own (Rayquaza, Arceus, ...) can still receive the donor's SECOND ability. GetMonAbilitySlot (the game's own rule: odd AND
-    // the mon's species has a second ability) is kept only for the Multitype type override so a real Arceus keeps overriding Type1.
-    enum SpeciesDataParam slot = (personality & 1) ? SPECIES_DATA_ABILITY_2 : SPECIES_DATA_ABILITY_1;
-
-    u32 ability = SpeciesData_GetSpeciesValue(donor, slot);
-    if (ability == ABILITY_NONE) {
-        ability = SpeciesData_GetSpeciesValue(donor, SPECIES_DATA_ABILITY_1);
-    }
-    if (ability == ABILITY_NONE) {
-        return storedAbility;
-    }
-    return ability;
-}
-
 static u32 BoxPokemon_GetDataInternal(BoxPokemon *boxMon, enum PokemonDataParam param, void *dest)
 {
     u32 result = 0;
@@ -934,9 +867,7 @@ static u32 BoxPokemon_GetDataInternal(BoxPokemon *boxMon, enum PokemonDataParam 
         break;
 
     case MON_DATA_ABILITY:
-        // COLOR MOD (port of PokeHeartGold ENTRY AC): ability donor override, see ApplyAbilityDonor
-        // above. Done on read, so nothing stored in a save changes and existing mons are covered too.
-        result = ApplyAbilityDonor(monDataBlockA->ability, monDataBlockA->species, boxMon->personality, monDataBlockB);
+        result = monDataBlockA->ability;
         break;
 
     case MON_DATA_MARKINGS:
@@ -1307,25 +1238,13 @@ static u32 BoxPokemon_GetDataInternal(BoxPokemon *boxMon, enum PokemonDataParam 
         break;
 
     case MON_DATA_TYPE_1:
-    case MON_DATA_TYPE_2: {
-        // HG SYNC (port of PokeHeartGold ENTRY CE item 2): Multitype's plate-based type now works on ANY species that has
-        // Multitype through the ability donor, not just a real Arceus (the old test read the stored, un-donated ability).
-        // Multitype in the mon's ability slot 1 overrides Type1, in slot 2 Type2 (a real Arceus is always slot 1).
-        u32 effectiveAbility = ApplyAbilityDonor(monDataBlockA->ability, monDataBlockA->species, boxMon->personality, monDataBlockB);
-        u32 abilitySlot = GetMonAbilitySlot(monDataBlockA->species, boxMon->personality);
-
-        if (effectiveAbility == ABILITY_MULTITYPE && ((param == MON_DATA_TYPE_1 && abilitySlot == 0) || (param == MON_DATA_TYPE_2 && abilitySlot == 1))) {
+    case MON_DATA_TYPE_2:
+        if (monDataBlockA->species == SPECIES_ARCEUS && monDataBlockA->ability == ABILITY_MULTITYPE) {
             result = Pokemon_GetArceusTypeOf(Item_LoadParam(monDataBlockA->heldItem, ITEM_PARAM_HOLD_EFFECT, HEAP_ID_SYSTEM));
         } else {
             result = SpeciesData_GetFormValue(monDataBlockA->species, monDataBlockB->form, SPECIES_DATA_TYPE_1 + (param - MON_DATA_TYPE_1));
         }
-
-        // COLOR MOD (port of PokeHeartGold ENTRY AD item 3): custom type override, see ApplyCustomType above.
-        if (!monDataBlockB->isEgg) {
-            result = ApplyCustomType(result, param == MON_DATA_TYPE_1 ? monDataBlockB->hpIV : monDataBlockB->speedIV);
-        }
         break;
-    }
 
     case MON_DATA_SPECIES_NAME:
         MessageLoader_GetSpeciesName(monDataBlockA->species, HEAP_ID_SYSTEM, dest);
@@ -2884,8 +2803,7 @@ static u8 BoxPokemon_IsShiny(BoxPokemon *boxMon)
 
 static inline BOOL Pokemon_InlineIsPersonalityShiny(u32 monOTID, u32 monPersonality)
 {
-    // COLOR MOD (port of PokeHeartGold ENTRY AD item 1): was a hard-coded "< 8" (vanilla 1/8192 odds).
-    // SHINY_ODDS = 32768 = exactly half of 65536, i.e. 50% of Pokemon are shiny.
+    // Keep one native shiny identity across battle, summary, PC and Following.
     return (((monOTID & 0xFFFF0000) >> 16) ^ (monOTID & 0xFFFF) ^ ((monPersonality & 0xFFFF0000) >> 16) ^ (monPersonality & 0xFFFF)) < SHINY_ODDS;
 }
 
@@ -3961,91 +3879,11 @@ u16 Pokemon_GetBaseSpeciesForBattle(const u16 species)
     return Pokemon_GetBaseSpeciesFromPersonalData(species);
 }
 
-// ENTRY P108: PER-TYPE LEVEL-UP MOVES (user's "moves per type.txt", 2026-10-16). On top of its species learnset, a Pokemon
-// learns these moves at these levels for each of its two types (MON_DATA_TYPE_1/2 - the effective types, custom type and
-// Multitype included). Checked at every level-up (Pokemon_LevelUpMove: battle EXP, Rare Candy, evolution, Day Care) after
-// the species moves, and merged into the default moveset (BoxPokemon_SetDefaultMoves: wild Pokemon, trainer Pokemon
-// without a custom moveset), in level order, species move first at the same level. Ditto gets none (Transform only).
-typedef struct TypeLevelUpMove {
-    u8 level;
-    u16 move;
-} TypeLevelUpMove;
-
-static const TypeLevelUpMove sTypeMovesNormal[] = { { 6, MOVE_QUICK_ATTACK }, { 12, MOVE_PAY_DAY }, { 18, MOVE_UPROAR }, { 20, MOVE_MEGA_PUNCH }, { 25, MOVE_FOCUS_ENERGY }, { 30, MOVE_SWIFT }, { 33, MOVE_PAY_DAY }, { 35, MOVE_MEGA_KICK }, { 40, MOVE_YAWN }, { 49, MOVE_BODY_SLAM }, { 50, MOVE_SKULL_BASH }, { 60, MOVE_THRASH }, { 0, MOVE_NONE } };
-static const TypeLevelUpMove sTypeMovesFighting[] = { { 6, MOVE_VACUUM_WAVE }, { 12, MOVE_SEISMIC_TOSS }, { 20, MOVE_MACH_PUNCH }, { 28, MOVE_SUBMISSION }, { 35, MOVE_SKY_UPPERCUT }, { 40, MOVE_REVENGE }, { 45, MOVE_CLOSE_COMBAT }, { 55, MOVE_FOCUS_BLAST }, { 0, MOVE_NONE } };
-static const TypeLevelUpMove sTypeMovesFlying[] = { { 4, MOVE_PECK }, { 10, MOVE_GUST }, { 14, MOVE_BOUNCE }, { 22, MOVE_AERIAL_ACE }, { 28, MOVE_AIR_CUTTER }, { 35, MOVE_TAILWIND }, { 44, MOVE_AIR_SLASH }, { 54, MOVE_SKY_ATTACK }, { 0, MOVE_NONE } };
-static const TypeLevelUpMove sTypeMovesPoison[] = { { 2, MOVE_POISON_STING }, { 9, MOVE_ACID }, { 15, MOVE_SLUDGE }, { 20, MOVE_POISON_FANG }, { 25, MOVE_TOXIC_SPIKES }, { 28, MOVE_TOXIC }, { 36, MOVE_CROSS_POISON }, { 50, MOVE_GUNK_SHOT }, { 0, MOVE_NONE } };
-static const TypeLevelUpMove sTypeMovesGround[] = { { 6, MOVE_MUD_SLAP }, { 12, MOVE_MUD_SHOT }, { 20, MOVE_MAGNITUDE }, { 22, MOVE_SPIKES }, { 25, MOVE_DIG }, { 35, MOVE_MUD_BOMB }, { 44, MOVE_EARTH_POWER }, { 45, MOVE_EARTHQUAKE }, { 0, MOVE_NONE } };
-static const TypeLevelUpMove sTypeMovesRock[] = { { 10, MOVE_ROCK_THROW }, { 15, MOVE_ROCK_TOMB }, { 20, MOVE_STEALTH_ROCK }, { 22, MOVE_POWER_GEM }, { 30, MOVE_ROCK_BLAST }, { 35, MOVE_ROCK_SLIDE }, { 49, MOVE_STONE_EDGE }, { 60, MOVE_ROCK_WRECKER }, { 0, MOVE_NONE } };
-static const TypeLevelUpMove sTypeMovesBug[] = { { 6, MOVE_LEECH_LIFE }, { 10, MOVE_FURY_CUTTER }, { 15, MOVE_BUG_BITE }, { 25, MOVE_PIN_MISSILE }, { 30, MOVE_SIGNAL_BEAM }, { 42, MOVE_X_SCISSOR }, { 50, MOVE_BUG_BUZZ }, { 0, MOVE_NONE } };
-static const TypeLevelUpMove sTypeMovesGhost[] = { { 6, MOVE_ASTONISH }, { 10, MOVE_SHADOW_SNEAK }, { 15, MOVE_NIGHT_SHADE }, { 18, MOVE_CURSE }, { 20, MOVE_SHADOW_PUNCH }, { 28, MOVE_SHADOW_BALL }, { 40, MOVE_DESTINY_BOND }, { 45, MOVE_OMINOUS_WIND }, { 0, MOVE_NONE } };
-static const TypeLevelUpMove sTypeMovesSteel[] = { { 6, MOVE_METAL_BURST }, { 14, MOVE_BULLET_PUNCH }, { 24, MOVE_MAGNET_BOMB }, { 30, MOVE_IRON_DEFENSE }, { 35, MOVE_FLASH_CANNON }, { 45, MOVE_IRON_HEAD }, { 60, MOVE_GYRO_BALL }, { 0, MOVE_NONE } };
-static const TypeLevelUpMove sTypeMovesFire[] = { { 6, MOVE_FIRE_SPIN }, { 9, MOVE_EMBER }, { 15, MOVE_FLAME_WHEEL }, { 30, MOVE_HEAT_WAVE }, { 40, MOVE_FLARE_BLITZ }, { 45, MOVE_FLAMETHROWER }, { 50, MOVE_FIRE_BLAST }, { 0, MOVE_NONE } };
-static const TypeLevelUpMove sTypeMovesWater[] = { { 2, MOVE_BUBBLE }, { 6, MOVE_BUBBLE }, { 10, MOVE_AQUA_JET }, { 19, MOVE_BUBBLE_BEAM }, { 25, MOVE_RAIN_DANCE }, { 30, MOVE_AQUA_RING }, { 35, MOVE_MUDDY_WATER }, { 48, MOVE_HYDRO_PUMP }, { 0, MOVE_NONE } };
-static const TypeLevelUpMove sTypeMovesGrass[] = { { 8, MOVE_ABSORB }, { 12, MOVE_VINE_WHIP }, { 16, MOVE_LEECH_SEED }, { 20, MOVE_SYNTHESIS }, { 24, MOVE_MAGICAL_LEAF }, { 30, MOVE_MEGA_DRAIN }, { 38, MOVE_RAZOR_LEAF }, { 45, MOVE_GIGA_DRAIN }, { 50, MOVE_SOLAR_BEAM }, { 55, MOVE_LEAF_STORM }, { 0, MOVE_NONE } };
-static const TypeLevelUpMove sTypeMovesElectric[] = { { 6, MOVE_THUNDER_SHOCK }, { 15, MOVE_CHARGE_BEAM }, { 20, MOVE_SPARK }, { 30, MOVE_DISCHARGE }, { 40, MOVE_THUNDERBOLT }, { 50, MOVE_ZAP_CANNON }, { 55, MOVE_THUNDER }, { 0, MOVE_NONE } };
-static const TypeLevelUpMove sTypeMovesPsychic[] = { { 8, MOVE_TELEPORT }, { 14, MOVE_CONFUSION }, { 20, MOVE_PSYBEAM }, { 30, MOVE_SKILL_SWAP }, { 34, MOVE_PSYCHO_CUT }, { 35, MOVE_CALM_MIND }, { 44, MOVE_MIST_BALL }, { 50, MOVE_PSYCHIC }, { 53, MOVE_FUTURE_SIGHT }, { 0, MOVE_NONE } };
-static const TypeLevelUpMove sTypeMovesIce[] = { { 8, MOVE_POWDER_SNOW }, { 14, MOVE_ICE_SHARD }, { 25, MOVE_ICY_WIND }, { 40, MOVE_AURORA_BEAM }, { 45, MOVE_ICE_BEAM }, { 50, MOVE_ICICLE_SPEAR }, { 60, MOVE_BLIZZARD }, { 90, MOVE_SHEER_COLD }, { 0, MOVE_NONE } };
-static const TypeLevelUpMove sTypeMovesDragon[] = { { 14, MOVE_TWISTER }, { 20, MOVE_DRAGON_RAGE }, { 28, MOVE_DRAGON_DANCE }, { 32, MOVE_DRAGON_BREATH }, { 44, MOVE_DRAGON_CLAW }, { 50, MOVE_DRAGON_PULSE }, { 65, MOVE_OUTRAGE }, { 0, MOVE_NONE } };
-static const TypeLevelUpMove sTypeMovesDark[] = { { 8, MOVE_PURSUIT }, { 12, MOVE_THIEF }, { 20, MOVE_PAYBACK }, { 25, MOVE_NASTY_PLOT }, { 30, MOVE_FAINT_ATTACK }, { 40, MOVE_NIGHT_SLASH }, { 50, MOVE_DARK_PULSE }, { 60, MOVE_SUCKER_PUNCH }, { 0, MOVE_NONE } };
-
-static const TypeLevelUpMove *GetTypeLevelUpMoves(u32 type)
-{
-    switch (type) {
-    case TYPE_NORMAL:
-        return sTypeMovesNormal;
-    case TYPE_FIGHTING:
-        return sTypeMovesFighting;
-    case TYPE_FLYING:
-        return sTypeMovesFlying;
-    case TYPE_POISON:
-        return sTypeMovesPoison;
-    case TYPE_GROUND:
-        return sTypeMovesGround;
-    case TYPE_ROCK:
-        return sTypeMovesRock;
-    case TYPE_BUG:
-        return sTypeMovesBug;
-    case TYPE_GHOST:
-        return sTypeMovesGhost;
-    case TYPE_STEEL:
-        return sTypeMovesSteel;
-    case TYPE_FIRE:
-        return sTypeMovesFire;
-    case TYPE_WATER:
-        return sTypeMovesWater;
-    case TYPE_GRASS:
-        return sTypeMovesGrass;
-    case TYPE_ELECTRIC:
-        return sTypeMovesElectric;
-    case TYPE_PSYCHIC:
-        return sTypeMovesPsychic;
-    case TYPE_ICE:
-        return sTypeMovesIce;
-    case TYPE_DRAGON:
-        return sTypeMovesDragon;
-    case TYPE_DARK:
-        return sTypeMovesDark;
-    }
-
-    return NULL;
-}
-
-// ENTRY P109: TRUE if the move is in that type's per-type level-up list (the trainer AI tells from it which type taught it).
+// Compatibility for existing AI callers: no bonus per-type learnsets exist.
 BOOL Pokemon_IsTypeLevelUpMove(u32 type, u16 move)
 {
-    const TypeLevelUpMove *moves = GetTypeLevelUpMoves(type);
-
-    if (moves == NULL) {
-        return FALSE;
-    }
-
-    for (int i = 0; moves[i].move != MOVE_NONE; i++) {
-        if (moves[i].move == move) {
-            return TRUE;
-        }
-    }
-
+    (void)type;
+    (void)move;
     return FALSE;
 }
 
@@ -4068,28 +3906,7 @@ BOOL Pokemon_LevelUpLearnsetHasMove(int monSpecies, int monForm, u16 move)
     return result;
 }
 
-// The (up to two) per-type move lists of this Pokemon: its second type only if it differs from the first. Ditto has none.
-static int BoxPokemon_GetTypeLevelUpMoveLists(BoxPokemon *boxMon, const TypeLevelUpMove **lists)
-{
-    int count = 0;
 
-    if (BoxPokemon_GetValue(boxMon, MON_DATA_SPECIES, NULL) == SPECIES_DITTO) {
-        return 0;
-    }
-
-    u32 type1 = BoxPokemon_GetValue(boxMon, MON_DATA_TYPE_1, NULL);
-    u32 type2 = BoxPokemon_GetValue(boxMon, MON_DATA_TYPE_2, NULL);
-
-    if ((lists[count] = GetTypeLevelUpMoves(type1)) != NULL) {
-        count++;
-    }
-
-    if (type2 != type1 && (lists[count] = GetTypeLevelUpMoves(type2)) != NULL) {
-        count++;
-    }
-
-    return count;
-}
 
 static void BoxPokemon_SetDefaultMoves(BoxPokemon *boxMon)
 {
@@ -4103,27 +3920,14 @@ static void BoxPokemon_SetDefaultMoves(BoxPokemon *boxMon)
 
     Pokemon_LoadLevelUpMovesOf(monSpecies, monForm, monLevelUpMoves);
 
-    // ENTRY P108: species moves and per-type moves together, level by level (species first at the same level); with all
-    // four slots used the oldest move is pushed out, as before.
-    const TypeLevelUpMove *typeLists[2];
-    int numTypeLists = BoxPokemon_GetTypeLevelUpMoveLists(boxMon, typeLists);
-
-    for (int level = 0; level <= monLevel; level++) {
-        for (int i = 0; monLevelUpMoves[i] != LEARNSET_SENTINEL_ENTRY; i++) {
-            if ((monLevelUpMoves[i] & 0xFE00) == level << 9) {
-                u16 monLevelUpMoveID = monLevelUpMoves[i] & 0x1FF;
-                if (BoxPokemon_AddMove(boxMon, monLevelUpMoveID) == LEARNSET_ALL_SLOTS_FILLED) {
-                    BoxPokemon_ReplaceMove(boxMon, monLevelUpMoveID);
-                }
+    for (int i = 0; monLevelUpMoves[i] != LEARNSET_SENTINEL_ENTRY; i++) {
+        if ((monLevelUpMoves[i] & 0xFE00) <= monLevel << 9) {
+            u16 monLevelUpMoveID = monLevelUpMoves[i] & 0x1FF;
+            if (BoxPokemon_AddMove(boxMon, monLevelUpMoveID) == LEARNSET_ALL_SLOTS_FILLED) {
+                BoxPokemon_ReplaceMove(boxMon, monLevelUpMoveID);
             }
-        }
-
-        for (int t = 0; t < numTypeLists; t++) {
-            for (int i = 0; typeLists[t][i].move != MOVE_NONE; i++) {
-                if (typeLists[t][i].level == level && BoxPokemon_AddMove(boxMon, typeLists[t][i].move) == LEARNSET_ALL_SLOTS_FILLED) {
-                    BoxPokemon_ReplaceMove(boxMon, typeLists[t][i].move);
-                }
-            }
+        } else {
+            break;
         }
     }
 
@@ -4220,58 +4024,28 @@ static void BoxPokemon_SetMoveSlot(BoxPokemon *boxMon, u16 moveID, u8 moveSlot)
     BoxPokemon_SetValue(boxMon, MON_DATA_MOVE1_PP + moveSlot, &moveMaxPP);
 }
 
-// ENTRY P108: indices from here on walk the per-type moves (first type's list, then the second's) after the species moves.
-#define TYPE_LEVEL_UP_MOVE_INDEX_BASE 0x400
 
-static u16 Pokemon_TypeLevelUpMove(Pokemon *mon, int *index, u16 *moveID, u8 monLevel)
-{
-    const TypeLevelUpMove *typeLists[2];
-    int numTypeLists = BoxPokemon_GetTypeLevelUpMoveLists(&mon->box, typeLists);
-    int pos = 0;
-
-    for (int t = 0; t < numTypeLists; t++) {
-        for (int i = 0; typeLists[t][i].move != MOVE_NONE; i++, pos++) {
-            if (pos < *index - TYPE_LEVEL_UP_MOVE_INDEX_BASE || typeLists[t][i].level != monLevel) {
-                continue;
-            }
-
-            *moveID = typeLists[t][i].move;
-            *index = TYPE_LEVEL_UP_MOVE_INDEX_BASE + pos + 1;
-            return Pokemon_AddMove(mon, *moveID);
-        }
-    }
-
-    *index = TYPE_LEVEL_UP_MOVE_INDEX_BASE + pos;
-    return MOVE_NONE;
-}
 
 u16 Pokemon_LevelUpMove(Pokemon *mon, int *index, u16 *moveID)
 {
     u16 result = MOVE_NONE;
-    u8 monLevel = Pokemon_GetValue(mon, MON_DATA_LEVEL, NULL);
-
-    if (*index >= TYPE_LEVEL_UP_MOVE_INDEX_BASE) {
-        return Pokemon_TypeLevelUpMove(mon, index, moveID, monLevel);
-    }
-
     u16 *monLevelUpMoves = Heap_Alloc(HEAP_ID_SYSTEM, sizeof(SpeciesLearnset));
     u16 monSpecies = Pokemon_GetValue(mon, MON_DATA_SPECIES, NULL);
     int monForm = Pokemon_GetValue(mon, MON_DATA_FORM, NULL);
+    u8 monLevel = Pokemon_GetValue(mon, MON_DATA_LEVEL, NULL);
 
     Pokemon_LoadLevelUpMovesOf(monSpecies, monForm, monLevelUpMoves);
 
     if (monLevelUpMoves[*index] == LEARNSET_SENTINEL_ENTRY) {
         Heap_Free(monLevelUpMoves);
-        *index = TYPE_LEVEL_UP_MOVE_INDEX_BASE; // ENTRY P108: species moves done, now the type moves
-        return Pokemon_TypeLevelUpMove(mon, index, moveID, monLevel);
+        return MOVE_NONE;
     }
 
     while ((monLevelUpMoves[*index] & 0xFE00) != monLevel << 9) {
         (*index)++;
         if (monLevelUpMoves[*index] == LEARNSET_SENTINEL_ENTRY) {
             Heap_Free(monLevelUpMoves);
-            *index = TYPE_LEVEL_UP_MOVE_INDEX_BASE; // ENTRY P108
-            return Pokemon_TypeLevelUpMove(mon, index, moveID, monLevel);
+            return MOVE_NONE;
         }
     }
 
@@ -5029,24 +4803,6 @@ static BOOL CanBoxPokemonLearnTM(BoxPokemon *boxMon, u8 tmID)
 {
     u16 monSpeciesEgg = BoxPokemon_GetValue(boxMon, MON_DATA_SPECIES_OR_EGG, NULL);
     int monForm = BoxPokemon_GetValue(boxMon, MON_DATA_FORM, NULL);
-
-    // ENTRY P108: Ditto learns no TM or HM at all - not even through the type rule below.
-    if (monSpeciesEgg == SPECIES_DITTO) {
-        return FALSE;
-    }
-
-    // COLOR MOD (port of PokeHeartGold ENTRY AD item 4): a mon can also learn a TM/HM whose move type
-    // matches either of its types (MON_DATA_TYPE_1/2, which already include the custom type override -
-    // see ApplyCustomType above), even if its species normally cannot learn that TM/HM.
-    if (monSpeciesEgg != SPECIES_EGG && tmID < NUM_TMS + NUM_HMS) {
-        u16 tmhmMove = Item_MoveForTMHM(ITEM_TM01 + tmID);
-        if (tmhmMove != MOVE_NONE) {
-            u32 moveType = MoveTable_LoadParam(tmhmMove, MOVEATTRIBUTE_TYPE);
-            if (moveType == BoxPokemon_GetValue(boxMon, MON_DATA_TYPE_1, NULL) || moveType == BoxPokemon_GetValue(boxMon, MON_DATA_TYPE_2, NULL)) {
-                return TRUE;
-            }
-        }
-    }
 
     return CanPokemonFormLearnTM(monSpeciesEgg, monForm, tmID);
 }

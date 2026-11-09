@@ -9,9 +9,9 @@
     ],
     "class": "CLASS_PHYSICAL",
     "type": "TYPE_FIGHTING",
-    "power": 125,
-    "accuracy": 75,
-    "pp": 10,
+    "power": 100,
+    "accuracy": 50,
+    "pp": 5,
     "effect": {
         "type": "BATTLE_EFFECT_CONFUSE_HIT",
         "chance": 100

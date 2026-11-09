@@ -80,7 +80,7 @@ def main():
             ("invalid cap allowance", 28, b"\x06", 1),
             ("zero trainer bonus", 29, b"\x00", 1),
             ("invalid trainer bonus", 29, b"\x04", 1),
-            ("invalid shiny rate", 30, b"\x04", 1),
+            ("invalid shiny rate", 30, b"\x05", 1),
             ("invalid cap mode", 31, b"\x02", 1),
         ]
         for name, offset, replacement, expected in mutations:
@@ -122,6 +122,15 @@ def main():
                         str(root / "src/run_extras.c"), str(root / "tools/tests/run_extras_tests.c"),
                         "-o", str(extras_executable), "-lm"], check=True, cwd=root)
         subprocess.run([str(extras_executable)], check=True, cwd=root)
+
+    # Check the game's actual shiny predicate and renderer hooks as well as the
+    # portable generator: otherwise an incompatible native threshold can pass.
+    subprocess.run([sys.executable, str(root / "tools/tests/check_shiny_native.py"),
+                    "--cc", compiler], check=True, cwd=root)
+    subprocess.run([sys.executable, str(root / "tools/tests/check_native_traits.py"),
+                    "--cc", compiler], check=True, cwd=root)
+    subprocess.run([sys.executable, str(root / "tools/tests/check_run_restart.py"),
+                    "--cc", compiler], check=True, cwd=root)
 
 
 if __name__ == "__main__":

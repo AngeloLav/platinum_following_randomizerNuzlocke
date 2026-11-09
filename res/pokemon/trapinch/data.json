@@ -1,7 +1,7 @@
 {
     "base_stats": {
         "hp": 45,
-        "attack": 110,
+        "attack": 100,
         "defense": 45,
         "speed": 10,
         "special_attack": 45,
@@ -9,7 +9,7 @@
     },
     "types": [ "TYPE_GROUND", "TYPE_GROUND" ],
     "catch_rate": 255,
-    "base_exp_reward": 83,
+    "base_exp_reward": 73,
     "ev_yields": {
         "hp": 0,
         "attack": 1,

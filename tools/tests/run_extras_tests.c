@@ -11,7 +11,7 @@ static u16 ShinyXor(u32 p, u32 ot) { return (p >> 16) ^ p ^ (ot >> 16) ^ ot; }
 static void TestShiny(void)
 {
     u32 ot = 0xAABBCCDDu;
-    for (u8 rate = 0; rate < 4; rate++) {
+    for (u8 rate = 0; rate < 5; rate++) {
         for (u8 constraint = 0; constraint <= 2; constraint += 2) {
             u32 shinies = 0;
             for (u32 x = 0; x < 65536; x++) {
@@ -29,15 +29,15 @@ static void TestShiny(void)
     }
     for (u32 tid = 0; tid < 16; tid++) {
         u32 id = tid * 0x11111111u;
-        for (u32 lowByte = 0; lowByte < 256; lowByte++) for (u16 x = 8; x < 64; x++) {
+        for (u32 lowByte = 0; lowByte < 256; lowByte++) for (u16 x = 8; x < 128; x++) {
             u16 low = lowByte | ((lowByte ^ 0xA5) << 8);
             u32 p = low | ((u32)(low ^ id ^ (id >> 16) ^ x) << 16);
-            u32 result = RunExtras_ShinyPID(p, id, 3, 2);
+            u32 result = RunExtras_ShinyPID(p, id, 4, 2);
             assert(ShinyXor(result, id) < 8 && (result & 255) == lowByte && result % 25 == p % 25);
             assert(((result >> 16) % 10 < 5) == ((p >> 16) % 10 < 5));
         }
     }
-    puts("PASS: all four shiny rates over every XOR value; forced shinies, gender byte, nature, ability bit and Wurmple branch");
+    puts("PASS: all five shiny rates over every XOR value; forced shinies, gender byte, nature, ability bit and Wurmple branch");
 }
 
 static void TestItems(void)
@@ -88,7 +88,7 @@ static void TestCompatibility(void)
         assert(RunRandomizer_CandidateWeight(&d, a, b) == expected);
     }
     RunConfig_Init(&c, RUN_PRESET_HARDCORE_RANDOMIZER, 123);
-    for (u8 rate = 0; rate < 4; rate++) {
+    for (u8 rate = 0; rate < 5; rate++) {
         c.shinyRate = rate;
         c.flags |= RUN_RANDOMIZE_FIELD_ITEMS;
         assert(RunConfig_Encode(&c, bytes, 36));

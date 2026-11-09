@@ -8,7 +8,7 @@
     ],
     "class": "CLASS_PHYSICAL",
     "type": "TYPE_STEEL",
-    "power": 60,
+    "power": 50,
     "accuracy": 95,
     "pp": 35,
     "effect": {

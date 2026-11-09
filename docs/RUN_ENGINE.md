@@ -1,17 +1,339 @@
 # Integrated run engine
 
+## Current source restoration and automatic restart — 2026-11-08
+
+The user explicitly requested the original gameplay dataset, accepted that
+development runs will be incompatible, and changed the Game Over policy:
+erase the ended adventure and open fresh run configuration automatically.
+They also requested removal of the HELP reminder from configuration footers.
+This section supersedes the earlier title/retained-history policy below.
+
+Native-data audit and restoration:
+- All4411 JSON definitions under res/pokemon, res/moves, res/items and
+  res/trainers now match Following-only commit
+  8f7ccec26e697e16df4fe4155915fbf28a038310. This includes508 species/forms.
+- The initial audit found360 changed level-up lists plus a TM-only learnset
+  change,108 altered move definitions, base-stat/EXP/held-item changes,
+ 14 changed Ball prices and two changed Cynthia item sets. These are restored.
+  Read-only audit references and pre-restoration data copies are in artifacts/.
+- Native type/ability getters, trainer personalities/ivScale, default/level-up
+  learning,20-entry learnset capacity, trainer AI, immunity/critical/speed-item
+  logic, weather modifiers, catch bonuses, Pickup chance, breeding compatibility,
+  species/IV inheritance, egg production and hatch speed are restored.
+- Cynthia gives Togepi again; the tutorial gives5 Poke Balls for either gender.
+  Native HM forgetting restrictions, Pokedex first-registration behavior,
+  Premier Ball shop bonus and Save confirmation prompts are restored.
+- Following movement/palettes, field-heap and battle-introduction fixes remain.
+  Explicit Randomizer/Nuzlocke controls, friendly-partner/tutorial safeguards,
+  registry/Poketch, field-HM assistance and requested postgame event access remain.
+  Compatibility symbols for removed Arceus/type-inference callbacks do nothing;
+  they retain ABI without enabling the removed mechanics.
+
+The original-stat dataset changes RUN_SPECIES_DATA_VERSION automatically
+from0x29370BBA to0x59FB5FE7. Old development runs fail validation as
+unsupported rather than being migrated or silently rerolled. Schema/rules
+versions and binary save layouts are unchanged. No actual .sav file was opened
+or modified by the agent. New development runs are required for this dataset.
+
+Automatic Game Over implementation:
+1. Existing loss rules finalize the battle DTO and records. First-battle,
+   tutorial, link/facility exemptions and Classic ordinary blackout remain.
+2. RunGame_EndRunTask closes the map and marks field shutdown. It no longer
+   writes a final checkpoint or opens a child menu while field objects exist.
+3. ReturnToTitleScreen frees the whole FieldSystem before enqueuing the
+   standalone restart menu. This menu reads ApplicationArgs->saveData;
+   the previous standalone path incorrectly interpreted ApplicationArgs as
+   a direct SaveData pointer.
+4. Both displays fade in; a native notice is visible for at least two frames
+   before erasure. Success needs no button press. Script fallbacks release
+   their tasks instead of waiting on a Game Over message.
+5. RunGame_Restart checks the actual global SaveData pointer, configured/ended
+   status, overwrite protection and matching run nonce before calling the
+   native eraser. Erasure clears all128 flash sectors (including both run
+   snapshots), RAM save data and session state. This explicitly clears the
+   ended adventure's party, PC, Bag and history under the user's new policy.
+6. After normal options-overlay teardown, native GameStartRowanIntro clears
+   new-game RAM and enqueues run configuration before Rowan. Erase/identity
+   failure cannot open configuration as success; it offers retry/title.
+   Hardware flash faults retain the native save driver's fatal-error handling.
+
+Controls/ReviewControls/ConfigNav no longer advertise X:HELP. The lower-screen
+descriptions and modal X help still work; A/B edit/back controls remain.
+
+Host tests passed for the portable engine, actual native getter/palette code,
+all4411 data definitions and native core-function contracts. Restart tests
+exercise the actual restart helper and native eraser in host RAM across64
+identity/status/failure combinations,128 sectors and both snapshot ranges.
+They also check teardown ordering and standalone arguments. These tests do
+not execute ARM overlays, real flash, or visible emulator transitions.
+
+The first correction build (session69945) was interrupted intentionally before
+compilation to incorporate the user's additional moves/gameplay requests.
+A Ninja dry run with -n -d explain is recorded in
+artifacts/native-gameplay-build-plan.log; it selected747 tasks (685 compile,
+60 generate,2 link), zero SDK targets and zero missing-command-log reasons.
+The actual incremental make rom completed successfully in session76576:
+exit0,746/746 tasks. No clean,
+distclean, build-directory deletion, Git history change or remote push occurred.
+The restoration ROM is build/pokeplatinum.us.nds,134217728 bytes, timestamp
+2026-11-09 20:33:08. Final
+`python tools/tests/check_run_rom.py artifacts/prompt5-before-map.json` passed:
+header CRC16=AE71, ARM9/FAT bounds, all122 overlay tables and parent/BSS
+ranges. Main static end02113F60, BSS end021F30C0, arena02293600; static
+budget70128 bytes before metadata/OS costs. Arena change from the original
+Prompt4 baseline is+4736 bytes. SHA256:
+F120F864D1B1C9089100A1AD43C5EB1B2D10389FD0488B11366EDEBD046381A1.
+The build's R4/YSMenu guard was filled from the new ARM9 bytes as intended;
+its diagnostic is not a compiler error. No running build remains. These
+binary/layout checks do not establish runtime heap/VRAM or emulator behavior.
+
+Remaining manual acceptance tests: cold-boot a fresh run; confirm native types,
+abilities/stats/moves,5 tutorial Balls, Togepi gift and native catch behavior;
+test X help/clean footers; exercise individual death and full party wipe, then
+verify automatic empty-save configuration without title input. Repeat with
+Obedience-only loss, first rival defeat and Classic blackout, plus map/battle/
+overlay/Following transitions and save/reload. The agent has not run an emulator.
+
+## Earlier targeted native correction — superseded by the restoration above
+
+The user's next playtest found randomized types/abilities and50 Poke Balls
+after the catching tutorial. The working tree still contained IV-based
+overrides from the earlier mod: HP/Speed IVs replaced type slots, and
+Def/SpDef IVs selected another species' ability. These reads ignored all run
+settings. They were missed by the preceding palette correction.
+
+The correction restores the exact Following-only native cases for
+MON_DATA_ABILITY and MON_DATA_TYPE_1/2 in src/pokemon.c. Ability reads return
+the stored ability; types come from species/form data, with the original
+Arceus+Multitype plate exception affecting both slots. The donor/custom-type
+helpers are removed; the existing AI's native ability-slot lookup remains.
+Native ability calculation is unchanged. No Pokemon PID/IV, run schema,
+configuration, ownership, history or existing save file is rewritten.
+
+Directly coupled changes are removed too: CanBoxPokemonLearnTM again consults
+the species/form TM table, and TrainerData_BuildParty matches the native
+Following-only function except for the existing RunGame_AdjustTrainerParty
+hook. This removes Cynthia's donor/type IV builds, random trainer IVs and
+the injected Mersenne seed; native ivScale and deterministic personalities
+return. The run hook still handles chosen species, levels and friendly NPCs.
+No Following, field-heap, battle-introduction or shiny/help fix is reverted.
+
+Route202_GivePokeballs now supplies5 via the original shared Dawn/Lucas path.
+Only the quantity constant and its misleading mod comment changed; native
+event flags, tutorial and run-activation handling remain. A save that already
+received50 keeps its Bag contents; this patch does not silently remove items.
+
+tools/tests/check_native_traits.py compares the actual getter cases, ability
+calculation, TM wrapper and trainer builder against commit
+8f7ccec26e697e16df4fe4155915fbf28a038310. All508 species/form type and ability
+definitions match that base. A host C harness executes the actual getter
+cases over every HP/Speed and Def/SpDef IV pair, both native ability slots,
+egg flags and both Arceus type slots. The tutorial gift is checked against
+the same base. This check is included in run_engine_tests.py.
+
+This was the earlier limited checkpoint. The subsequent user-requested audit
+removed the per-type bonus learnsets and custom AI and restored original
+gameplay data; see the current section above.
+
+The 19:55 ROM is preserved at
+artifacts/pokeplatinum.shiny-help-before-traits.nds (SHA256
+626000742B5EBE5A8E08238328CB7ABAC4286DAB5A7A86ABD98E33DD7C2E92BB).
+The next correction build/result will be recorded here after verification.
+The shiny/help build described below predates these additional corrections.
+
+## Shiny colors and X-help regression fixes — 2026-11-08
+
+User playtesting of the 17:50 Prompt5 ROM reported PID-dependent colors,
+inconsistent shiny behavior at 1/512, and X help capturing input without a
+visible window. These are runtime reports from the user; the agent has not
+run an emulator.
+
+The native predicate in this working tree used SHINY_ODDS=32768, while the
+run PID promotion algorithm assumes the original XOR<8 identity. A new host
+integration test compiled the actual predicate and promotion functions and
+reproduced 32768/65536 shinies at every rate before the fix. Both actual
+palette hooks also failed byte-preservation tests before the fix.
+
+Corrections:
+- Restore native XOR<8 identity; configurable odds remain generation-time PID
+  promotion, including value4 (1/512 Ultra High). Restore OTID_NOT_SHINY,
+  real-shiny-only summary stars and the three native battle sparkle paths.
+- Retain the public palette-hook symbols as no-op compatibility entry points.
+  Native normal/shiny resource colors pass through unchanged in battle,
+  summary, trade, hatching and Following. Disable the extra Totodile follower
+  brightness adjustment; follower movement, raw HG palettes, white flash,
+  loading paths and existing heap fixes remain.
+- RunMenu_Main now fades both displays in and out. Help is drawn on SUB0;
+  the previous MAIN_ONLY fade left the lower display black after New Game.
+  Existing modal controls remain X open, A next/first, B/X close. Retail
+  Options fades are unchanged.
+
+No persistent field, schema, stored Pokemon PID, history, seed or quota is
+rewritten. Pokemon previously classified shiny only by the erroneous 50%
+criterion now display normally unless their stored PID is truly shiny.
+Earlier special/shiny registry classifications are retained as historical
+records; there is no silent quota/history migration.
+
+The old build session55692 completed successfully (exit0,16831/16831) at
+2026-11-08 17:50:25. Its binary/layout checks passed: 122 overlay records,
+header CRC16=2534, arena02294DA0, static budget64080 bytes before metadata/OS
+costs. SHA256 E409504B8A69B005C885EC460BFC45F42AD842B800999B924A31A6D627F70726.
+An independent diagnostic copy is preserved as
+`artifacts/pokeplatinum.prompt5-before-shiny-fix.nds`.
+
+The correction build completed via incremental `make rom`, session4439:
+exit0,1830/1830. The new ROM timestamp is 2026-11-08 19:55:23; size134217728
+bytes. Final `check_run_rom.py artifacts/prompt5-before-map.json` passed:
+header CRC16=87E4, ARM9/FAT bounds, all122 overlay tables and parent/BSS
+ranges; arena02294AC0, static budget64816 bytes before metadata/OS costs.
+SHA256: 626000742B5EBE5A8E08238328CB7ABAC4286DAB5A7A86ABD98E33DD7C2E92BB.
+These binary/layout checks do not exercise runtime allocations or graphics.
+No clean/distclean or build-directory deletion was performed. The earlier
+broad rebuild was caused by missing command records in .ninja_log; the log
+is now preserved. The build session is finished; no second build was launched.
+
+Host verification passed after the fixes: portable engine C tests, all five
+native shiny rates over every XOR value/four trainer IDs, both palette hooks
+over all 65536 color words/four PIDs, native icon/sparkle wiring, resources,
+font bounds and two-display run-menu fades. These checks do not prove visible
+help or battle graphics on Nintendo DS; the user must retest those behaviors.
+
 ## Current revision and verification
 
-Work is confined to `nuzlocke-base`; no commit, history rewrite, branch switch,
-merge, cherry-pick or push was performed. Following and its isolated field-heap
-and battle-introduction fixes are preserved. No Delta gameplay/balance import.
+Prompt5, Ultra High Shiny Rate and the above corrections are implemented on
+`nuzlocke-base`. The user explicitly authorized switching to this feature
+branch; main, Git history and the remote have not been changed. Existing
+Following/field-heap/battle-introduction fixes are preserved.
 
-Prompt3, Prompt4, the first-Ball advice, first-encounter rule and battle capture
-indicator are implemented in source. Portable C tests and localized resource /
-native-font bounds checks passed on 2026-11-05. The current ARM build has not yet
-completed; the build record below will be updated after incremental `make rom`.
-Do not delete `build/` or clean. No emulator, graphics, real-flash or hardware
-test has been executed. User acceptance testing is still required.
+The previous user-tested Prompt4 ROM remains independently protected at
+`artifacts/pokeplatinum.prompt4-working.nds`, SHA256
+E3B63FBC93A0F1C5BFB426C429E39FA960AB5E5CBA6EEC375C7F6B0E1FC85522.
+Its map baseline is `artifacts/prompt5-before-map.json`.
+The correction ROM build and binary/layout checks passed as recorded above.
+Emulator checks remain pending: cold-boot the new ROM without an older build's
+savestate; verify X help on both displays (A paging, B/X close), original normal
+and shiny palettes, matching summary stars/battle sparkles/Following, first
+battle and return to the overworld. Existing native save files were not edited.
+
+## Prompt5 implementation
+
+- X opens a modal explanation for every configurable option, preset and seed.
+  Native framed lower-screen window, selected-option title, automatic wrapping
+  at216 pixels, six lines per page, A next/first and B/X close. Input is captured
+  while open; the same cursor/scroll is restored and closing cannot confirm the
+  run. All25 option explanations are separate localized strings; disabled
+  settings show a parent-rule notice and descriptions explain the dependency.
+- Permadeath is the single visible switch in configuration, review and Registry
+  settings. Presets/new edits set/clear both old internal death/wipe bits.
+  Legacy wire data is not rewritten: PERMADEATH is authoritative, the old wipe
+  bit remains encoded byte-exactly but is ignored for effective-preset comparison
+  and loss-policy decisions. Thus a legacy death-ON/wipe-OFF combination now
+  has the mandatory wipe behavior; death-OFF/wipe-ON remains ordinary fainting.
+  No history or ownership is erased. Obedience-only loss remains independent.
+- Numeric controls use one shared tested clamp helper. BST Range and Similarity
+  move by5 percentage points, display percentages, and stop at10/75 and0/100.
+  Other numeric domains retain steps of1; hexadecimal seed editing is separate.
+- Shiny Rate adds `1/512 Ultra High` as value4. Values0..3 are unchanged and the
+  new message ID is appended; an explicit display table avoids shifting old IDs.
+  RUNC remains36 bytes/schema3. Older ROMs that only accept0..3 cannot load an
+  Ultra High run; this ROM continues to read old runs unchanged. The generator
+  promotes XOR values8..127 and preserves original forced shinies, nature,
+  gender/ability byte and Wurmple branch. Shiny Clause remains independent.
+- Regi ruins now accept postgame + National Dex instead of requiring an imported
+  fateful Regigigas. Native door conditions, maps, dot puzzles, statue states,
+  levels and retry/caught rules remain. Regigigas still requires the three
+  titans in the party; with Static Randomizer ON, native caught states for all
+  three ruins also prove completion when their species were replaced.
+- Friendly field/story allies use the same single trainer loader: Cheryl, Mira,
+  Riley, Marley, Buck, Dawn/Lucas and Barry. All three wild-partner loaders and
+  the scripted cooperative-trainer path reach it. The old enemy-side-only
+  exclusion is removed, PLAYER1 is protected, and allies keep their original
+  levels. Each trainer ID/slot uses the existing seeded BST mapping exactly
+  once. Link/Frontier facilities remain outside the existing run randomizer.
+- Dawn/Lucas's demo uses distinct stable tutorial keys for wild/ally species.
+  Wild OFF / Trainer OFF retains each respective original Pokemon and moves.
+  Randomized demo parties have temporary Tackle-only moves to prevent Teleport
+  or self-destruction; demo damage is nonlethal. The native ALWAYS_CATCH flag
+  already guarantees capture. Tutorial bags/parties stay temporary, history,
+  death/EXP/capture rules are suspended, and the player's first-Ball latch is
+  unaffected. The native FIRST_BATTLE loss story branch is also exempt from
+  permadeath; it keeps its original return-home/healing behavior.
+- A fatal battle finalizes opportunity/death records before a native field task
+  saves the final GAME OVER state. It waits for map and battle overlays to close,
+  shows a brief native information screen (120 frames, A/B may skip), then ends
+  the FieldSystem through its existing title-screen exit. No Center respawn or
+  uncontrolled hardware reset. Continue on a saved defeated run shows the notice
+  and returns to title; New Game stays usable. Failed/protected saves require
+  acknowledgement and warn explicitly; an in-process nonce latch also blocks
+  reloading that run after a failed write. A power loss cannot preserve history
+  that the storage device refused to write. Unrelated adventures are never
+  silently overwritten.
+- Poketch drawing is redesigned for the192x160 LCD: native active-theme palette,
+  title/location header, rounded opportunity marks, large seven-segment fraction,
+  separate capture state, compact cap/badge/bonus panel and run-status footer.
+  Towns such as Jubilife show NO WILD ENCOUNTERS, not a fake allowance. OFF and
+  tracking-inactive states omit the fraction. One eligible Obedience combatant
+  shows ACTIVE:1 READY and a warning mark. A small state cache refreshes only
+  changed data, checked every15 frames. Long names are bounded to184 pixels.
+  Window24x20 tiles uses15360 bytes of heap pixels and tiles32..511 (ending at
+  char offset0x4000, below the BG map at0x7000). No new bitmap/sprite resources,
+  persistent save fields or app lifecycle changes are introduced.
+
+Native-asset layout preview: `artifacts/prompt5-tracker-preview.png`. This is a
+host rendering of the layout/font/palette, NOT an emulator screenshot.
+
+### Static encounter audit
+
+| Encounters | Native path / result of source audit |
+| --- | --- |
+| Regirock / Regice / Registeel | Rock Peak / Iceberg / Iron Ruins; original level30 puzzles; postgame National Dex unlock |
+| Regigigas | Snowpoint Temple B5F, level1; native party prerequisite or randomized-ruins capture proof |
+| Uxie / Azelf | Acuity / Valor Cavern, StartLegendaryBattle |
+| Mesprit / Cresselia / roaming birds | Native roaming state; battle ROAMER bit maps to STATIC permission; stored species retained |
+| Giratina | Distortion origin-form and Turnback Cave paths both call scripted static generation |
+| Dialga / Palkia | Original Spear Pillar level70 scripts |
+| Heatran | Original Stark Mountain room3 level50 script |
+| Darkrai / Shaymin | Original Newmoon / Flower Paradise scripts and existing obtainable key-item access |
+| Rotom / Drifloon / Spiritomb / other fixed scripts | Shared scripted-wild constructor assigns STATIC event identity |
+
+All these permissions use encounter source/event identity, never a legendary
+species test. Static priority bypasses quota/dupes/history capacity, records
+Special counters and never spends a route attempt. Retried events reuse their
+map/original-species key and native one-time rules. Ordinary randomized wild
+legendaries remain WILD. Native trainer/story catching restrictions remain.
+Actual Ball use in these ARM formats still needs the playtests below.
+
+### Prompt5 acceptance checklist — not yet executed by the agent
+
+1. All25 X explanations plus preset/seed/review: wrapping/page navigation,
+   disabled reasons, exact cursor/scroll return, simultaneous A/X and B/X,
+   no edits or accidental confirmation. Check every option in read-only settings.
+2. One Permadeath row only; all presets, ON/OFF, legacy mixed flag combinations,
+   +5/-5 numeric taps/repeats and clamped boundaries; other increments1 and
+   seed editing; saved values survive reload. All five Shiny Rates, including
+   Ultra High1/512, with Shiny Clause ON/OFF and unchanged existing Pokemon.
+3. Each Regi entrance before/after postgame/National Dex, dots/statues, catch,
+   KO/flee/native retries, Regigigas party requirement and randomized proof.
+   Every listed static with exhausted route and dupes, Static Randomizer OFF/ON,
+   Ball count/turn behavior, special record identity and reload. Mesprit/Cresselia
+   roaming HP/state persistence and ordinary randomized wild legendary denial.
+4. Each named ally, wild partner and scripted cooperative fight: Trainer ON/OFF,
+   same seed teams, original ally levels, legal moves, native AI/healing/party
+   structure, no changes to player Pokemon, no double randomization.
+5. Both-gender catching tutorials with Wild/Trainer ON/OFF combinations,
+   difficult replacement species, guaranteed catch, correct name/cry/sprite,
+   no player Ball/ownership/opportunity changes or premature activation.
+   First rival loss remains nonfatal and the story heals/returns home normally.
+6. Permadeath wipe with living PC reserve, Obedience-only zero eligible,
+   nonfatal fainting with a survivor, cap-raising Gym win, Classic normal loss.
+   Fatal cases go directly to title, save GAME OVER/history, and cannot Continue;
+   New Game works. Simulate protected/failing save only on disposable copies:
+   explicit warning, no unrelated overwrite, in-process Continue blocked.
+7. Poketch on the actual DS resolution, all color themes, route/town transitions,
+   quota1/2/3 and exhaustion, activation/OFF, catches/KO/flee, badges/cap/bonus,
+   Obedience warning, long names and sleeping/battle/app switching. Repeated
+   unload/reload must not leak or leave stale pixels; Following and map loads
+   remain stable. Compare to the supplied photo and the layout preview.
 
 ## Configuration and native interfaces
 
@@ -29,7 +351,7 @@ presets initialize consistent defaults. An override changes the effective
 profile to Custom. Level Cap Mode defaults to EXP Lock in all presets. Shiny
 Rate defaults to Original (1/8192); Field Item Randomizer defaults OFF.
 Shiny Rate and Shiny Clause are independent. Shiny Rate offers 1/8192, 1/4096,
-1/2048 and 1/1024 and affects newly generated wild/gift/Egg Pokemon only.
+1/2048, 1/1024 and 1/512 and affects newly generated wild/gift/Egg Pokemon only.
 Forced shinies remain shiny; gender byte, nature, ability parity and Wurmple's
 evolution branch are preserved. Already generated Pokemon and native stored
 roamers are unchanged. Manaphy's special Egg anti-shiny behavior is preserved.
@@ -130,8 +452,7 @@ editing Pokemon. Registry shows the mode, cap, eligible/refusing counts and a
 warning when just one eligible party member remains.
 
 Permadeath, exhausted-PC handling, living boxed reserves not preventing a wipe,
-safe end-run Center confinement, automatic checkpoint and explicit restart are
-preserved. A checkpoint does not overwrite another adventure; failed I/O or
+automatic final checkpoint and direct native title transition are implemented. A checkpoint does not overwrite another adventure; failed I/O or
 overwrite protection produces a warning and keeps Game Over enforced in memory.
 
 ## Original mythical events
@@ -303,7 +624,7 @@ are NOT YET EXECUTED:
    Badge restores eligibility; Gym win raising the cap must not cause false loss.
 8. Obedience zero-eligible loss with living overleveled party and living PC reserve,
    including permadeath OFF, and before a mandatory encounter. Refusers retain
-   HP/alive history. Check safe Center/Game Over reason/save/reload/restart. One
+   HP/alive history. Check direct title/Game Over reason/save/reload/restart. One
    eligible member shows warning but does not end the run. Test ordinary death
    wipe separately, healing/revival/storage protection and Following/HMs.
 9. Oak before/after National Dex, game completion and boy/Cresselia quest; no
@@ -328,12 +649,10 @@ The battle flag adds a short transient font object/tiles below the existing
 verification. Native base heaps and Following heap fixes are unchanged.
 Current final ARM layout/ROM hash will be recorded when this build completes.
 
-Current build attempts: session92207 regenerated Meson/Ninja and reached249/282,
-then stopped on an undefined `fieldSystem` in the new hidden-item hook. The
-static helper now receives that context explicitly from its caller. Native
-resource checks passed again; incremental retry session12335 compiled all ARM
-sources through1088/1090 and is linking the final image. No emulator was run.
-The failed attempt is not a successful ROM build and did not replace the ROM.
+The preceding Prompt3/4 build completed Nov5 at15:02:39. Its current binary was
+independently verified on Nov8: CRC16=9E48, main static end02112E40, BSS end021F1F40,
+arena02292380, static budget74864 bytes before metadata/OS costs. The new Prompt5
+build result will be appended here after it actually completes.
 
 The records below refer to the PREVIOUS ROM, not validation of this revision.
 

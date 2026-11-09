@@ -9,7 +9,7 @@
     ],
     "class": "CLASS_PHYSICAL",
     "type": "TYPE_FIGHTING",
-    "power": 125,
+    "power": 100,
     "accuracy": 90,
     "pp": 20,
     "effect": {

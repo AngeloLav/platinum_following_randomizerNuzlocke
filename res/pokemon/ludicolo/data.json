@@ -37,8 +37,7 @@
             [ 1, "MOVE_ASTONISH" ],
             [ 1, "MOVE_GROWL" ],
             [ 1, "MOVE_MEGA_DRAIN" ],
-            [ 1, "MOVE_NATURE_POWER" ],
-            [ 1, "MOVE_ABSORB" ]
+            [ 1, "MOVE_NATURE_POWER" ]
         ],
         "by_tm": [
             "TM01",

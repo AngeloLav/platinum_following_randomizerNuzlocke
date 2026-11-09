@@ -1,6 +1,6 @@
 {
     "base_stats": {
-        "hp": 148,
+        "hp": 108,
         "attack": 112,
         "defense": 118,
         "speed": 47,
@@ -44,7 +44,6 @@
             [ 7, "MOVE_BITE" ],
             [ 13, "MOVE_YAWN" ],
             [ 19, "MOVE_TAKE_DOWN" ],
-            [ 19, "MOVE_DIG" ],
             [ 25, "MOVE_SAND_TOMB" ],
             [ 31, "MOVE_CRUNCH" ],
             [ 40, "MOVE_EARTHQUAKE" ],
@@ -63,7 +62,6 @@
             "TM23",
             "TM26",
             "TM27",
-            "TM28",
             "TM32",
             "TM37",
             "TM39",

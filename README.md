@@ -22,10 +22,10 @@ The interfaces deliberately reuse Pokémon Platinum's own text, windows, palette
 - **BST-aware randomization**, with an adjustable eligible range and probability bias toward similarly strong species.
 - **Custom Nuzlocke capture limits** of 1, 2, or 3 eligible encounters per area, including enforcement before Poké Ball consumption.
 - **Persistent encounter registry**, evolutionary-family Dupes Clause, optional Shiny Clause, and separate static/gift tracking.
-- **Permadeath**, an EXHAUSTED memorial, and configurable party-wipe Game Over.
+- **Permadeath**, an EXHAUSTED memorial, and mandatory party-wipe Game Over under the single Permadeath switch.
 - **Two level-cap modes:** EXP Lock and Obedience Cap.
 - **Dynamic trainer levels**, configurable at +1 to +3 levels per badge.
-- **Shiny Rate** options from 1/8192 to 1/1024 and an optional safe Field Item Randomizer.
+- **Shiny Rate** options from 1/8192 to 1/512, original normal/shiny colors, and an optional safe Field Item Randomizer.
 - **Native Run Registry** available from the Start menu before obtaining the Pokétch, plus a compact Pokétch tracker later.
 - **Brief route notifications** showing remaining encounter opportunities.
 - **Accessible original Darkrai and Shaymin events** through normal postgame progression, without expired event distributions.
@@ -46,7 +46,7 @@ Overriding a preset's values makes the effective profile **Custom**. The chosen 
 
 ## All configurable settings
 
-The initial configuration screen uses **one vertically scrolling list**, with context-sensitive explanations on the lower screen. Values below are the default configuration for **Hardcore Randomizer** where a preset-specific value is applicable; other presets may differ.
+The initial configuration screen uses **one vertically scrolling list**, with context-sensitive explanations on the lower screen. Press **X: HELP** on any setting for a titled, automatically wrapped explanation; A changes help pages and B/X closes without changing your selection. Numeric boundaries clamp; BST controls move by exactly 5 percentage points. Values below are the default configuration for **Hardcore Randomizer** where a preset-specific value is applicable; other presets may differ.
 
 ### Randomizer
 
@@ -70,7 +70,7 @@ The initial configuration screen uses **one vertically scrolling list**, with co
 | **Capture Opportunities** | OFF / 1 / 2 / 3 per area | **1** | Number of distinct eligible ordinary encounters, **not** guaranteed successful catches. |
 | **Dupes Clause** | ON / OFF | ON | Previously owned evolution families cannot be caught again as ordinary encounters. |
 | **Shiny Clause** | ON / OFF | ON | Eligible shiny wild encounters can be captured as bonus encounters without spending an ordinary attempt. |
-| **Shiny Rate** | 1/8192, 1/4096, 1/2048, 1/1024 | **1/8192** | Changes shiny generation odds in supported new-Pokémon generation paths. |
+| **Shiny Rate** | 1/8192, 1/4096, 1/2048, 1/1024 / **1/512 Ultra High** | **1/8192** | Changes shiny generation odds in supported new-Pokémon generation paths. |
 | **Gift Pokémon Separate** | ON / OFF | ON | Gifts can be tracked independently of ordinary area limits. |
 | **Gift Eggs Separate** | ON / OFF | ON | Gift Eggs can be tracked independently of ordinary area limits. |
 
@@ -79,7 +79,6 @@ The initial configuration screen uses **one vertically scrolling list**, with co
 | Setting | Available values | Hardcore default | Explanation |
 | --- | --- | --- | --- |
 | **Permadeath** | ON / OFF | ON | A Pokémon reaching 0 HP becomes permanently **EXHAUSTED**. |
-| **Game Over on Party Wipe** | ON / OFF (requires permadeath) | ON | Losing all usable active-party Pokémon ends the run, even with living boxed Pokémon. |
 | **Day Care Eggs** | Allowed / Disabled | Disabled | Prevents generation of ordinary Day Care Eggs; unrelated gift Eggs remain separate. |
 | **Level Cap** | ON / OFF | ON | Uses the next original Gym Leader ace level, plus any allowance. |
 | **Level Cap Mode** | **EXP Lock / Obedience Cap** | **EXP Lock** | Determines how Pokémon behave at or above the cap. |
@@ -209,7 +208,7 @@ Wild encounter levels remain unchanged. Boss scaling is a separate toggle.
 
 When **Permadeath** is active, a Pokémon that reaches 0 HP becomes permanently **EXHAUSTED**. It cannot be returned to combat through ordinary healing, revives, Pokémon Centers, or PC withdrawal. Exhausted Pokémon are tracked in the memorial, and an exhausted follower is no longer permitted to follow the player.
 
-When **Game Over on Party Wipe** is enabled, losing every usable Pokémon in the active party ends the run—even if healthy Pokémon are stored in the PC. A safe Game Over flow permits viewing run information and starting a new adventure after confirmation. The registry distinguishes a normal fainting wipe from an Obedience Cap loss.
+With **Permadeath ON**, losing every eligible active-party Pokémon ends the run even with living PC reserves. After battle and field cleanup, a native notice appears, the ended adventure is erased, and the run configuration menu opens automatically. This clears that run's party, PC, Bag and history. Obedience Cap can separately end a run even with Permadeath OFF. An identity/protection failure blocks erasure and offers retry or return to title; native flash errors retain the game's error handling.
 
 > [!WARNING]
 > Save restoration and emulator savestates are outside the in-game enforcement system. Back up your saves before updating development builds; configured saves are not guaranteed to work in older ROM revisions.
@@ -230,7 +229,7 @@ Press **L/R** to switch between five dedicated pages:
 | **MEMORIAL** | Permanently exhausted Pokémon and their recorded history. |
 | **SPECIAL** | Static encounters, gifts, gift Eggs, and shiny bonus records; includes Darkrai/Shaymin event status. |
 
-The pages display explicit **L/R navigation hints** and use scrollable native-style menus. A separate, compact **Pokétch tracker** becomes available after the player receives the Pokétch in Jubilife City. Brief area-entry notifications reuse the familiar map-name popup style and can be disabled.
+The pages display explicit **L/R navigation hints** and use scrollable native-style menus. A native LCD **Pokétch tracker** becomes available after receiving the Pokétch in Jubilife City. It emphasizes remaining/total opportunities with large digits and small opportunity marks, distinguishes unavailable/exhausted/inactive/OFF areas, and shows no invented wild allowance in towns such as Jubilife. Secondary information shows cap, badges, trainer bonus and run status. It refreshes only changed data and follows the native color theme. Brief area-entry notifications reuse the familiar map-name popup style and can be disabled.
 
 ## Randomized starter selection and Rowan introduction
 
@@ -417,3 +416,22 @@ This is an **unofficial, fan-made, noncommercial source-code project**, not affi
 ---
 
 **Choose your rules. Know your encounters. Make every decision count.**
+
+## Latest playtest polish
+
+The current feature branch adds X-button explanations, one Permadeath setting,
+clamped numerical controls, Ultra High1/512 shinies, friendly story-partner
+randomization, safe randomized catching demonstrations, automatic fresh-run configuration after Game Over,
+and a redesigned native Pokétch LCD. Postgame National Dex unlocks the original
+Regi ruins without an imported event Pokémon; original puzzles remain.
+See [implementation, save compatibility and regression checklist](docs/RUN_ENGINE.md).
+The player supplied playtest feedback and a physical-console photo; the new
+revision still requires its own emulator/hardware acceptance testing.
+
+The latest source restoration compares all 4411 Pokémon, move, item and trainer
+JSON definitions with the Following-only base. Native types, abilities, base
+stats, learnsets, move parameters, prices, catch bonuses, trainer AI and breeding
+rules are restored. The new original-stat dataset changes the Randomizer data
+fingerprint: older development runs are incompatible; start a new run. Existing
+save files are not migrated or erased merely by updating the ROM. Automatic
+erasure applies only when the currently configured run ends.

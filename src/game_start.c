@@ -17,6 +17,7 @@
 #include "record_mixed_rng.h"
 #include "run_menu.h"
 #include "run_session.h"
+#include "run_game.h"
 #include "save_player.h"
 #include "savedata.h"
 #include "savedata_misc.h"
@@ -139,6 +140,8 @@ static int GameStartLoadSave_Exit(ApplicationManager *appMan, int *state)
     Heap_Destroy(HEAP_ID_GAME_START);
     if (RunSession_Damaged()) {
         EnqueueApplication(FS_OVERLAY_ID_NONE, &gRunConfigMenuTemplate);
+    } else if (RunGame_Over()) {
+        EnqueueApplication(FS_OVERLAY_ID_NONE, &gRunRestartMenuTemplate);
     } else {
         EnqueueApplication(FS_OVERLAY_ID_NONE, &gFieldSystemContinueTemplate);
     }

@@ -162,7 +162,7 @@ static void TestHistory(void)
 
 static void TestRevisedClausesAndLegacy(void)
 {
-    for (u8 rate = 0; rate < 4; rate++) for (u8 clause = 0; clause < 2; clause++) {
+    for (u8 rate = 0; rate < 5; rate++) for (u8 clause = 0; clause < 2; clause++) {
         RunConfig config;
         RunConfig_Init(&config, RUN_PRESET_HARDCORE_RANDOMIZER, 77);
         config.shinyRate = rate;

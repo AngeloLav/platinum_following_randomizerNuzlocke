@@ -65,13 +65,14 @@ typedef struct RunConfig {
     u8 seedMode;
     u8 levelCapAllowance;
     u8 trainerLevelsPerBadge;
-    u8 shinyRate; // 0..3: 1/8192, 1/4096, 1/2048, 1/1024; new Pokemon only.
+    u8 shinyRate; // 0..4: 1/8192, 1/4096, 1/2048, 1/1024, 1/512; new Pokemon only.
     u8 rulesVersion; // 2 retains published mappings; 3 uses the Gaussian mixture.
     u8 levelCapMode; // Zero is EXP Lock for all existing runs.
 } RunConfig;
 
 BOOL RunConfig_Init(RunConfig *config, enum RunPreset preset, u32 seed);
 BOOL RunConfig_IsValid(const RunConfig *config);
+u8 RunConfig_AdjustValue(u8 value, u8 low, u8 high, u8 step, BOOL decrease);
 enum RunPreset RunConfig_EffectivePreset(const RunConfig *config);
 BOOL RunConfig_CaptureLimitsEnabled(const RunConfig *config);
 BOOL RunConfig_DupesEnabled(const RunConfig *config);

@@ -9,8 +9,8 @@
     ],
     "class": "CLASS_PHYSICAL",
     "type": "TYPE_NORMAL",
-    "power": 22,
-    "accuracy": 90,
+    "power": 18,
+    "accuracy": 80,
     "pp": 15,
     "effect": {
         "type": "BATTLE_EFFECT_MULTI_HIT",

@@ -8,7 +8,7 @@
     ],
     "class": "CLASS_SPECIAL",
     "type": "TYPE_NORMAL",
-    "power": 90,
+    "power": 60,
     "accuracy": 0,
     "pp": 20,
     "effect": {

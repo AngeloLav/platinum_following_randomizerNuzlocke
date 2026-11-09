@@ -9,7 +9,7 @@
     ],
     "class": "CLASS_PHYSICAL",
     "type": "TYPE_GROUND",
-    "power": 120,
+    "power": 80,
     "accuracy": 100,
     "pp": 10,
     "effect": {

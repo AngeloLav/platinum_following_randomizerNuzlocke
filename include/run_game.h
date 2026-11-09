@@ -5,6 +5,7 @@
 #include "location.h"
 #include "field/field_system_decl.h"
 #include "run_state.h"
+#include "field_task.h"
 
 u16 RunGame_MonID(BoxPokemon *mon);
 u16 RunGame_Register(BoxPokemon *mon, enum RunEncounterSource source, u16 specialID);
@@ -34,6 +35,8 @@ BOOL RunGame_AcceptScriptGift(Pokemon *mon);
 void RunGame_SetGiftResult(BOOL accepted);
 BOOL RunGame_GiftResult(void);
 BOOL RunGame_Over(void);
+BOOL RunGame_EndRunTask(FieldTask *task);
+BOOL RunGame_Restart(SaveData *save);
 void RunGame_ConfineLocation(Location *location);
 void RunGame_PollEnd(FieldSystem *fieldSystem);
 void RunGame_ObserveParty(Party *party);

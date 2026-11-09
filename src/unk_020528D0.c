@@ -199,6 +199,7 @@ static void sub_02052AA4(UnkStruct_02052AA4 *param0, u16 param1, u8 param2, u8 p
 
 BOOL FieldTask_BlackOutFromBattle(FieldTask *task)
 {
+    if (RunGame_Over()) return RunGame_EndRunTask(task);
     FieldSystem *fieldSystem = FieldTask_GetFieldSystem(task);
     int *state = FieldTask_GetState(task);
 

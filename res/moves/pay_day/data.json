@@ -9,9 +9,9 @@
     ],
     "class": "CLASS_PHYSICAL",
     "type": "TYPE_NORMAL",
-    "power": 45,
+    "power": 40,
     "accuracy": 100,
-    "pp": 35,
+    "pp": 20,
     "effect": {
         "type": "BATTLE_EFFECT_INCREASE_PRIZE_MONEY",
         "chance": 0

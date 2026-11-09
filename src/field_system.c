@@ -26,6 +26,7 @@
 #include "field_overworld_state.h"
 #include "field_system.h"
 #include "run_game.h"
+#include "run_menu.h"
 #include "field_task.h"
 #include "game_overlay.h"
 #include "heap.h"
@@ -89,7 +90,11 @@ static BOOL ExecuteFieldProcesses(ApplicationManager *appMan, int *state)
 static BOOL ReturnToTitleScreen(ApplicationManager *appMan, int *state)
 {
     TeardownFieldSystem(appMan);
-    EnqueueApplication(FS_OVERLAY_ID(game_opening), &gTitleScreenAppTemplate);
+    if (RunGame_Over()) {
+        EnqueueApplication(FS_OVERLAY_ID_NONE, &gRunRestartMenuTemplate);
+    } else {
+        EnqueueApplication(FS_OVERLAY_ID(game_opening), &gTitleScreenAppTemplate);
+    }
     return TRUE;
 }
 

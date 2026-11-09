@@ -9,7 +9,7 @@
     ],
     "class": "CLASS_PHYSICAL",
     "type": "TYPE_ICE",
-    "power": 25,
+    "power": 10,
     "accuracy": 100,
     "pp": 30,
     "effect": {

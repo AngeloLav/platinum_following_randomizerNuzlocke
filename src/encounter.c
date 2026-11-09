@@ -154,6 +154,15 @@ static BOOL CheckPlayerWonEncounter(Encounter *encounter)
     return CheckPlayerWonBattle(encounter->dto->resultMask);
 }
 
+static BOOL EndRunAfterEncounter(FieldTask *task, Encounter *encounter)
+{
+    if (!RunGame_Over()) return FALSE;
+    if (encounter->resultMaskPtr) *encounter->resultMaskPtr = encounter->dto->resultMask;
+    FreeEncounter(encounter);
+    FieldTask_InitJump(task, RunGame_EndRunTask, NULL);
+    return TRUE;
+}
+
 static void UpdateFieldSystemFromDTO(const FieldBattleDTO *dto, FieldSystem *fieldSystem)
 {
     if (dto->battleType & BATTLE_TYPE_DEBUG) {
@@ -190,6 +199,7 @@ static BOOL FieldTask_Encounter(FieldTask *task)
 
     case 3:
         UpdateFieldSystemFromDTO(encounter->dto, fieldSystem);
+        if (EndRunAfterEncounter(task, encounter)) return FALSE;
 
         if (encounter->dto->battleType == BATTLE_TYPE_WILD_MON
             || encounter->dto->battleType == BATTLE_TYPE_ROAMER
@@ -394,6 +404,12 @@ static BOOL FieldTask_WildEncounter(FieldTask *task)
 
     case 3:
         UpdateFieldSystemFromDTO(encounter->dto, fieldSystem);
+        if (RunGame_Over()) {
+            FreeWildEncounter(encounter);
+            RadarChain_Clear(fieldSystem->chain);
+            FieldTask_InitJump(task, RunGame_EndRunTask, NULL);
+            return FALSE;
+        }
         FieldSystem_SaveTVSegment_CatchThatPokemonShow(fieldSystem, encounter->dto->captureAttempt, encounter->dto->resultMask);
 
         if (CheckPlayerWonBattle(encounter->dto->resultMask) == 0) {
@@ -479,6 +495,7 @@ static BOOL FieldTask_SafariEncounter(FieldTask *task)
 
     case 3:
         UpdateFieldSystemFromDTO(encounter->dto, fieldSystem);
+        if (EndRunAfterEncounter(task, encounter)) return FALSE;
 
         if (encounter->dto->resultMask == BATTLE_RESULT_CAPTURED_MON) {
             TVBroadcast *broadcast = SaveData_GetTVBroadcast(fieldSystem->saveData);
@@ -622,6 +639,7 @@ static BOOL FieldTask_PalParkEncounter(FieldTask *task)
 
     case 3:
         UpdateFieldSystemFromDTO(encounter->dto, fieldSystem);
+        if (EndRunAfterEncounter(task, encounter)) return FALSE;
         FieldSystem_UpdateCatchingShowResult(fieldSystem, encounter->dto);
         UpdateGameRecords(fieldSystem, encounter->dto);
         (*state)++;

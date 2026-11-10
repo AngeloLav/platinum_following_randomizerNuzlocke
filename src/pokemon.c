@@ -4132,7 +4132,10 @@ void Pokemon_FromBoxPokemon(BoxPokemon *boxMon, Pokemon *mon)
     }
 
     Pokemon_SetValue(mon, MON_DATA_STATUS, &zero);
-    Pokemon_SetValue(mon, MON_DATA_HP, &zero);
+    BOOL reencrypt = Pokemon_EnterDecryptionContext(mon);
+    // Box data has no party HP. This is construction, not a fainting event:
+    // bypass the public HP/death hook while initializing the decrypted copy.
+    Pokemon_SetDataInternal(mon, MON_DATA_HP, &zero);
     Pokemon_SetValue(mon, MON_DATA_MAX_HP, &zero);
 
     Mail *mail = Mail_New(HEAP_ID_SYSTEM);
@@ -4146,6 +4149,7 @@ void Pokemon_FromBoxPokemon(BoxPokemon *boxMon, Pokemon *mon)
     Pokemon_SetValue(mon, MON_DATA_BALL_CAPSULE, &v2);
 
     Pokemon_CalcLevelAndStats(mon);
+    Pokemon_ExitDecryptionContext(mon, reencrypt);
 }
 
 u8 Party_GetMaxLevel(Party *party)

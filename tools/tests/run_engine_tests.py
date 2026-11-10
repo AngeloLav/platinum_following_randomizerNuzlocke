@@ -131,6 +131,8 @@ def main():
                     "--cc", compiler], check=True, cwd=root)
     subprocess.run([sys.executable, str(root / "tools/tests/check_run_restart.py"),
                     "--cc", compiler], check=True, cwd=root)
+    subprocess.run([sys.executable, str(root / "tools/tests/check_box_permadeath.py"),
+                    "--cc", compiler], check=True, cwd=root)
 
 
 if __name__ == "__main__":

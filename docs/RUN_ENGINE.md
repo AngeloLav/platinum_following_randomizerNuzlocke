@@ -1,5 +1,98 @@
 # Integrated run engine
 
+## PC permadeath fix with save compatibility — 2026-11-10
+
+The user reported that healthy captures sent to the PC with a full party,
+and manually deposited Pokemon, appeared fainted and could later become
+permanently exhausted. They had saved before the capture and explicitly
+confirmed that no false-death recovery is needed. Their runtime is a 3DS
+using an NDS forwarder, not the agent's emulator.
+
+Root cause: Pokemon_FromBoxPokemon copies tracked BoxPokemon data into a
+reused Pokemon buffer, then uses the public HP setter to initialize HP to0
+before calculating party stats. BoxPokemon has no party HP. The destination's
+old HP can be nonzero; RunGame_FilterHP interprets the construction write as
+a real faint, setting the temporary copy's permanent-death marker and the
+shared run-history record. PC previews/comparisons also call this conversion,
+so merely displaying a healthy stored Pokemon can trigger the bug.
+
+The fix is confined to src/pokemon.c: retain the initial native status setter
+and checksum validation, enter the normal decryption context, initialize the
+new party HP through the internal setter, calculate stats normally, and close
+the context. The stat-calculation HP write still uses the public filter, so
+already exhausted Pokemon remain at0 HP. Real positive-to-zero HP updates
+still mark deaths through the unchanged public setter. No PC menu, capture
+rule, death-record format or save-load policy is altered.
+
+Compatibility: no data/seed/rules/schema version, struct layout, persistent
+field, Pokemon ID, nonce or stored marker meaning changed. The dataset remains
+0x59FB5FE7, RUNC schema3 and run-state schema1. Existing saves from the current
+original-gameplay ROM can Continue; no new run or conversion is required.
+The agent has not opened or edited a user .sav. False deaths already committed
+by older code cannot safely be distinguished from genuine deaths and are not
+silently cleared; the user's pre-capture checkpoint avoids that issue.
+
+tools/tests/check_box_permadeath.py reproduced the actual bug before the fix
+(healthy tracked Pokemon, stale HP1 -> HP0, death marker/history written).
+It now passes using actual conversion, public HP setter, decryption-context,
+permadeath and automatic/manual storage functions with host fixtures. Tests
+cover stale HP buffers, encrypted/decrypted source flags, all18 boxes,
+repeated previews, disabled/suspended permadeath, source/identity preservation,
+native checksum-check entry and real deaths remaining locked after storage.
+Crypto primitives, stat data and flash are fixtures; this is not ARM/emulator
+or hardware execution. The complete host engine/native-data/restart suite
+also passed. The new test is included in run_engine_tests.py.
+
+The preceding ROM is protected at artifacts/pokeplatinum.before-pc-fix.nds,
+SHA256 F120F864D1B1C9089100A1AD43C5EB1B2D10389FD0488B11366EDEBD046381A1.
+Ninja dependency inspection completed in session9711; the explanation is
+saved to artifacts/pc-fix-build-plan.log. It selected6 tasks: the modified
+Pokemon object plus three unchanged C objects older than an already generated
+species-name header, then main.nef linking and ROM packaging. No SDK target,
+gameplay-data regeneration or missing-command-log reason was found.
+Actual incremental make rom completed in session65669, exit0,6/6 tasks.
+The PC-fix ROM timestamp is2026-11-10 18:01:14,134217728 bytes. Final
+check_run_rom.py passed: CRC16=AE71, ARM9/FAT bounds,122 overlay records and
+parent/BSS ranges. Main static end02113F60, BSS021F30C0, arena02293600;
+unallocated static budget70128 bytes before metadata/OS costs. Dataset remains
+0x59FB5FE7. SHA256:
+948D330DD6E71CBA4CCA1A66A1010B6E3070D2A22A6E2B350001A220BC7FD040.
+No build is running. The artifact was subsequently renamed in the workspace
+to build/FinalPokeplatinum.us.nds; its hash matches the verified build exactly.
+The agent did not rename it or launch a new build when the standard output
+path disappeared.
+
+Subsequent user feedback: this ROM starts in DeSmuME, but copy/pasting the raw
+.sav initially showed New Game. After explicit backup-memory import the user
+confirmed the save loads and works. This is user-reported emulator save-load
+validation, not an emulator test performed by the agent or proof that all PC
+deposit/capture scenarios were exercised.
+
+The user reports a white screen with the 3DS forwarder. It remains unresolved;
+the startup phase and cache-reset result have not yet been supplied. The final
+ROM is complete and valid structurally. Binary comparison with the preceding
+ROM shows identical512-byte headers (CPUE/AE71), identical non-overlay NitroFS
+payloads and changed linked code; no gameplay archives were changed by this
+fix. Report: artifacts/pc-fix-rom-comparison.json. A stale nds-bootstrap cache
+is a troubleshooting hypothesis, not a confirmed diagnosis. Following the
+official FAQ, the user was advised to back up saves and reversibly rename
+sd:/_nds/nds-bootstrap/fatTable and patchOffsetCache before retesting. Do not
+modify save data or apply speculative ROM/AP patches without evidence.
+
+3DS update procedure: back up the existing .sav, then replace only the .nds
+at the same SD path and with the same filename used by the forwarder. Keep
+the save in its existing location and select Continue. Forwarders launch the
+ROM from its path; standard nds-bootstrap saves use saves/[rom name].sav.
+Sources: https://wiki.ds-homebrew.com/ds-index/forwarders and
+https://wiki.ds-homebrew.com/ds-index/emulators.
+
+Manual acceptance: load the pre-capture save; catch with six party Pokemon,
+inspect the destination box repeatedly, close/reopen, withdraw, deposit a
+healthy party member, move between boxes, save and restart, then withdraw
+again. Check Registry/Memorial for false deaths and confirm a genuinely
+exhausted Pokemon still cannot be revived/withdrawn. The agent has not run
+these device tests.
+
 ## Current source restoration and automatic restart — 2026-11-08
 
 The user explicitly requested the original gameplay dataset, accepted that
